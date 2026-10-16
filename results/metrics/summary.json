@@ -1,0 +1,39 @@
+{
+  "mu": {
+    "lms": 0.31593944275926183,
+    "nlms": 0.046415888336127774,
+    "nlms_shift": 0.0625
+  },
+  "candidates": [
+    {
+      "algo": "lms",
+      "W": 12,
+      "mu": 0.31593944275926183,
+      "nr_fixed": 17.013363247483078,
+      "nr_float": 17.095652372325972,
+      "mean_deg": 0.08228912484289541,
+      "deg_plus1": NaN,
+      "ovf": 0,
+      "structure": "2L+1 mult, no divider"
+    }
+  ],
+  "thresholds": {
+    "mean_deg": 1.0,
+    "max_deg": 3.0,
+    "ovf_rate": 0.001,
+    "min_nr": 10.0
+  },
+  "wav": "C:\\Users\\Lenovo\\Downloads\\anc_fpga_rtl_audited (4)\\anc_fpga_rtl_audited (1)\\anc_fpga\\vectors\\audio\\acoustic_chord.wav",
+  "n": 16000,
+  "L": 32,
+  "widths": [
+    8,
+    10,
+    12,
+    14,
+    16,
+    20,
+    24
+  ],
+  "date": "2026-10-13 17:09:36"
+}

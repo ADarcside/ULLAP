@@ -1,0 +1,27 @@
+# =============================================================================
+# de2_115.sdc: Synopsys Design Constraints for Terasic DE2-115 ANC Design
+# Target FPGA : Altera/Intel Cyclone IV E EP4CE115F29C7
+# =============================================================================
+
+# Primary 50 MHz Master Clock
+create_clock -name CLOCK_50 -period 20.000 [get_ports CLOCK_50]
+
+# Audio Codec Bit Clock (WM8731 Master Mode: ~3.072 MHz for 48 kHz stereo 32-bit slot)
+set_false_path -from [get_ports {AUD_BCLK}]
+
+# Automatically derive PLL and clock uncertainties
+derive_clock_uncertainty
+
+# Cut timing paths for asynchronous inputs (synchronizers present in RTL)
+set_false_path -from [get_ports {KEY[*]}]
+set_false_path -from [get_ports {SW[*]}]
+set_false_path -from [get_ports {AUD_ADCLRCK}]
+set_false_path -from [get_ports {AUD_DACLRCK}]
+set_false_path -from [get_ports {AUD_ADCDAT}]
+
+# Cut timing paths for status outputs and I2C low-speed lines
+set_false_path -to [get_ports {LEDR[*]}]
+set_false_path -to [get_ports {I2C_SCLK}]
+set_false_path -to [get_ports {I2C_SDAT}]
+set_false_path -from [get_ports {I2C_SDAT}]
+set_false_path -to [get_ports {AUD_XCK}]

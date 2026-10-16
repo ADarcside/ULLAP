@@ -1,0 +1,58 @@
+# RTL interface specification (portable Verilog; implemented in `rtl/anc_core.v`)
+
+Status: implemented and simulated (Verilator), bit-exact on 51 vector sets (see TEST_REPORT_PHASE1_3.md). Not synthesised since the pipelining change: re-run Quartus. Defaults now EPS_EXP=2, K=3; LAT = L+3 (LMS), L+5 (NLMS, NLMS-shift).
+Original text of this spec is kept below; implementation-time clarifications (extra `busy` port, `in` flag, coefficient
+readout, input pacing, MU_INT/K defaults) are in `docs/verification.md` section 4.
+The Python model `py/fixedpoint.py` is the bit-level reference; the RTL must reproduce it exactly.
+No vendor IP, primitives, PLLs, memories-by-macro or constraints: infer multipliers/RAM from plain RTL only.
+
+## Module `anc_core`
+
+| Parameter | Meaning | Default |
+|---|---|---|
+| `W` | total signed width of x, d, y, e and coefficients (F = W-1 fractional bits) | 12 |
+| `L` | number of taps | 32 |
+| `ALGO` | 0 = LMS, 1 = NLMS, 2 = NLMS-shift | 2 |
+| `MU_INT` | LMS/NLMS step constant, `round(mu*2^10)` (ALGO 0/1) | - |
+| `K` | NLMS-shift step exponent, `mu = 2^-K` (ALGO 2) | - |
+| `ACC_W` | accumulator width, default `2*W + $clog2(L)` | - |
+| `EPS_EXP` | eps = 2^-EPS_EXP (default 10) | 10 |
+
+| Port | Dir | Description |
+|---|---|---|
+| `clk`, `rst_n` | in | single clock, synchronous active-low reset (clears delay line and coefficients to 0) |
+| `in_valid` | in | 1-cycle strobe: `x_in`, `d_in` hold a new sample pair |
+| `x_in[W-1:0]`, `d_in[W-1:0]` | in | reference / primary sample, two's complement Q1.(W-1) |
+| `out_valid` | out | 1-cycle strobe when `y_out`, `e_out` correspond to the sample accepted `LAT` cycles earlier |
+| `y_out[W-1:0]`, `e_out[W-1:0]` | out | filter output and error `e = d - y` (error is the cancelled signal) |
+| `sat_flags[5:0]` | out | sticky saturation flags `{w, g, e, y, acc, in}`; cleared by `rst_n` |
+
+Throughput target: one sample pair per `in_valid`; the sample period (>= L cycles at 8 kHz is trivially available on
+any board clock) allows a serial, one-MAC implementation (`LAT` ~ 2L+c cycles) or a parallel one. Architecture is
+free as long as outputs are bit-identical. `LAT` is a free design parameter and must be reported.
+
+## Arithmetic contract (identical to `run_fixed`)
+
+Per sample, with `xv = [x[n]..x[n-L+1]]` (zero history after reset), `F = W-1`:
+
+1. `acc = sat_ACC_W( sum_i w[i]*xv[i] )` (exact sum, saturate once at the end; 2F fractional bits)
+2. `y = sat_W( rs(acc, F) )`, `e = sat_W( d - y )`, with `rs(v,s) = (v + 2^(s-1)) >>> s` (round half up, arithmetic shift)
+3. `P = sum_i xv[i]^2` (exact), `Q = P + 2^(2F-EPS_EXP)`
+4. update term per tap (all rounding via `rs`):
+   * LMS: `upd[i] = rs( (MU_INT*e)*xv[i], F+10 )`
+   * NLMS: `g = sat_{W+4}( round_div( (MU_INT*e) << (F+F-10), Q ) )` with `round_div(n,d) = floor((2n+d)/(2d))`; `upd[i] = rs( g*xv[i], F )`
+   * NLMS-shift: `upd[i] = rs( e*xv[i], bitlen(Q) - F + K )` (`bitlen(Q)` = index of leading one + 1; a negative shift is a left shift)
+5. `w[i] = sat_W( w[i] + upd[i] )`; every saturation event sets the matching `sat_flags` bit.
+
+The NLMS divider is specified as an ideal integer division; its hardware architecture (iterative/reciprocal) is open
+and must be bit-identical to the reference or be re-characterised in Python first.
+
+## Testbench contract (`tb/`)
+
+* Inputs/expected outputs: `vectors/<algo>_W<W>_<scenario>.vec` - one line per sample, 4 hex words `x d y_exp e_exp`
+  (two's complement, `ceil(W/4)` digits), read with `$fscanf("%h %h %h %h")`; `.w` holds the final coefficients
+  (L lines, hex) after the last sample of the `.vec` file (4096 samples).
+* Pass criterion: `y_out`, `e_out` equal `y_exp`, `e_exp` for every sample **and** final coefficients equal `.w`
+  (bit-exact). The testbench must be self-checking, print mismatch counts and use `$finish` with a non-zero count on failure.
+* Regenerate vectors for other widths/configs by editing the candidate list in `py/run_all.py` or calling
+  `fixedpoint.run_fixed` + `write_vec` directly.

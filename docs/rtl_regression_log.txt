@@ -1,0 +1,21 @@
+[shipped_lms_W11_stationary] TB_RESULT PASS vec=vectors/lms_W11_stationary ALGO=0 W=11 L=32 samples=4096 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=33 busy_cycles=66
+[shipped_lms_W11_path_switch] TB_RESULT PASS vec=vectors/lms_W11_path_switch ALGO=0 W=11 L=32 samples=4096 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=33 busy_cycles=66
+[shipped_nlms_W11_stationary] TB_RESULT PASS vec=vectors/nlms_W11_stationary ALGO=1 W=11 L=32 samples=4096 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=116
+[shipped_nlms_W11_path_switch] TB_RESULT PASS vec=vectors/nlms_W11_path_switch ALGO=1 W=11 L=32 samples=4096 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=116
+[shipped_nlms_shift_W11_stationary] TB_RESULT PASS vec=vectors/nlms_shift_W11_stationary ALGO=2 W=11 L=32 samples=4096 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=67
+[shipped_nlms_shift_W11_path_switch] TB_RESULT PASS vec=vectors/nlms_shift_W11_path_switch ALGO=2 W=11 L=32 samples=4096 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=67
+[lms_W8_L16] TB_RESULT PASS vec=vectors/rtl/lms_W8_L16 ALGO=0 W=8 L=16 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=17 busy_cycles=34
+[nlms_W12_L8] TB_RESULT PASS vec=vectors/rtl/nlms_W12_L8 ALGO=1 W=12 L=8 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=11 busy_cycles=69
+[shift_W16_L32_k3] TB_RESULT PASS vec=vectors/rtl/shift_W16_L32_k3 ALGO=2 W=16 L=32 samples=2000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=67
+[lms_W11_sat_w] TB_RESULT PASS vec=vectors/rtl/lms_W11_sat_w ALGO=0 W=11 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=101100 lat=33 busy_cycles=66
+[nlms_W11_sat_g] TB_RESULT PASS vec=vectors/rtl/nlms_W11_sat_g ALGO=1 W=11 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=010000 lat=35 busy_cycles=119
+[nlms_W11_sat_in] TB_RESULT PASS vec=vectors/rtl/nlms_W11_sat_in ALGO=1 W=11 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=119
+[lms_W11_acc18] TB_RESULT PASS vec=vectors/rtl/lms_W11_acc18 ALGO=0 W=11 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000010 lat=33 busy_cycles=66
+[shift_W11_acc18] TB_RESULT PASS vec=vectors/rtl/shift_W11_acc18 ALGO=2 W=11 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000010 lat=35 busy_cycles=67
+[lms_W20_L32] TB_RESULT PASS vec=vectors/rtl/lms_W20_L32 ALGO=0 W=20 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=33 busy_cycles=66
+[nlms_W16_L32] TB_RESULT PASS vec=vectors/rtl/nlms_W16_L32 ALGO=1 W=16 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=131
+[shift_W11_sat_w] TB_RESULT PASS vec=vectors/rtl/shift_W11_sat_w ALGO=2 W=11 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=100000 lat=35 busy_cycles=67
+[nlms_W11_sat_wg] TB_RESULT PASS vec=vectors/rtl/nlms_W11_sat_wg ALGO=1 W=11 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=110000 lat=35 busy_cycles=120
+[nlms_W11_L5] TB_RESULT PASS vec=vectors/rtl/nlms_W11_L5 ALGO=1 W=11 L=5 samples=1000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=8 busy_cycles=61
+---- summary ----
+passed 19 of 19

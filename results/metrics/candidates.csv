@@ -1,0 +1,2 @@
+algo,W,mu,nr_fixed,nr_float,mean_deg,deg_plus1,ovf,structure
+lms,12,0.31593944275926183,17.013363247483078,17.095652372325972,0.08228912484289541,nan,0,"2L+1 mult, no divider"

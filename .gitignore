@@ -1,0 +1,47 @@
+# Git
+.git/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Quartus generated files
+db/
+incremental_db/
+output_files/
+*.qdb
+*.rpt
+*.summary
+*.jdi
+*.sof
+*.pof
+*.smsg
+*.done
+*.fit.smsg
+*.map.smsg
+*.sta.smsg
+
+# Questa / ModelSim generated files
+work/
+transcript
+vsim.wlf
+*.wlf
+*.vcd
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+.DS_Store
+Thumbs.db
+
+# Generated simulation/build directories
+build/
+
+# Temporary Quartus programming file
+*.jditmp
+
+# Generated Questa session state
+*.cr.mti
