@@ -177,10 +177,24 @@ A feedback scenario was incorporated into `py/signals.py` with an acoustic loop 
 ## 10. TASK 9: Regression Verification & Acceptance Sign-Off
 
 ### 10.1 Unified Regression Runner (`py/run_full_regression.py`)
-- Python unit tests (`pytest`): 18/18 PASSED.
-- Questa RTL hardware simulation regression: 55/55 PASSED.
+- Python unit tests (`unittest discover`): 23/23 PASSED.
+- Questa RTL hardware simulation regression: 57/57 PASSED.
 - Quartus hardware synthesis integrity check: PASSED.
 
 ### 10.2 Criteria Not Met or Unmeasured
 - **Physical Board Test on DE2-115:** Marked as **PENDING (manual)** to be conducted on bench hardware.
 - **Dynamic Silicon Power Measurement:** Marked **UNAVAILABLE** (Quartus Power Analyzer vectorless estimate requires full VCD/SAIF activity profile).
+
+---
+
+## 11. Algorithm Trade-offs & Empirical Comparison
+
+Based on the 20-seed Monte Carlo evaluation in `results/paper_numbers.csv` with each architecture evaluated at its fair-tuned operating point ($W=12, L=32$):
+
+- **Stationary Noise:** NLMS-Shift achieves a mean final NR of $22.37\text{ dB}$ ($95\%\text{ CI: } [22.11, 22.63]\text{ dB}$), which is statistically indistinguishable from fair-tuned LMS at $22.39\text{ dB}$ ($[22.12, 22.66]\text{ dB}$) and fair-tuned NLMS at $22.28\text{ dB}$ ($[22.01, 22.54]\text{ dB}$).
+- **Amplitude Steps:** NLMS-Shift achieves $24.33\text{ dB}$ ($[23.88, 24.78]\text{ dB}$), comparable to fair-tuned NLMS at $24.16\text{ dB}$ ($[23.58, 24.73]\text{ dB}$) and outperforming LMS at $22.36\text{ dB}$ ($[21.72, 23.00]\text{ dB}$) by $\sim 2.0\text{ dB}$. NLMS-Shift maintains a modest $+0.17\text{ dB}$ advantage over NLMS because power-of-two shift quantization provides an intrinsic floor during step transients, though the two algorithms overlap within their 95% confidence intervals.
+- **Acoustic Path Switch:** NLMS-Shift reaches $18.91\text{ dB}$ ($[18.76, 19.06]\text{ dB}$), closely matching LMS at $18.95\text{ dB}$ ($[18.81, 19.09]\text{ dB}$) and exceeding fair-tuned NLMS at $18.53\text{ dB}$ ($[18.39, 18.67]\text{ dB}$). However, NLMS-Shift does not dominate this scenario: prior to fair re-tuning, when LMS and NLMS were operated with larger step sizes ($\mu=0.5$ and $\mu=0.1468$), NLMS-Shift lagged both by approximately $1.6\text{ dB}$ ($18.99\text{ dB}$ vs $20.57\text{ dB}$ and $20.48\text{ dB}$), reflecting the bounded tracking agility imposed by fixed power-of-two quantization.
+- **Real WAV Audio:** NLMS-Shift delivers $5.46\text{ dB}$ ($[5.42, 5.50]\text{ dB}$), losing to both fair-tuned NLMS at $5.73\text{ dB}$ ($[5.69, 5.76]\text{ dB}$) and LMS at $5.69\text{ dB}$ ($[5.66, 5.73]\text{ dB}$) by $0.23$–$0.27\text{ dB}$. In all three algorithms, cancellation is fundamentally limited below $6\text{ dB}$ by the tonal nature and harmonic sparsity of the `acoustic_chord.wav` recording rather than filter arithmetic.
+- **Acoustic Feedback:** All three algorithms yield an identical $4.35\text{ dB}$ ($[4.31, 4.39]\text{ dB}$ for NLMS/LMS, $[4.32, 4.39]\text{ dB}$ for NLMS-Shift), bounded by the closed-loop singing margin ($D=8, g=0.88$). This scenario does not separate the algorithms.
+
+**Architectural Trade-off Summary:** NLMS-Shift is not uniformly superior across all metrics. While it eliminates the high cycle count and resource overhead of a multi-cycle restoring divider (achieving 72 busy cycles vs 127 cycles for NLMS, and $F_{\max} = 61.98\text{ MHz}$ vs $58.87\text{ MHz}$), it exhibits minor cancellation deficits on complex audio waveforms (losing $\sim 0.25\text{ dB}$ on WAV) and required specific regularisation tuning to avoid path-switch tracking penalties relative to full-precision dividers.
