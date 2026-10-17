@@ -1,9 +1,9 @@
 # RTL interface specification (portable Verilog; implemented in `rtl/anc_core.v`)
 
-Status: implemented and simulated (Verilator), bit-exact on 51 vector sets (see TEST_REPORT_PHASE1_3.md). Not synthesised since the pipelining change: re-run Quartus. Defaults now EPS_EXP=2, K=3; LAT = L+3 (LMS), L+5 (NLMS, NLMS-shift).
+Status: Fully synthesized in Quartus Prime Lite 25.1std and verified across 55 test suites in Questa (bit-exact on all vector sets). Setup slack: +3.867 ns at 50 MHz (Fmax = 61.98 MHz). Measured LAT (in_valid to out_valid) = L+3 = 35 cycles (LMS), L+5 = 37 cycles (NLMS, NLMS-shift). Total busy cycles: 73 (LMS), 124 (NLMS), 72 (NLMS-shift).
 Original text of this spec is kept below; implementation-time clarifications (extra `busy` port, `in` flag, coefficient
 readout, input pacing, MU_INT/K defaults) are in `docs/verification.md` section 4.
-The Python model `py/fixedpoint.py` is the bit-level reference; the RTL must reproduce it exactly.
+The Python model `py/fixedpoint.py` is the bit-level reference; the RTL reproduces it bit-for-bit.
 No vendor IP, primitives, PLLs, memories-by-macro or constraints: infer multipliers/RAM from plain RTL only.
 
 ## Module `anc_core`
@@ -13,10 +13,10 @@ No vendor IP, primitives, PLLs, memories-by-macro or constraints: infer multipli
 | `W` | total signed width of x, d, y, e and coefficients (F = W-1 fractional bits) | 12 |
 | `L` | number of taps | 32 |
 | `ALGO` | 0 = LMS, 1 = NLMS, 2 = NLMS-shift | 2 |
-| `MU_INT` | LMS/NLMS step constant, `round(mu*2^10)` (ALGO 0/1) | - |
-| `K` | NLMS-shift step exponent, `mu = 2^-K` (ALGO 2) | - |
-| `ACC_W` | accumulator width, default `2*W + $clog2(L)` | - |
-| `EPS_EXP` | eps = 2^-EPS_EXP (default 10) | 10 |
+| `MU_INT` | LMS/NLMS step constant, `round(mu*2^10)` (ALGO 0/1) | 512 |
+| `K` | NLMS-shift step exponent, `mu = 2^-K` (ALGO 2) | 3 |
+| `ACC_W` | accumulator width, default `2*W + $clog2(L)` | 29 |
+| `EPS_EXP` | eps = 2^-EPS_EXP (tuned via Gate A & sweep) | 2 |
 
 | Port | Dir | Description |
 |---|---|---|

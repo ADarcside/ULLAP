@@ -78,9 +78,10 @@ All figures are exported as both high-res PNG (300 DPI) and vector PDF:
 5. `fig5_noise_reduction_comparison`: Grouped bar chart comparing final and whole-run NR across scenarios.
 6. `fig6_bitwidth_sweep`: Cancellation performance, float degradation, and SQNR vs word-length $W$.
 7. `fig7_coef_trajectories`: Evolution of selected filter tap weights over time.
-8. `fig8_resource_utilization`: FPGA Logic Elements (LEs) and embedded 9-bit multipliers.
-9. `fig9_timing_comparison`: Maximum clock frequency ($F_{\max}$) and setup slack.
+8. `fig8_resource_utilization`: FPGA Logic Elements (LEs) and dedicated registers across LMS, NLMS, and NLMS-Shift.
+9. `fig9_timing_comparison`: Maximum clock frequency ($F_{\max}$) and setup slack (all architectures >= +3.0 ns PASS on Speed Grade 7).
 10. `fig10_performance_cost_tradeoff`: Cancellation quality (dB) vs FPGA resource cost.
+11. `fig11_latency_comparison`: Processing latency in clock cycles, processing time at 50 MHz, and share of 8 kHz audio budget (< 2%).
 
 ---
 
@@ -88,26 +89,34 @@ All figures are exported as both high-res PNG (300 DPI) and vector PDF:
 
 Recent simulation and extended verification runs (`results/research_summary.md`):
 
-### Tuned Step Sizes ($\mu$)
-- **LMS:** $\mu = 0.5009$
-- **NLMS:** $\mu = 0.0464$
-- **NLMS-Shift:** $\mu = 0.0625$ ($2^{-4}$, dividerless leading-one barrel shift)
+### Tuned Step Sizes & Regularisation
+- **LMS:** $\mu = 0.5009$ (Fixed step size)
+- **NLMS:** $\mu = 0.1468$ ($\epsilon = 0.25$, restoring divider)
+- **NLMS-Shift:** $K = 3$ ($\mu = 2^{-3} = 0.125$, $\text{EPS\_EXP} = 2$, dividerless leading-one barrel shift)
 
-### Performance Across Test Scenarios
+### Performance Across Test Scenarios (W=12, L=32)
 | Scenario | Algorithm | Final NR (dB) | Whole-Run NR (dB) | Settling Time (ms) | Tracking Time (ms) | Overflows |
 |---|---|---|---|---|---|---|
 | **Stationary Noise** | LMS | 20.3 ± 0.6 | 15.2 | 1784 | n/a | 0 |
-| **Stationary Noise** | NLMS | 20.7 ± 0.4 | 15.7 | 1791 | n/a | 0 |
-| **Stationary Noise** | NLMS-Shift | 20.8 ± 0.5 | 15.5 | 1791 | n/a | 0 |
+| **Stationary Noise** | NLMS | 21.3 ± 0.6 | 14.8 | 1786 | n/a | 0 |
+| **Stationary Noise** | NLMS-Shift | **22.2 ± 0.4** | 13.2 | 1784 | n/a | **0** |
+| **Amplitude Steps** | LMS | 18.9 ± 0.7 | 18.5 | 484 | 74 | 0 |
+| **Amplitude Steps** | NLMS | 18.7 ± 0.2 | 18.9 | 465 | 198 | 0 |
+| **Amplitude Steps** | NLMS-Shift | **24.2 ± 1.8** | 16.9 | 484 | 197 | **0** |
 | **Path Switch ($t = 1.0\text{ s}$)** | LMS | 20.6 ± 0.3 | 12.0 | 722 | 706 | 0 |
-| **Path Switch ($t = 1.0\text{ s}$)** | NLMS | 20.7 ± 0.2 | 11.8 | 698 | 690 | 0 |
-| **Path Switch ($t = 1.0\text{ s}$)** | NLMS-Shift | 20.6 ± 0.3 | 11.6 | 694 | 674 | 0 |
+| **Path Switch ($t = 1.0\text{ s}$)** | NLMS | 20.6 ± 0.3 | 11.3 | 708 | 678 | 0 |
+| **Path Switch ($t = 1.0\text{ s}$)** | NLMS-Shift | **19.0 ± 0.5** | 9.5 | 722 | 705 | **0** |
+| **Real Audio WAV** | NLMS-Shift | **5.5 ± 0.1** | 8.9 | 128 | n/a | **0** |
+| **Acoustic Feedback** | NLMS-Shift | **4.3 ± 0.1** | 4.0 | 0 | n/a | **0** |
 
-### Selected Cyclone IV E Hardware Candidate
-- **Selected Word-Length:** $W = 11$ bits ($F = 10$ fractional bits), Accumulator Width $\text{ACC\_W} = 27$ bits.
-- **Fixed-Point NR:** $16.1\text{ dB}$ (Degradation vs. Float: $+0.46\text{ dB}$, **0 overflows**).
-- **Arithmetic Architecture:** $2L+1$ multipliers, zero hardware dividers.
-- **Extended Verification:** 9/9 verification tests passed in [`results/metrics/verification_summary.json`](file:///c:/Users/Lenovo/OneDrive/Desktop/esa_proj/ULLAP/results/metrics/verification_summary.json).
+### Selected Cyclone IV E Hardware Synthesis (W=12, Speed Grade 7)
+- **LMS (W=12):** 1,885 LEs (1.65%), 1,148 registers, 4 DSP mults, $F_{\max} = 59.90\text{ MHz}$, Setup Slack = **+3.305 ns (PASS)**.
+- **NLMS (W=12):** 2,697 LEs (2.36%), 1,425 registers, 4 DSP mults, $F_{\max} = 61.72\text{ MHz}$, Setup Slack = **+3.798 ns (PASS)**.
+- **NLMS-Shift (W=12):** 2,690 LEs (2.35%), 1,213 registers, 4 DSP mults, $F_{\max} = \mathbf{61.98\text{ MHz}}$, Setup Slack = $\mathbf{+3.867\text{ ns}}$ **(PASS)**.
+- **Timing Closure (Gate B):** Full timing closure across all corners (Slow 85°C, Slow 0°C, Fast 0°C) with 0 unconstrained paths.
+- **Latency & Audio Budget:** Output latency $LAT = 37$ cycles ($740\text{ ns}$ @ 50 MHz), 72 busy cycles per sample (**$1.15\%$ of 8 kHz audio budget**).
+- **Verification Suite:** 18/18 Python unit tests PASSED, 55/55 Questa RTL simulation regression tests PASSED, top wrapper verified. Physical board test is marked **PENDING (manual)**.
+
 
 ---
 

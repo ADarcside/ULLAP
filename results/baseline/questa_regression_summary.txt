@@ -1,0 +1,66 @@
+Questa Verification Regression Summary (2026-10-17 14:59:44)
+================================================================================
+Total Tests : 55
+Passed      : 55
+Failed      : 0
+Simulator   : Questa Altera Starter FPGA Edition-64 2025.2
+================================================================================
+
+MANIFEST TESTS:
+shipped_lms_W11_stationary          | PASS | # TB_RESULT PASS vec=vectors/lms_W11_stationary ALGO=0 W=11 L=32 samples=4096 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=73
+shipped_lms_W11_path_switch         | PASS | # TB_RESULT PASS vec=vectors/lms_W11_path_switch ALGO=0 W=11 L=32 samples=4096 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=73
+shipped_nlms_W11_stationary         | PASS | # TB_RESULT PASS vec=vectors/nlms_W11_stationary ALGO=1 W=11 L=32 samples=4096 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=124
+shipped_nlms_W11_path_switch        | PASS | # TB_RESULT PASS vec=vectors/nlms_W11_path_switch ALGO=1 W=11 L=32 samples=4096 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=124
+shipped_nlms_shift_W11_stationary   | PASS | # TB_RESULT PASS vec=vectors/nlms_shift_W11_stationary ALGO=2 W=11 L=32 samples=4096 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shipped_nlms_shift_W11_path_switch  | PASS | # TB_RESULT PASS vec=vectors/nlms_shift_W11_path_switch ALGO=2 W=11 L=32 samples=4096 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+lms_W8_L16                          | PASS | # TB_RESULT PASS vec=vectors/rtl/lms_W8_L16 ALGO=0 W=8 L=16 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=19 busy_cycles=41
+nlms_W12_L8                         | PASS | # TB_RESULT PASS vec=vectors/rtl/nlms_W12_L8 ALGO=1 W=12 L=8 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=13 busy_cycles=77
+shift_W16_L32_k3                    | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_W16_L32_k3 ALGO=2 W=16 L=32 samples=2000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+lms_W11_sat_w                       | PASS | # TB_RESULT PASS vec=vectors/rtl/lms_W11_sat_w ALGO=0 W=11 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=101100 lat=35 busy_cycles=73
+nlms_W11_sat_g                      | PASS | # TB_RESULT PASS vec=vectors/rtl/nlms_W11_sat_g ALGO=1 W=11 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=010000 lat=37 busy_cycles=127
+nlms_W11_sat_in                     | PASS | # TB_RESULT PASS vec=vectors/rtl/nlms_W11_sat_in ALGO=1 W=11 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=127
+lms_W11_acc18                       | PASS | # TB_RESULT PASS vec=vectors/rtl/lms_W11_acc18 ALGO=0 W=11 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000010 lat=35 busy_cycles=73
+shift_W11_acc18                     | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_W11_acc18 ALGO=2 W=11 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000010 lat=37 busy_cycles=72
+lms_W20_L32                         | PASS | # TB_RESULT PASS vec=vectors/rtl/lms_W20_L32 ALGO=0 W=20 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=73
+nlms_W16_L32                        | PASS | # TB_RESULT PASS vec=vectors/rtl/nlms_W16_L32 ALGO=1 W=16 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=139
+shift_W11_sat_w                     | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_W11_sat_w ALGO=2 W=11 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=100000 lat=37 busy_cycles=72
+nlms_W11_sat_wg                     | PASS | # TB_RESULT PASS vec=vectors/rtl/nlms_W11_sat_wg ALGO=1 W=11 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=110000 lat=37 busy_cycles=128
+nlms_W11_L5                         | PASS | # TB_RESULT PASS vec=vectors/rtl/nlms_W11_L5 ALGO=1 W=11 L=5 samples=1000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=10 busy_cycles=69
+lms_W11_L2                          | PASS | # TB_RESULT PASS vec=vectors/rtl/lms_W11_L2 ALGO=0 W=11 L=2 samples=1000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=5 busy_cycles=13
+nlms_W11_L2                         | PASS | # TB_RESULT PASS vec=vectors/rtl/nlms_W11_L2 ALGO=1 W=11 L=2 samples=1000 y_bad=0 e_bad=0 w_bad=0 flags=100000 lat=7 busy_cycles=61
+shift_W11_L2                        | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_W11_L2 ALGO=2 W=11 L=2 samples=1000 y_bad=0 e_bad=0 w_bad=0 flags=100000 lat=7 busy_cycles=12
+shift_W11_k0                        | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_W11_k0 ALGO=2 W=11 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_W8_k3                         | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_W8_k3 ALGO=2 W=8 L=16 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=21 busy_cycles=40
+lms_W28_L32                         | PASS | # TB_RESULT PASS vec=vectors/rtl/lms_W28_L32 ALGO=0 W=28 L=32 samples=1000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=73
+shift_W28_L32                       | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_W28_L32 ALGO=2 W=28 L=32 samples=1000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+lms_W30_L2                          | PASS | # TB_RESULT PASS vec=vectors/rtl/lms_W30_L2 ALGO=0 W=30 L=2 samples=1000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=5 busy_cycles=13
+lms_W31_L2                          | PASS | # TB_RESULT PASS vec=vectors/rtl/lms_W31_L2 ALGO=0 W=31 L=2 samples=1000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=5 busy_cycles=13
+lms_W11_acc62                       | PASS | # TB_RESULT PASS vec=vectors/rtl/lms_W11_acc62 ALGO=0 W=11 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=73
+lms_W11_acc11                       | PASS | # TB_RESULT PASS vec=vectors/rtl/lms_W11_acc11 ALGO=0 W=11 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=100010 lat=35 busy_cycles=73
+shift_W31_L32_rail                  | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_W31_L32_rail ALGO=2 W=31 L=32 samples=1000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e2_k3_W10_stationary          | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e2_k3_W10_stationary ALGO=2 W=10 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e2_k3_W10_amp_steps           | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e2_k3_W10_amp_steps ALGO=2 W=10 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e2_k3_W10_path_switch         | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e2_k3_W10_path_switch ALGO=2 W=10 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e2_k3_W12_stationary          | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e2_k3_W12_stationary ALGO=2 W=12 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e2_k3_W12_amp_steps           | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e2_k3_W12_amp_steps ALGO=2 W=12 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e2_k3_W12_path_switch         | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e2_k3_W12_path_switch ALGO=2 W=12 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e2_k3_W14_stationary          | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e2_k3_W14_stationary ALGO=2 W=14 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e2_k3_W14_amp_steps           | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e2_k3_W14_amp_steps ALGO=2 W=14 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e2_k3_W14_path_switch         | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e2_k3_W14_path_switch ALGO=2 W=14 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e4_k3_W10_stationary          | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e4_k3_W10_stationary ALGO=2 W=10 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e4_k3_W10_amp_steps           | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e4_k3_W10_amp_steps ALGO=2 W=10 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e4_k3_W10_path_switch         | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e4_k3_W10_path_switch ALGO=2 W=10 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e4_k3_W12_stationary          | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e4_k3_W12_stationary ALGO=2 W=12 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e4_k3_W12_amp_steps           | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e4_k3_W12_amp_steps ALGO=2 W=12 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e4_k3_W12_path_switch         | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e4_k3_W12_path_switch ALGO=2 W=12 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e4_k3_W14_stationary          | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e4_k3_W14_stationary ALGO=2 W=14 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e4_k3_W14_amp_steps           | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e4_k3_W14_amp_steps ALGO=2 W=14 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e4_k3_W14_path_switch         | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e4_k3_W14_path_switch ALGO=2 W=14 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e2_k3_W12_quiet               | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e2_k3_W12_quiet ALGO=2 W=12 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_e2_k3_W12_lowlevel            | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_e2_k3_W12_lowlevel ALGO=2 W=12 L=32 samples=1500 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+
+PROTOCOL TESTS:
+proto_algo0_L8                      | PASS | # TB_PROTO PASS ALGO=0 W=11 L=8
+proto_algo1_L8                      | PASS | # TB_PROTO PASS ALGO=1 W=11 L=8
+proto_algo2_L8                      | PASS | # TB_PROTO PASS ALGO=2 W=11 L=8
+proto_algo2_L2                      | PASS | # TB_PROTO PASS ALGO=2 W=11 L=2
