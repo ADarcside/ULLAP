@@ -7,7 +7,10 @@
 create_clock -name CLOCK_50 -period 20.000 [get_ports CLOCK_50]
 
 # Audio Codec Bit Clock (WM8731 Master Mode: ~3.072 MHz for 48 kHz stereo 32-bit slot)
-set_false_path -from [get_ports {AUD_BCLK}]
+create_clock -name AUD_BCLK -period 325.520 [get_ports {AUD_BCLK}]
+
+# Clock Domain Crossing: 50 MHz master clock and Audio BCLK are asynchronous
+set_clock_groups -asynchronous -group [get_clocks {CLOCK_50}] -group [get_clocks {AUD_BCLK}]
 
 # Automatically derive PLL and clock uncertainties
 derive_clock_uncertainty
@@ -19,9 +22,11 @@ set_false_path -from [get_ports {AUD_ADCLRCK}]
 set_false_path -from [get_ports {AUD_DACLRCK}]
 set_false_path -from [get_ports {AUD_ADCDAT}]
 
-# Cut timing paths for status outputs and I2C low-speed lines
+# Cut timing paths for status outputs, audio DAC serial line, and I2C low-speed lines
 set_false_path -to [get_ports {LEDR[*]}]
 set_false_path -to [get_ports {I2C_SCLK}]
 set_false_path -to [get_ports {I2C_SDAT}]
 set_false_path -from [get_ports {I2C_SDAT}]
 set_false_path -to [get_ports {AUD_XCK}]
+set_false_path -to [get_ports {AUD_DACDAT}]
+
