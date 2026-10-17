@@ -25,6 +25,28 @@ set_global_assignment -name SDC_FILE de2_115.sdc
 # Source Official DE2-115 Pin Assignments
 source de2_115_pins.tcl
 
+# Optional Command-Line Top-Level Parameter Overrides
+if {$argc >= 1} {
+    set algo [lindex $argv 0]
+    set_parameter -name ALGO $algo
+}
+if {$argc >= 2} {
+    set w_val [lindex $argv 1]
+    set_parameter -name W $w_val
+}
+if {$argc >= 3} {
+    set k_val [lindex $argv 2]
+    set_parameter -name K $k_val
+}
+if {$argc >= 4} {
+    set eps_val [lindex $argv 3]
+    set_parameter -name EPS_EXP $eps_val
+}
+if {$argc >= 5} {
+    set mu_val [lindex $argv 4]
+    set_parameter -name MU_INT $mu_val
+}
+
 # Compilation Flow
 puts "================================================================="
 puts "Starting Quartus Prime Lite Synthesis (Analysis & Synthesis)..."

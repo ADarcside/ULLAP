@@ -12,7 +12,8 @@ module anc_de2_115_top #(
     parameter integer L     = 32,    // 32-tap adaptive filter
     parameter integer ALGO  = 2,     // 0: LMS, 1: NLMS, 2: NLMS-shift (Hardware Recommended)
     parameter integer K     = 3,     // Step size mu = 2^-3 = 0.125 (tuned with EPS_EXP)
-    parameter integer EPS_EXP = 2   // Regulariser eps = 2^-2 (Phase-1 sweep)
+    parameter integer EPS_EXP = 2,   // Regulariser eps = 2^-2 (Phase-1 sweep)
+    parameter integer MU_INT = 512   // Step size for LMS/NLMS: round(mu * 1024)
 ) (
     input  wire        CLOCK_50,     // 50 MHz master oscillator (PIN_Y2)
     input  wire [3:0]  KEY,          // Pushbuttons (Active low): KEY[0] = Reset
@@ -137,6 +138,7 @@ module anc_de2_115_top #(
         .W       (W),
         .L       (L),
         .ALGO    (ALGO),
+        .MU_INT  (MU_INT),
         .K       (K),
         .EPS_EXP (EPS_EXP)
     ) u_anc_core (
