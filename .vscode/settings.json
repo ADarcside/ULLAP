@@ -1,11 +1,14 @@
 {
+  "python.defaultInterpreterPath": "C:/Users/Lenovo/scoop/apps/python/current/python.exe",
   "python.analysis.extraPaths": [
-    "./py",
-    "./scratch"
+    "${workspaceFolder}/py",
+    "${workspaceFolder}/scratch",
+    "${workspaceFolder}"
   ],
   "python.autoComplete.extraPaths": [
-    "./py",
-    "./scratch"
+    "${workspaceFolder}/py",
+    "${workspaceFolder}/scratch",
+    "${workspaceFolder}"
   ],
   "python.envFile": "${workspaceFolder}/.env"
 }

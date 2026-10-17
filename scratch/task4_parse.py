@@ -1,36 +1,50 @@
-import os, re
+import os
+import re
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 dirs = [
-    ('LMS (ALGO=0, W=12)', r'c:\Users\Lenovo\OneDrive\Desktop\esa_proj\ULLAP\scratch\lms_w12'),
-    ('NLMS (ALGO=1, W=12)', r'c:\Users\Lenovo\OneDrive\Desktop\esa_proj\ULLAP\scratch\nlms_w12'),
-    ('NLMS-Shift (ALGO=2, W=12)', r'c:\Users\Lenovo\OneDrive\Desktop\esa_proj\ULLAP\scratch\shift_w12')
+    ('LMS (ALGO=0, W=12)', os.path.join(ROOT, 'scratch', 'lms_w12')),
+    ('NLMS (ALGO=1, W=12)', os.path.join(ROOT, 'scratch', 'nlms_w12')),
+    ('NLMS-Shift (ALGO=2, W=12)', os.path.join(ROOT, 'scratch', 'shift_w12'))
 ]
 
 records = []
 
 for label, d in dirs:
-    with open(os.path.join(d, 'anc_de2_115.fit.summary')) as f:
-        fit = f.read()
-    with open(os.path.join(d, 'anc_de2_115.fit.rpt')) as f:
-        fit_rpt = f.read()
-    with open(os.path.join(d, 'anc_de2_115.sta.rpt')) as f:
-        sta = f.read()
-        
+    fit_path = os.path.join(d, 'anc_de2_115.fit.summary')
+    fit_rpt_path = os.path.join(d, 'anc_de2_115.fit.rpt')
+    sta_path = os.path.join(d, 'anc_de2_115.sta.rpt')
+
+    fit = ""
+    fit_rpt = ""
+    sta = ""
+
+    if os.path.exists(fit_path):
+        with open(fit_path, 'r', encoding='utf-8', errors='replace') as f:
+            fit = f.read()
+    if os.path.exists(fit_rpt_path):
+        with open(fit_rpt_path, 'r', encoding='utf-8', errors='replace') as f:
+            fit_rpt = f.read()
+    if os.path.exists(sta_path):
+        with open(sta_path, 'r', encoding='utf-8', errors='replace') as f:
+            sta = f.read()
+
     les_m = re.search(r'Total logic elements\s*:\s*([0-9,]+)\s*/\s*([0-9,]+)\s*\(\s*([0-9]+)\s*%\s*\)', fit)
-    les = les_m.group(1).replace(',', '')
-    le_pct = les_m.group(3)
-    
+    les = les_m.group(1).replace(',', '') if les_m else '0'
+    le_pct = les_m.group(3) if les_m else '0'
+
     regs_m = re.search(r'Total registers\s*:\s*([0-9,]+)', fit)
-    regs = regs_m.group(1).replace(',', '')
-    
+    regs = regs_m.group(1).replace(',', '') if regs_m else '0'
+
     # 9-bit mults from fit.rpt
     mult_m = re.search(r'Embedded Multiplier 9-bit elements\s*;\s*([0-9]+)\s*/', fit_rpt)
     mults = mult_m.group(1) if mult_m else '4'
-    
+
     # Fmax
     fmax_m = re.search(r';\s*([0-9\.]+)\s*MHz\s*;\s*([0-9\.]+)\s*MHz\s*;\s*CLOCK_50\s*;', sta)
     fmax = float(fmax_m.group(1)) if fmax_m else 0.0
-    
+
     s_85_setup = re.search(r'; Slow 1200mV 85C Model Setup Summary\s*;.*?; ([-0-9\.]+) ;', sta, re.DOTALL)
     s_85_hold = re.search(r'; Slow 1200mV 85C Model Hold Summary\s*;.*?; ([-0-9\.]+) ;', sta, re.DOTALL)
     s_0_setup = re.search(r'; Slow 1200mV 0C Model Setup Summary\s*;.*?; ([-0-9\.]+) ;', sta, re.DOTALL)

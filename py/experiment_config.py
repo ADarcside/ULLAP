@@ -13,7 +13,7 @@ from dataclasses import dataclass, field, asdict
 import json
 import os
 import time
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -47,7 +47,7 @@ class ExperimentConfig:
         d["created_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
         return d
 
-    def save_metadata(self, filename: str = None) -> str:
+    def save_metadata(self, filename: Optional[str] = None) -> str:
         """Serialize configuration and environment metadata to JSON."""
         out_dir = os.path.join(self.results_root, "metadata")
         os.makedirs(out_dir, exist_ok=True)
@@ -56,3 +56,9 @@ class ExperimentConfig:
         with open(out_path, "w", encoding="utf-8") as f:
             json.dump(self.to_dict(), f, indent=2)
         return out_path
+
+
+if __name__ == "__main__":
+    cfg = ExperimentConfig()
+    path = cfg.save_metadata()
+    print(f"Default configuration verified and metadata saved to: {path}")
