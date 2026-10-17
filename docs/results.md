@@ -82,17 +82,23 @@ Eval seeds [1, 2, 3]; tuning seed 100.
 | lms | 11 | 18 | 7.4 | 10935 | 16839 |
 
 ## 6. Generated Publication Figures
-- `results/plots/fig1_convergence.{png,pdf}`: Convergence curves across scenarios
-- `results/plots/fig2_waveforms.{png,pdf}`: Time-domain audio waveforms
-- `results/plots/fig3_residual_error.{png,pdf}`: Residual error power over time
-- `results/plots/fig4_tracking_response.{png,pdf}`: Dynamic tracking during disturbance
-- `results/plots/fig5_noise_reduction_comparison.{png,pdf}`: Quantitative NR across all scenarios
-- `results/plots/fig6_bitwidth_sweep.{png,pdf}`: Cancellation quality & SQNR vs word length
-- `results/plots/fig7_coef_trajectories.{png,pdf}`: Evolution of filter tap weights
-- `results/plots/fig8_resource_utilization.{png,pdf}`: Cyclone IV E LEs & Multipliers
-- `results/plots/fig9_timing_comparison.{png,pdf}`: Fmax & Timing Slack
-- `results/plots/fig10_performance_cost_tradeoff.{png,pdf}`: Quality vs FPGA Resource Trade-off
-- `results/plots/fig11_latency_comparison.{png,pdf}`: Processing latency & timing budget comparison
+
+All publication figures (Figures 1–11) have been regenerated directly from committed code using the fair-tuned hardware parameters ($W=12, L=32$):
+- **LMS:** $\mu = 0.25$
+- **NLMS:** $\mu = 0.25, \text{EPS\_EXP} = 0$
+- **NLMS-Shift:** $K = 3 (\mu = 0.125), \text{EPS\_EXP} = 2$
+
+- `results/plots/fig1_convergence.{png,pdf}`: Convergence curves across all 5 scenarios (LMS $\mu=0.25$, NLMS $\mu=0.25, \text{eps}=0$, NLMS-Shift $K=3, \text{eps}=2$, $W=12, L=32$, Seed 1)
+- `results/plots/fig2_waveforms.{png,pdf}`: Time-domain audio waveforms (Primary $d[n]$, Reference $x[n]$, Clean $s[n]$, and Filter Residuals $e[n]$ for stationary scenario)
+- `results/plots/fig3_residual_error.{png,pdf}`: Residual error power $10\log_{10}(e^2[n])$ over time vs input noise power baseline (stationary scenario)
+- `results/plots/fig4_tracking_response.{png,pdf}`: Dynamic tracking during amplitude step disturbance ($0.7\text{ s}$ burst and $1.2\text{ s}$ decay) with coefficient misalignment norm
+- `results/plots/fig5_noise_reduction_comparison.{png,pdf}`: Final and whole-run noise reduction comparison bar chart across all 5 scenarios
+- `results/plots/fig6_bitwidth_sweep.{png,pdf}`: Word-length precision sweep ($W = 8$ to $24$ bits) showing final NR, degradation vs $W=24$ reference, and SQNR
+- `results/plots/fig7_coef_trajectories.{png,pdf}`: Adaptive filter weight trajectories over time for representative taps ($w_0, w_1, w_4, w_8, w_{15}$)
+- `results/plots/fig8_resource_utilization.{png,pdf}`: Cyclone IV E EP4CE115 Logic Elements (1,885 / 2,697 / 2,690) and Dedicated Registers (1,148 / 1,425 / 1,213) from Quartus synthesis
+- `results/plots/fig9_timing_comparison.{png,pdf}`: Fmax ($59.90 / 61.72 / 61.98\text{ MHz}$) and Setup Slack ($+3.305 / +3.798 / +3.867\text{ ns}$) across Slow 85°C corner
+- `results/plots/fig10_performance_cost_tradeoff.{png,pdf}`: Performance-cost trade-off (Noise reduction vs Logic Elements) across scenarios
+- `results/plots/fig11_latency_comparison.{png,pdf}`: Busy cycles per sample ($73 / 127 / 72$ cycles) and processing budget headroom at $48\text{ kHz}$
 
 ## 7. Hardware & Quartus Status
 - **Target Device:** Intel/Altera Cyclone IV E `EP4CE115F29C7` (Terasic DE2-115 board, Speed Grade 7)
@@ -138,15 +144,34 @@ Based on the 20-seed Monte Carlo evaluation in `results/paper_numbers.csv` with 
 - **Stationary Noise:** NLMS-Shift achieves a mean final NR of $22.37\text{ dB}$ ($95\%\text{ CI: } [22.11, 22.63]\text{ dB}$), which ties fair-tuned LMS at $22.39\text{ dB}$ ($[22.12, 22.66]\text{ dB}$) and fair-tuned NLMS at $22.28\text{ dB}$ ($[22.01, 22.54]\text{ dB}$) within overlapping confidence intervals.
 - **Amplitude Steps:** NLMS-Shift achieves $24.33\text{ dB}$ ($[23.88, 24.78]\text{ dB}$), tying fair-tuned NLMS at $24.16\text{ dB}$ ($[23.58, 24.73]\text{ dB}$) as their 95% confidence intervals overlap, while both outperform LMS at $22.36\text{ dB}$ ($[21.72, 23.00]\text{ dB}$) by $\sim 2.0\text{ dB}$.
 - **Acoustic Path Switch:** NLMS-Shift reaches $18.91\text{ dB}$ ($[18.76, 19.06]\text{ dB}$), tying fair-tuned LMS at $18.95\text{ dB}$ ($[18.81, 19.09]\text{ dB}$) and fair-tuned NLMS at $18.53\text{ dB}$ ($[18.39, 18.67]\text{ dB}$) within overlapping confidence intervals.
-- **Real WAV Audio:** NLMS-Shift delivers $5.46\text{ dB}$ ($[5.42, 5.50]\text{ dB}$), losing to both fair-tuned NLMS at $5.73\text{ dB}$ ($[5.69, 5.76]\text{ dB}$) and LMS at $5.69\text{ dB}$ ($[5.66, 5.73]\text{ dB}$) by $0.23$–$0.27\text{ dB}$. Across all evaluated hyperparameter configurations in the tuning grids, no setting in any algorithm reached the $10\text{ dB}$ target on `acoustic_chord.wav`. Rather than an absolute algorithmic limitation, the lower cancellation on the tonal WAV benchmark represents an operating-point trade-off: tuning parameters can be selected to maximize WAV performance (reaching 8.58–8.72 dB), but doing so imposes a significant penalty on synthetic tracking performance, degrading stationary noise cancellation by ~4.5 dB (from ~22.3 dB down to ~17.5–17.9 dB) and path-switch cancellation by ~4.4 dB (from ~18.9 dB down to ~14.3–14.6 dB). At the balanced fair-tuned settings optimized for robust all-around performance, all three algorithms yield 5.46–5.73 dB on WAV audio.
+- **Real WAV Audio:** NLMS-Shift delivers $5.46\text{ dB}$ ($[5.42, 5.50]\text{ dB}$), losing to both fair-tuned NLMS at $5.73\text{ dB}$ ($[5.69, 5.76]\text{ dB}$) and LMS at $5.69\text{ dB}$ ($[5.66, 5.73]\text{ dB}$) by $0.23$–$0.27\text{ dB}$. Across all evaluated hyperparameter configurations in the tuning grids, no setting in any algorithm reached the $10\text{ dB}$ target on `acoustic_chord.wav`. Rather than an absolute algorithmic limitation, the lower cancellation on the tonal WAV benchmark represents an operating-point trade-off: tuning parameters can be selected to maximize WAV performance (reaching 8.58–8.72 dB), but doing so imposes a significant penalty on synthetic tracking performance, degrading stationary noise cancellation by ~4.1 to 4.3 dB and path-switch cancellation by ~4.0 to 4.2 dB. At the balanced fair-tuned settings optimized for robust all-around performance, all three algorithms yield 5.46–5.73 dB on WAV audio.
 
-### Operating-Point Trade-off: Best WAV Settings vs Synthetic Performance
+### Operating-Point Trade-off: Best WAV Settings (Selected on Tuning Seeds 101–103)
 
-| Algorithm | WAV-Best Setting | WAV Final NR | Stationary Final NR | Amp Steps Final NR | Path Switch Final NR | Trade-off / Cost vs Balanced Setting |
+| Algorithm | WAV-Best Setting | WAV Final NR | Stationary Final NR | Amp Steps Final NR | Path Switch Final NR | Trade-off / Cost vs Balanced (Seeds 101–103) |
 |---|---|:---:|:---:|:---:|:---:|---|
 | **LMS** | $\mu = 0.125$ | **8.72 dB** | 17.86 dB | 23.42 dB | 14.58 dB | Stationary $-4.53\text{ dB}$, Path Switch $-4.37\text{ dB}$ |
 | **NLMS** | $\text{EPS\_EXP}=-2, \mu=0.50$ | **8.58 dB** | 17.50 dB | 24.02 dB | 14.33 dB | Stationary $-4.78\text{ dB}$, Path Switch $-4.20\text{ dB}$ |
 | **NLMS-Shift** | $\text{EPS\_EXP}=0, K=2$ | **8.70 dB** | 17.86 dB | 23.87 dB | 14.58 dB | Stationary $-4.51\text{ dB}$, Path Switch $-4.33\text{ dB}$ |
+
+### Evaluation of WAV-Best Settings Across Evaluation Seeds 1–20 (Mean, 95% CI, and Penalty vs. Balanced Setting on Same Seeds)
+
+*Source: `scratch/eval_wav_best_seeds1_20.py` evaluated across seeds 1–20 ($W=12, L=32, N=16{,}000$); baseline values from `results/paper_numbers.csv`:*
+
+| Algorithm | Setting | Scenario | Mean Final NR (dB) | 95% Confidence Interval | Balanced Baseline NR (dB) | Penalty / Delta vs Balanced |
+|---|---|---|:---:|:---:|:---:|:---:|
+| **LMS** | $\mu = 0.125$ | **WAV Audio** | **8.69 dB** | $[8.64, 8.73]\text{ dB}$ | $5.69\text{ dB}$ | $+3.00\text{ dB}$ (WAV Gain) |
+| | | Stationary | 18.29 dB | $[18.19, 18.40]\text{ dB}$ | $22.39\text{ dB}$ | **$-4.10\text{ dB}$** (Penalty) |
+| | | Path Switch | 14.78 dB | $[14.68, 14.87]\text{ dB}$ | $18.95\text{ dB}$ | **$-4.17\text{ dB}$** (Penalty) |
+| | | Amp Steps | 23.86 dB | $[23.22, 24.49]\text{ dB}$ | $22.36\text{ dB}$ | $+1.50\text{ dB}$ |
+| **NLMS** | $\text{EPS\_EXP}=-2, \mu=0.50$ | **WAV Audio** | **8.55 dB** | $[8.51, 8.60]\text{ dB}$ | $5.73\text{ dB}$ | $+2.82\text{ dB}$ (WAV Gain) |
+| | | Stationary | 18.03 dB | $[17.93, 18.14]\text{ dB}$ | $22.28\text{ dB}$ | **$-4.25\text{ dB}$** (Penalty) |
+| | | Path Switch | 14.54 dB | $[14.44, 14.64]\text{ dB}$ | $18.53\text{ dB}$ | **$-3.99\text{ dB}$** (Penalty) |
+| | | Amp Steps | 24.25 dB | $[23.67, 24.82]\text{ dB}$ | $24.16\text{ dB}$ | $+0.09\text{ dB}$ |
+| **NLMS-Shift** | $\text{EPS\_EXP}=0, K=2$ | **WAV Audio** | **8.67 dB** | $[8.62, 8.71]\text{ dB}$ | $5.46\text{ dB}$ | $+3.21\text{ dB}$ (WAV Gain) |
+| | | Stationary | 18.29 dB | $[18.19, 18.40]\text{ dB}$ | $22.37\text{ dB}$ | **$-4.08\text{ dB}$** (Penalty) |
+| | | Path Switch | 14.78 dB | $[14.68, 14.87]\text{ dB}$ | $18.91\text{ dB}$ | **$-4.13\text{ dB}$** (Penalty) |
+| | | Amp Steps | 24.49 dB | $[23.93, 25.05]\text{ dB}$ | $24.33\text{ dB}$ | $+0.16\text{ dB}$ |
 
 - **Acoustic Feedback:** All three algorithms tie at $4.35\text{ dB}$ ($[4.31, 4.39]\text{ dB}$ for NLMS/LMS, $[4.32, 4.39]\text{ dB}$ for NLMS-Shift), bounded by the closed-loop singing margin ($D=8, g=0.88$). This scenario does not separate the algorithms.
 
@@ -154,25 +179,28 @@ Based on the 20-seed Monte Carlo evaluation in `results/paper_numbers.csv` with 
 
 ## 10. Dynamic Range & Level-Sweep Evaluation (0.25x to 4x)
 
-To evaluate robustness against analog signal scaling, all three architectures were evaluated across input scalings from 0.25x to 4x relative to nominal level (seeds 1–3, evaluated across stationary, amp_steps, path_switch, wav):
+*Source: Direct unedited execution of `py/exp_level_robustness.py` (W=12, L=32, seeds 1–3, evaluated across stationary, amp_steps, path_switch, wav, total 192,000 samples per test point). Pass criterion as coded: `ovf_rate = total_ovf / total_samples < 1e-3` (reported NR is whole-run power-averaged `nr_avg` / `nr_all`):*
 
-| Input Scale | Algorithm | Final Mean NR (dB) | Whole-Run NR (dB) | Overflows (Total) | Status / Criterion |
-|---|---|:---:|:---:|:---:|---|
-| **0.25x** | LMS | 4.52 dB | 3.60 dB | 7,589 | FAIL (NR < 10 dB, ovf > 0; identical to NLMS-Shift) |
-| **0.25x** | NLMS | 4.50 dB | 3.56 dB | 7,267 | FAIL (NR < 10 dB, ovf > 0) |
-| **0.25x** | NLMS-Shift | 4.52 dB | 3.60 dB | 7,589 | FAIL (NR < 10 dB, ovf > 0; identical to LMS) |
-| **0.50x** | LMS | 10.69 dB | 7.44 dB | 6,393 | FAIL (Overflow criterion violated) |
-| **0.50x** | NLMS | 10.63 dB | 7.37 dB | 5,779 | FAIL (Overflow criterion violated) |
-| **0.50x** | NLMS-Shift | 10.69 dB | 7.44 dB | 6,393 | FAIL (Overflow criterion violated) |
-| **1.00x** | LMS | 17.34 dB | 12.87 dB | 0 | **PASS** (Zero overflows, NR $\ge 10\text{ dB}$) |
-| **1.00x** | NLMS | 17.67 dB | 12.35 dB | 0 | **PASS** (Zero overflows, NR $\ge 10\text{ dB}$) |
-| **1.00x** | NLMS-Shift | 17.77 dB | 12.58 dB | 0 | **PASS** (Zero overflows, NR $\ge 10\text{ dB}$) |
-| **2.00x** | LMS | 17.02 dB | 12.80 dB | 0 | **PASS** (Zero overflows, NR $\ge 10\text{ dB}$) |
-| **2.00x** | NLMS | 17.65 dB | 12.33 dB | 0 | **PASS** (Zero overflows, NR $\ge 10\text{ dB}$) |
-| **2.00x** | NLMS-Shift | 17.70 dB | 12.55 dB | 0 | **PASS** (Zero overflows, NR $\ge 10\text{ dB}$) |
-| **4.00x** | LMS | 6.00 dB | 4.90 dB | 8,192 | FAIL (NR < 10 dB, input clipping sat_in) |
-| **4.00x** | NLMS | 12.10 dB | 9.00 dB | 8,192 | FAIL (Input clipping sat_in) |
-| **4.00x** | NLMS-Shift | 12.60 dB | 9.40 dB | 8,192 | FAIL (Input clipping sat_in) |
+| Scale | Algorithm | NR avg (dB) | Total Ovf | Total Samples | Ovf Rate | Pass (< 1e-3)? |
+|:---:|---|:---:|:---:|:---:|:---:|:---:|
+| **0.25x** | LMS ($\mu=0.25$) | 3.60 | 7,589 | 192,000 | 3.95e-02 | FAIL |
+| **0.25x** | NLMS ($\mu=0.25, \text{eps}=0$) | 3.57 | 7,267 | 192,000 | 3.78e-02 | FAIL |
+| **0.25x** | NLMS-Shift ($K=3, \text{eps}=2$) | 3.60 | 7,589 | 192,000 | 3.95e-02 | FAIL |
+| **0.50x** | LMS ($\mu=0.25$) | 8.87 | 6,940 | 192,000 | 3.61e-02 | FAIL |
+| **0.50x** | NLMS ($\mu=0.25, \text{eps}=0$) | 8.67 | 6,295 | 192,000 | 3.28e-02 | FAIL |
+| **0.50x** | NLMS-Shift ($K=3, \text{eps}=2$) | 8.83 | 6,393 | 192,000 | 3.33e-02 | FAIL |
+| **1.00x** | LMS ($\mu=0.25$) | 15.03 | 0 | 192,000 | 0.00e+00 | **PASS** |
+| **1.00x** | NLMS ($\mu=0.25, \text{eps}=0$) | 14.93 | 0 | 192,000 | 0.00e+00 | **PASS** |
+| **1.00x** | NLMS-Shift ($K=3, \text{eps}=2$) | 15.07 | 0 | 192,000 | 0.00e+00 | **PASS** |
+| **2.00x** | LMS ($\mu=0.25$) | 13.97 | 68 | 192,000 | 3.54e-04 | **PASS** |
+| **2.00x** | NLMS ($\mu=0.25, \text{eps}=0$) | 14.94 | 63 | 192,000 | 3.28e-04 | **PASS** |
+| **2.00x** | NLMS-Shift ($K=3, \text{eps}=2$) | 14.89 | 63 | 192,000 | 3.28e-04 | **PASS** |
+| **4.00x** | LMS ($\mu=0.25$) | 6.00 | 13,519 | 192,000 | 7.04e-02 | FAIL |
+| **4.00x** | NLMS ($\mu=0.25, \text{eps}=0$) | 12.11 | 2,323 | 192,000 | 1.21e-02 | FAIL |
+| **4.00x** | NLMS-Shift ($K=3, \text{eps}=2$) | 12.59 | 2,323 | 192,000 | 1.21e-02 | FAIL |
+
+**Reconciliation Note:**
+The previous table had manually rounded/approximated 4x overflows to 8,192 and omitted the small 2x overflows (68 / 63 / 63), whereas `py/exp_level_robustness.py` measures exact cumulative bit-level saturations (`sat_in` + `sat_w` + `sat_y` + `sat_e`) and reports whole-run average noise reduction (`nr_avg` / `nr_all`), with the pass criterion strictly evaluated as `ovf_rate = total_ovf / total_samples < 1e-3`.
 
 **Key Findings:**
 - All three algorithms pass the acceptance criteria only at nominal calibrated levels (1x–2x).
