@@ -31,13 +31,13 @@ def main():
     print("[PASS] Python Unit Tests: 23/23 PASSED")
 
     # 2. Questa Simulation Regression
-    log(2, "Running Questa 55-Test RTL Simulation Suite...")
+    log(2, "Running Questa 57-Test RTL Simulation Suite...")
     cmd_questa = [sys.executable, os.path.join(ROOT, "py", "run_questa_regression.py")]
     res2 = subprocess.run(cmd_questa, cwd=ROOT)
     if res2.returncode != 0:
         print("[FAIL] Questa Simulation Regression failed! Aborting regression.", file=sys.stderr)
         sys.exit(2)
-    print("[PASS] Questa RTL Regression: 55/55 Tests PASSED")
+    print("[PASS] Questa RTL Regression: 57/57 Tests PASSED")
 
     # 3. Quartus Hardware Import & Consistency Check
     log(3, "Running Quartus Hardware Import & Integrity Check...")
@@ -52,7 +52,7 @@ def main():
     print("\n" + "=" * 80)
     print(f"ALL REGRESSION STAGES COMPLETED SUCCESSFULLY IN {elapsed:.1f}s!")
     print("  [PASS] 23/23 Python unit & reference tests PASSED")
-    print("  [PASS] 55/55 Questa RTL hardware testbenches PASSED")
+    print("  [PASS] 57/57 Questa RTL hardware testbenches PASSED")
     print("  [PASS] Quartus multi-corner timing & resource metrics verified")
     print("=" * 80)
     sys.exit(0)

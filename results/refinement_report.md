@@ -97,7 +97,18 @@ Simulation across seeds 1–3 at $W=12, L=32$ with continuous shift $s = (P_{\te
 | **Path Switch** | **18.99 dB** | 20.71 dB | 14.80 dB ($-4.19\text{ dB}$) | 14.80 dB ($-4.19\text{ dB}$) | 8.68 dB ($-10.31\text{ dB}$) |
 | **WAV Audio** | **5.51 dB** | 6.24 dB | 8.71 dB ($+3.19\text{ dB}$) | 8.71 dB ($+3.19\text{ dB}$) | 4.88 dB ($-0.63\text{ dB}$) |
 
-*Note on Identical Rows:* For $P_{\text{low}} \in \{0.3, 0.5\}$, $(P_{\text{low}} + \epsilon_{\text{fixed}}).\text{bit\_length()}$ evaluates to the exact same fixed shift value ($s = 12$). Therefore, the simulation trajectories and final NR numbers for $P_{\text{low}}=0.3$ and $P_{\text{low}}=0.5$ are mathematically identical.
+*Source & Methodology:* The entire table, including the `EPS_EXP=4, K=3` comparison point, was produced directly by `scratch/check_gate_a_fixed.py` across seeds 1–3 ($W=12, L=32$).
+
+*Exact Scale Derivation for Identical Rows ($P_{\text{low}} \in \{0.3, 0.5\}$):*
+In the integer implementation ($W=12$, fractional bits $F = 11$, product accumulator scale $2F = 22$):
+- $\epsilon_i = 1 \ll (2F - \text{EPS\_EXP}) = 1 \ll (22 - 2) = 1 \ll 20 = 1{,}048{,}576$
+- Thresholds are scaled to integer $Q_{2F}$ units: $\text{th\_low} = \text{int}(P_{\text{low}} \times 2^{2F}) = \text{int}(P_{\text{low}} \times 4{,}194{,}304)$
+- For $P_{\text{low}} = 0.3$: $\text{th\_low} = 1{,}258{,}291 \implies \text{th\_low} + \epsilon_i = 2{,}306{,}867$
+  $2{,}306{,}867.\text{bit\_length}() = 22 \implies \text{fixed\_s} = 22 - 11 + 3 = 14$
+- For $P_{\text{low}} = 0.5$: $\text{th\_low} = 2{,}097{,}152 \implies \text{th\_low} + \epsilon_i = 3{,}145{,}728$
+  $3{,}145{,}728.\text{bit\_length}() = 22 \implies \text{fixed\_s} = 22 - 11 + 3 = 14$
+
+Because both $(1{,}258{,}291 + 1{,}048{,}576)$ and $(2{,}097{,}152 + 1{,}048{,}576)$ have bit-length 22 (lying strictly between $2^{21} = 2{,}097{,}152$ and $2^{22} = 4{,}194{,}304$), both yield $\text{fixed\_s} = 14$. Whenever signal power drops below the threshold, both configurations enter fixed mode with the identical shift $s=14$, producing bit-identical trajectories and identical final NR values across all seeds.
 
 - **Gate A Rule:** Adopt only if hybrid beats eps-only by $\ge 1.0\text{ dB}$ in $\ge 2$ scenarios without hurting the third by $> 0.5\text{ dB}$.
 - **VERDICT: REJECT HYBRID (Negative Finding).** While the hybrid improved the WAV scenario by $+3.19\text{ dB}$, it severely degraded Stationary Noise by $-3.99\text{ dB}$ and Path Switch by $-4.19\text{ dB}$.

@@ -54,13 +54,15 @@ HW_DATA = {
 
 
 def generate_paper_numbers():
-    print("[reproduce] Generating results/paper_numbers.csv...")
+    print("[reproduce] Generating results/paper_numbers.csv with 20 seeds for main scenarios...")
+    import scipy.stats as st
     wav_path = os.path.join(ROOT, "vectors", "audio", "acoustic_chord.wav")
     scenarios = ["stationary", "amp_steps", "path_switch", "wav", "feedback"]
     algos = [("nlms_shift", 2.0**-3, FxCfg(W=12, eps_exp=2)),
              ("nlms", 0.14678, FxCfg(W=12, eps_exp=2)),
              ("lms", 0.5009, FxCfg(W=12, eps_exp=2))]
-    seeds = [1, 2, 3]
+    main_seeds = list(range(1, 21))  # 20 seeds for statistical rigor
+    sweep_seeds = [1, 2, 3]
 
     rows = []
     for al, mu, cfg in algos:
@@ -70,7 +72,7 @@ def generate_paper_numbers():
             s_all = []
             s_ovf = 0
             tot_samples = 0
-            for s in seeds:
+            for s in main_seeds:
                 sc = make_scenario(sc_name, 16000, s, wav_path if sc_name == "wav" else None)
                 tot_samples += len(sc.x)
                 r = run_fixed(al, sc.x, sc.d, 32, mu, cfg)
@@ -80,11 +82,21 @@ def generate_paper_numbers():
                 s_ovf += sum(r["counts"].values())
 
             ovf_rate = s_ovf / tot_samples
+            n_samples = len(s_nrs)
+            m_val = float(np.mean(s_nrs))
+            s_val = float(np.std(s_nrs, ddof=1))
+            t_crit = float(st.t.ppf(0.975, df=n_samples - 1))
+            margin = t_crit * (s_val / np.sqrt(n_samples))
+
             row = {
                 "algorithm": al,
                 "scenario": sc_name,
                 "setting": hw["setting"],
-                "nr_final_mean": round(float(np.mean(s_nrs)), 2),
+                "nr_final_mean": round(m_val, 2),
+                "nr_final_std": round(s_val, 2),
+                "nr_final_ci95_low": round(m_val - margin, 2),
+                "nr_final_ci95_high": round(m_val + margin, 2),
+                "nr_final_ci95_margin": round(margin, 2),
                 "nr_final_seed1": round(float(s_nrs[0]), 2),
                 "nr_final_seed2": round(float(s_nrs[1]), 2),
                 "nr_final_seed3": round(float(s_nrs[2]), 2),
@@ -114,7 +126,7 @@ def generate_paper_numbers():
             s_ovf = 0
             tot_samples = 0
             for sc_name in ["stationary", "amp_steps", "path_switch", "wav"]:
-                for s in seeds:
+                for s in sweep_seeds:
                     sc = make_scenario(sc_name, 16000, s, wav_path if sc_name == "wav" else None)
                     x_sc = sc.x * scale
                     tot_samples += len(x_sc)
@@ -123,12 +135,23 @@ def generate_paper_numbers():
                     s_nrs.append(m["nr_final"])
                     s_all.append(m["nr_all"])
                     s_ovf += sum(r["counts"].values())
+
             ovf_rate = s_ovf / tot_samples
+            n_samples = len(s_nrs)
+            m_val = float(np.mean(s_nrs))
+            s_val = float(np.std(s_nrs, ddof=1))
+            t_crit = float(st.t.ppf(0.975, df=n_samples - 1))
+            margin = t_crit * (s_val / np.sqrt(n_samples))
+
             row = {
                 "algorithm": al,
                 "scenario": f"level_sweep_{scale:.2f}x",
                 "setting": f"{hw['setting']} (input_scale={scale}x)",
-                "nr_final_mean": round(float(np.mean(s_nrs)), 2),
+                "nr_final_mean": round(m_val, 2),
+                "nr_final_std": round(s_val, 2),
+                "nr_final_ci95_low": round(m_val - margin, 2),
+                "nr_final_ci95_high": round(m_val + margin, 2),
+                "nr_final_ci95_margin": round(margin, 2),
                 "nr_final_seed1": round(float(s_nrs[0]), 2),
                 "nr_final_seed2": round(float(s_nrs[1]), 2),
                 "nr_final_seed3": round(float(s_nrs[2]), 2),

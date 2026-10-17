@@ -109,6 +109,7 @@ def main():
         ("lms_W20_L32",     "lms",        20, 32, 0.5,    "path_switch", 1500, 1.0,   0,    None),
         ("nlms_W16_L32",    "nlms",       16, 32, 0.05,   "stationary",  1500, 1.0,   0,    None),
         ("shift_W11_sat_w", "nlms_shift", 11, 32, 0.5,    "stationary",  1500, 0.05,  0,    None),
+        ("nlms_W11_sat_wg", "nlms",       11, 32, 0.5,    "stationary",  1500, 0.05,  0,    None),
         ("lms_W12_L32",     "lms",        12, 32, 0.5,    "stationary",  1500, 1.0,   0,    None),
         ("nlms_W12_L32",    "nlms",       12, 32, 0.05,   "stationary",  1500, 1.0,   0,    None),
         ("nlms_W11_L5",     "nlms",       11, 5,  0.1,    "stationary",  1000, 1.0,   0,    None),

@@ -142,7 +142,7 @@ class T(unittest.TestCase):
 
     def test_manifest_vectors(self):
         lines = [l.split() for l in open(os.path.join(ROOT, "tb", "manifest.txt")) if l.strip() and l[0] != "#"]
-        self.assertEqual(len(lines), 51)
+        self.assertEqual(len(lines), 53)
         for name, algo, W, L, mi, K, accw, prefix, n, eps in lines:
             algo, W, L, mi, K, accw, n, eps = map(int, (algo, W, L, mi, K, accw, n, eps))
             rows, w = fp.read_vec(os.path.join(ROOT, prefix), W)
