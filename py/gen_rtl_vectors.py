@@ -16,6 +16,7 @@ Manifest line: name algo W L MU_INT K ACC_W prefix(relative to repo root) nsampl
 import json
 import os
 import sys
+from typing import Optional
 
 import numpy as np
 
@@ -40,7 +41,7 @@ def flags_of(counts):
     return v
 
 
-def gen(name, algo, W, L, mu, scen, n, xscale=1.0, quiet=0, acc_bits=None, seed=1, eps_exp=10):
+def gen(name, algo, W, L, mu, scen, n, xscale=1.0, quiet=0, acc_bits: Optional[int] = None, seed=1, eps_exp=10):
     sc = make_scenario(scen, 16000, seed)
     x = sc.x * xscale
     d = sc.d

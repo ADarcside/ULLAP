@@ -12,6 +12,7 @@ Saturation at every narrowing point; each event is counted (overflow counters).
 Per-sample order: y = rs(acc, F) -> e = d - y -> update -> w = sat(w + upd).
 """
 from dataclasses import dataclass
+from typing import Optional
 
 import numpy as np
 
@@ -21,8 +22,8 @@ from algos import windows, shift_k
 @dataclass(frozen=True)
 class FxCfg:
     W: int = 16
-    F: int = None
-    acc_bits: int = None
+    F: Optional[int] = None
+    acc_bits: Optional[int] = None
     rnd: str = "nearest"
     mu_frac: int = 10
     g_extra: int = 4
