@@ -16,7 +16,7 @@ import math
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
-EPS = 2.0 ** -10      # regulariser, identical for nlms and nlms_shift (real units)
+EPS = 2.0 ** -2      # regulariser, identical for nlms and nlms_shift (real units)
 
 
 def windows(x, L):

@@ -27,7 +27,7 @@ class FxCfg:
     rnd: str = "nearest"
     mu_frac: int = 10
     g_extra: int = 4
-    eps_exp: int = 10
+    eps_exp: int = 2
 
 
 def rs(v, s, rnd="nearest"):
