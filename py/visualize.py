@@ -508,28 +508,28 @@ def plot_fig11_latency(quartus_data, out_base):
         yval = bar.get_height()
         ax_cyc.text(bar.get_x() + bar.get_width() / 2.0, yval + 2, f"{yval} cyc", ha="center", va="bottom", fontsize=8.2, fontweight="bold")
 
-    budget_us = 125.0
-    budget_10pct = 12.5
+    budget_us = 20.833  # 48 kHz audio sample period = 20.833 us (at 12.5 MHz MCLK / 256)
+    budget_10pct = budget_us * 0.10  # 2.083 us
 
     bars_tout = ax_time.bar(x - w/2, time_out_50_us, width=w, label="Output Latency @ 50 MHz (us)",
                             color="#3498db", edgecolor="#2980b9", linewidth=0.8)
     bars_ttot = ax_time.bar(x + w/2, time_tot_50_us, width=w, label="Total Processing @ 50 MHz (us)",
                             color="#2ecc71", edgecolor="#27ae60", linewidth=0.8)
 
-    ax_time.axhline(budget_10pct, color="#e67e22", linestyle="--", linewidth=1.2, label="10% Budget Guideline (12.5 us)")
-    ax_time.set_title("Processing Time at 50 MHz vs Audio Frame Budget\n8 kHz Audio Sample Period = 125.0 us", fontsize=10.5, pad=10)
+    ax_time.axhline(budget_10pct, color="#e67e22", linestyle="--", linewidth=1.2, label=f"10% Budget Guideline ({budget_10pct:.2f} us)")
+    ax_time.set_title("Processing Time at 50 MHz vs 48 kHz Codec Budget\nSample Period = 20.83 us (Codec filter delays: estimates, unverified)", fontsize=10.0, pad=10)
     ax_time.set_ylabel("Time (microseconds, us)")
     ax_time.set_xticks(x)
     ax_time.set_xticklabels(algo_labels, fontsize=9.0)
-    ax_time.set_ylim(0, 15)
+    ax_time.set_ylim(0, 4.0)
     ax_time.legend(loc="upper left", fontsize=8.0)
 
     for bar, val in zip(bars_tout, time_out_50_us):
         pct = (val / budget_us) * 100.0
-        ax_time.text(bar.get_x() + bar.get_width() / 2.0, val + 0.25, f"{val:.2f} us\n({pct:.2f}%)", ha="center", va="bottom", fontsize=7.8)
+        ax_time.text(bar.get_x() + bar.get_width() / 2.0, val + 0.08, f"{val:.2f} us\n({pct:.1f}%)", ha="center", va="bottom", fontsize=7.8)
     for bar, val in zip(bars_ttot, time_tot_50_us):
         pct = (val / budget_us) * 100.0
-        ax_time.text(bar.get_x() + bar.get_width() / 2.0, val + 0.25, f"{val:.2f} us\n({pct:.2f}%)", ha="center", va="bottom", fontsize=7.8, fontweight="bold")
+        ax_time.text(bar.get_x() + bar.get_width() / 2.0, val + 0.08, f"{val:.2f} us\n({pct:.1f}%)", ha="center", va="bottom", fontsize=7.8, fontweight="bold")
 
     return _save_fig(fig, out_base)
 

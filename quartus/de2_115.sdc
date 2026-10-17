@@ -6,8 +6,8 @@
 # Primary 50 MHz Master Clock
 create_clock -name CLOCK_50 -period 20.000 [get_ports CLOCK_50]
 
-# Audio Codec Bit Clock (WM8731 Master Mode: ~3.072 MHz for 48 kHz stereo 32-bit slot)
-create_clock -name AUD_BCLK -period 325.520 [get_ports {AUD_BCLK}]
+# Audio Codec Bit Clock (WM8731 Master Mode: 64 x fs = 3.125 MHz, period 320.000 ns at 12.5 MHz MCLK)
+create_clock -name AUD_BCLK -period 320.000 [get_ports {AUD_BCLK}]
 
 # Clock Domain Crossing: 50 MHz master clock and Audio BCLK are asynchronous
 set_clock_groups -asynchronous -group [get_clocks {CLOCK_50}] -group [get_clocks {AUD_BCLK}]

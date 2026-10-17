@@ -98,3 +98,32 @@ Eval seeds [1, 2, 3]; tuning seed 100.
 - **NLMS (W=11):** 2,542 LEs (2.22%), 1,331 registers, Fmax = 58.87 MHz, Setup Slack = +3.014 ns (PASS)
 - **NLMS-Shift (W=12):** 2,690 LEs (2.35%), 1,213 registers, Fmax = 61.98 MHz, Setup Slack = +3.867 ns (PASS)
 - **Gate B Timing Closure:** PASSED (all worst-case slow 85°C setup slacks >= +3.0 ns, exceeding +0.5 ns target).
+
+## 8. Latency and Execution Budget Analysis
+
+### Measured RTL Processing Latency ($L=32, 50\text{ MHz}$)
+*Source: Hardware testbench simulation in Questa (`tb/tb_anc_core.v`, `results/metrics/questa_regression_summary.txt`):*
+
+| Algorithm | Bit-Width ($W$) | Output Latency (`lat_seen`) | Output Latency ($\mu\text{s}$) | Busy Cycles (`bmax`) | Total Processing ($\mu\text{s}$) | Busy Share ($48\text{ kHz}, T_s = 20.83\,\mu\text{s}$) |
+|---|---|---|---|---|---|---|
+| **LMS** | 12 (or 11) | 35 cycles | $0.70\,\mu\text{s}$ | 73 cycles | $1.46\,\mu\text{s}$ | **7.01%** |
+| **NLMS** | 12 | 37 cycles | $0.74\,\mu\text{s}$ | 127 cycles | $2.54\,\mu\text{s}$ | **12.20%** |
+| **NLMS** | 11 | 37 cycles | $0.74\,\mu\text{s}$ | 124 cycles | $2.48\,\mu\text{s}$ | **11.90%** |
+| **NLMS-Shift** | 12 | 37 cycles | $0.74\,\mu\text{s}$ | 72 cycles | $1.44\,\mu\text{s}$ | **6.91%** |
+
+### Questa Log Verification Lines
+- `shipped_lms_W11_stationary`: `# TB_RESULT PASS vec=vectors/lms_W11_stationary ALGO=0 W=11 L=32 ... lat=35 busy_cycles=73`
+- `shipped_nlms_W11_stationary`: `# TB_RESULT PASS vec=vectors/nlms_W11_stationary ALGO=1 W=11 L=32 ... lat=37 busy_cycles=124`
+- `shift_e2_k3_W12_stationary`: `# TB_RESULT PASS vec=vectors/rtl/shift_e2_k3_W12_stationary ALGO=2 W=12 L=32 ... lat=37 busy_cycles=72`
+
+### Busy-Cycle Reconciliation
+- **LMS (70 vs 73 cycles):** Analytical pre-pipeline model assumed $2L + 6 = 70$ cycles. The actual 3-stage multiplier pipeline in `rtl/anc_core.v` introduces a 3-cycle drain in state `S_UPD` (`wc = 2`), giving exactly $70 + 3 = 73$ cycles.
+- **NLMS (91 vs 124/127 cycles):** An earlier preliminary analytical estimate assumed a generic 18-cycle divider ($2L + 9 + 18 = 91$). The actual synthesizable restoring divider in `rtl/anc_core.v` uses dividend width $NW = W + MUW + 2F + 4 + CL$ (48 cycles for $W=11$, 50 cycles for $W=12$), running for $NW+1$ cycles and resulting in 124 cycles ($W=11$) and 127 cycles ($W=12$).
+
+### End-to-End System Latency Budget (at $f_s = 48\text{ kHz}$)
+- **Codec Sample Period:** $T_s = 1 / 48000 \approx 20.833\,\mu\text{s}$ (1041.67 system clock cycles at 50 MHz).
+- **ADC Decimation Filter Delay:** 12 audio samples = $250.0\,\mu\text{s}$ (*estimate, unverified*).
+- **DAC Interpolation Filter Delay:** 11 audio samples = $229.2\,\mu\text{s}$ (*estimate, unverified*).
+- **I2S Word Serialization (Framing):** 2 audio samples = $41.7\,\mu\text{s}$.
+- **FPGA Core Processing Latency (NLMS-Shift):** 37 cycles at 50 MHz = $0.74\,\mu\text{s}$.
+- **Total Acoustic Loop Delay:** $\approx 521.6\,\mu\text{s}$ ($\sim 0.52\text{ ms}$). The FPGA processing delay constitutes only 0.14% of the acoustic latency.

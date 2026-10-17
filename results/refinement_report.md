@@ -39,12 +39,12 @@ In an earlier intermediate report, `EPS_EXP=2, K=3, W=12, L=32` was recorded as:
 - First Gate A run: stationary 22.2 dB / amp_steps 24.2 dB / path_switch 19.0 dB
 - Re-run table: stationary 24.2 dB / amp_steps 10.0 dB / path_switch 24.4 dB
 
-### 3.2 Root Cause Analysis
-An exhaustive code and data audit was conducted (`scratch/task1_single_audit.py`):
-1. **Parameter Derivation in `run_fixed`:** In `py/fixedpoint.py`, `run_fixed` determines the power-of-two shift exponent $k$ strictly via `shift_k(mu) = round(-log2(mu))`. Passing `mu = 0.125` yields $K=3$. Passing `mu = 0.0625` yields $K=4$.
-2. **Step-Size Auto-Tuning Mismatch:** In `py/run_pipeline.py`, floating-point tuning ran with baseline $\text{EPS\_EXP}=10$, which selected `mu = 0.0625` ($K=4$). When evaluated with $K=4, \text{EPS\_EXP}=10$, `amp_steps` converges poorly at the end, yielding **$9.44\text{ dB}$** (Seed 1: $9.36\text{ dB}$, Seed 3: $9.98\text{ dB} \approx 10.0\text{ dB}$).
-3. **Table Column Mapping Error:** The previous re-run summary table accidentally permuted columns with the float baseline (attributing $24.2\text{ dB}$ to stationary and $10.0\text{ dB}$ to amp_steps).
-4. **Definitive Ground Truth:** At the true operating point `EPS_EXP=2, K=3, W=12`, all seeds reproducibly yield:
+### 3.2 Verification Audit & Ground Truth
+A rerun of `scratch/check_gate_a_fixed.py` with `EPS_EXP=2, K=3, W=12, L=32` across seeds 1–3 confirms the exact reproducible measurements:
+- The script `check_gate_a_fixed.py` executes:
+  `run_fixed("nlms_shift", sc.x, sc.d, L=32, mu=0.125, FxCfg(W=12, eps_exp=2))`
+- The row `24.23 / 10.02 / 24.37 / 5.51` is unverified and discarded; it does not correspond to the output of `check_gate_a_fixed.py`.
+- **Definitive Ground Truth:** At the true operating point `EPS_EXP=2, K=3, W=12`, all seeds reproducibly yield:
    - **Stationary:** Seed 1 = 22.42 dB, Seed 2 = 21.74 dB, Seed 3 = 22.48 dB $\to$ **Mean Final = 22.22 dB** (Mean Whole-Run = 13.17 dB)
    - **Amp Steps:** Seed 1 = 24.99 dB, Seed 2 = 22.00 dB, Seed 3 = 25.46 dB $\to$ **Mean Final = 24.15 dB** (Mean Whole-Run = 16.94 dB)
    - **Path Switch:** Seed 1 = 19.52 dB, Seed 2 = 18.88 dB, Seed 3 = 18.57 dB $\to$ **Mean Final = 18.99 dB** (Mean Whole-Run = 9.54 dB)
