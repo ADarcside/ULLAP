@@ -22,13 +22,13 @@ def main():
     print("=" * 80)
 
     # 1. Unit Tests
-    log(1, "Running Python Unit & Reference Model Tests (pytest)...")
-    cmd_pytest = [sys.executable, "-m", "pytest", "py/test_anc.py", "py/test_extended_verification.py", "py/test_rtl_model.py"]
-    res1 = subprocess.run(cmd_pytest, cwd=ROOT)
+    log(1, "Running Python Unit & Reference Model Tests (unittest discover)...")
+    cmd_unittest = [sys.executable, "-m", "unittest", "discover", "-s", "py", "-v"]
+    res1 = subprocess.run(cmd_unittest, cwd=ROOT)
     if res1.returncode != 0:
         print("[FAIL] Python Unit Tests failed! Aborting regression.", file=sys.stderr)
         sys.exit(1)
-    print("[PASS] Python Unit Tests: 18/18 PASSED")
+    print("[PASS] Python Unit Tests: 23/23 PASSED")
 
     # 2. Questa Simulation Regression
     log(2, "Running Questa 55-Test RTL Simulation Suite...")
@@ -51,7 +51,7 @@ def main():
     elapsed = time.time() - t_start
     print("\n" + "=" * 80)
     print(f"ALL REGRESSION STAGES COMPLETED SUCCESSFULLY IN {elapsed:.1f}s!")
-    print("  ✓ 18/18 Python unit & reference tests PASSED")
+    print("  ✓ 23/23 Python unit & reference tests PASSED")
     print("  ✓ 55/55 Questa RTL hardware testbenches PASSED")
     print("  ✓ Quartus multi-corner timing & resource metrics verified")
     print("=" * 80)

@@ -32,7 +32,7 @@ def upd_rtl(prod, s, PRW, rtl_fix=True):
     return wrap(prod + half, PRW + 1) >> s      # t_sum  : reg signed [PRW:0]
 
 
-def run_rtl_model(algo, xi, di, W, L, MU_INT=512, K=4, ACC_W=None, EPS_EXP=10, rtl_fix=True):
+def run_rtl_model(algo, xi, di, W, L, MU_INT=512, K=4, ACC_W=None, EPS_EXP=2, rtl_fix=True):
     F, CL = W - 1, clog2(L)
     ACC_W = ACC_W or 2 * W + CL
     MUW = clog2(MU_INT + 1) + 1

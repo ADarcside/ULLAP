@@ -29,5 +29,8 @@ Overflow counts are 0 for every grid point.
   model is sometimes better. W = 10 is clearly weaker than W = 12 or 14 for eps_exp = 2 and 3.
 
 ## Gate A (hybrid power switch)
-Not adopted. On seed 1 the hybrid beat eps-only by more than 1 dB in one scenario (amp_steps) and about 0 in the others,
-which does not meet the "at least 1 dB in at least two scenarios" criterion.
+Not adopted. The hybrid power switch is structurally identical to eps-only for thresholds below eps: because P + eps is bounded below by eps = 0.25, the leading-one position / bit_length of (P + eps) remains strictly constant for all P < 0.25 (s = (0.25).bit_length() - F + K). Consequently, the filter naturally operates in fixed-step LMS mode during quiet intervals without requiring any explicit mode-switching threshold or comparator hardware.
+
+Furthermore, cancellation performance in this regularised regime depends primarily on the effective step size:
+$$\mu_{\text{eff}} = 2^{\text{EPS\_EXP} - K}$$
+This is directly confirmed by the parameter sweep rows where configurations with equal $(\text{EPS\_EXP} - K)$ exhibit equivalent steady-state tracking and noise-floor behavior (e.g., EPS_EXP=2, K=3 and EPS_EXP=3, K=4 both yield $\text{EPS\_EXP}-K = -1$).

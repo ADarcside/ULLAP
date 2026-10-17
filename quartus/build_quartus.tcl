@@ -7,8 +7,11 @@ load_package flow
 
 set project_name "anc_de2_115"
 
-# Create project and overwrite if exists
-project_new -overwrite $project_name
+if {[project_exists $project_name]} {
+    project_open $project_name
+} else {
+    project_new $project_name
+}
 
 # Target Hardware
 set_global_assignment -name FAMILY "Cyclone IV E"
