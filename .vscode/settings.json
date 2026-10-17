@@ -1,0 +1,11 @@
+{
+  "python.analysis.extraPaths": [
+    "./py",
+    "./scratch"
+  ],
+  "python.autoComplete.extraPaths": [
+    "./py",
+    "./scratch"
+  ],
+  "python.envFile": "${workspaceFolder}/.env"
+}

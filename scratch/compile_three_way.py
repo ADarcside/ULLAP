@@ -1,6 +1,7 @@
 import os, sys, subprocess, re
 
-QUARTUS_DIR = r"C:\work\ULLAP\quartus"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+QUARTUS_DIR = os.path.join(ROOT, "quartus")
 QUARTUS_SH = r"C:\altera_lite\25.1std\quartus\bin64\quartus_sh.exe"
 
 def compile_and_extract(algo, w, k, eps_exp, mu_int, name):

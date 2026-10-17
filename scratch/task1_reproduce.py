@@ -1,7 +1,7 @@
 import os, sys
 import numpy as np
 
-ROOT = r"c:\Users\Lenovo\OneDrive\Desktop\esa_proj\ULLAP"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "py"))
 
 from signals import make_scenario, SCENARIOS
