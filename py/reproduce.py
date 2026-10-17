@@ -31,22 +31,22 @@ from metrics import evaluate
 HW_DATA = {
     "lms": {
         "setting": "W=12, mu=0.25",
-        "les": 1930, "registers": 1133, "multipliers": 1,
-        "fmax_slow_85c": 60.05, "slack_setup_slow_85c": 3.347, "slack_hold_slow_85c": 0.380,
-        "slack_setup_slow_0c": 4.612, "slack_setup_fast_0c": 11.120,
+        "les": 1885, "registers": 1148, "multipliers": 4,
+        "fmax_slow_85c": 59.90, "slack_setup_slow_85c": 3.305, "slack_hold_slow_85c": 0.182,
+        "slack_setup_slow_0c": 4.819, "slack_setup_fast_0c": 11.654,
         "latency_cycles": 35, "busy_cycles": 73
     },
     "nlms": {
         "setting": "W=12, mu=0.25, eps_exp=0",
-        "les": 2740, "registers": 1395, "multipliers": 1,
-        "fmax_slow_85c": 58.87, "slack_setup_slow_85c": 3.014, "slack_hold_slow_85c": 0.395,
-        "slack_setup_slow_0c": 4.220, "slack_setup_fast_0c": 10.850,
+        "les": 2697, "registers": 1425, "multipliers": 4,
+        "fmax_slow_85c": 61.72, "slack_setup_slow_85c": 3.798, "slack_hold_slow_85c": 0.181,
+        "slack_setup_slow_0c": 5.115, "slack_setup_fast_0c": 11.707,
         "latency_cycles": 37, "busy_cycles": 127
     },
     "nlms_shift": {
         "setting": "W=12, K=3, EPS_EXP=2",
-        "les": 2690, "registers": 1213, "multipliers": 1,
-        "fmax_slow_85c": 61.98, "slack_setup_slow_85c": 3.867, "slack_hold_slow_85c": 0.402,
+        "les": 2690, "registers": 1213, "multipliers": 4,
+        "fmax_slow_85c": 61.98, "slack_setup_slow_85c": 3.867, "slack_hold_slow_85c": 0.181,
         "slack_setup_slow_0c": 5.177, "slack_setup_fast_0c": 11.688,
         "latency_cycles": 37, "busy_cycles": 72
     }

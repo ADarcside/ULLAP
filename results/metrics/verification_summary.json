@@ -4,7 +4,7 @@
   "passed": 9,
   "failed": 0,
   "all_passed": true,
-  "execution_time_seconds": 1.0,
+  "execution_time_seconds": 0.993,
   "tests": [
     {
       "test_name": "test_reset_clean_initial_state",
@@ -12,7 +12,7 @@
       "status": "PASS",
       "mismatches": 0,
       "details": "All internal states, outputs, and taps initialized to 0",
-      "timestamp": "2026-10-18 01:16:19"
+      "timestamp": "2026-10-18 01:47:04"
     },
     {
       "test_name": "test_algorithm_selection_lms",
@@ -20,7 +20,7 @@
       "status": "PASS",
       "mismatches": 0,
       "details": "Bit-exact match against fixed-point specification for lms",
-      "timestamp": "2026-10-18 01:16:19"
+      "timestamp": "2026-10-18 01:47:04"
     },
     {
       "test_name": "test_algorithm_selection_nlms",
@@ -28,7 +28,7 @@
       "status": "PASS",
       "mismatches": 0,
       "details": "Bit-exact match against fixed-point specification for nlms",
-      "timestamp": "2026-10-18 01:16:19"
+      "timestamp": "2026-10-18 01:47:04"
     },
     {
       "test_name": "test_algorithm_selection_nlms_shift",
@@ -36,7 +36,7 @@
       "status": "PASS",
       "mismatches": 0,
       "details": "Bit-exact match against fixed-point specification for nlms_shift",
-      "timestamp": "2026-10-18 01:16:19"
+      "timestamp": "2026-10-18 01:47:04"
     },
     {
       "test_name": "test_weight_freezing_zero_mu",
@@ -44,7 +44,7 @@
       "status": "PASS",
       "mismatches": 0,
       "details": "Adaptation suppressed when step size is 0; weights remain unchanged",
-      "timestamp": "2026-10-18 01:16:19"
+      "timestamp": "2026-10-18 01:47:04"
     },
     {
       "test_name": "test_boundary_rails_and_saturation",
@@ -52,7 +52,7 @@
       "status": "PASS",
       "mismatches": 0,
       "details": "Signals saturate cleanly to [-1024, +1023] without arithmetic wrap",
-      "timestamp": "2026-10-18 01:16:19"
+      "timestamp": "2026-10-18 01:47:04"
     },
     {
       "test_name": "test_accumulator_saturation_flag",
@@ -60,7 +60,7 @@
       "status": "PASS",
       "mismatches": 0,
       "details": "Sticky overflow counter captures accumulator overflow on narrow ACC_W",
-      "timestamp": "2026-10-18 01:16:19"
+      "timestamp": "2026-10-18 01:47:04"
     },
     {
       "test_name": "test_sustained_operation_6k_samples",
@@ -68,7 +68,7 @@
       "status": "PASS",
       "mismatches": 0,
       "details": "Sustained operation over 6000 samples without numerical divergence or drift",
-      "timestamp": "2026-10-18 01:16:19"
+      "timestamp": "2026-10-18 01:47:05"
     },
     {
       "test_name": "test_real_audio_wav_scenario",
@@ -76,7 +76,7 @@
       "status": "PASS",
       "mismatches": 0,
       "details": "Verified on real audio file: acoustic_chord.wav",
-      "timestamp": "2026-10-18 01:16:20"
+      "timestamp": "2026-10-18 01:47:05"
     }
   ]
 }

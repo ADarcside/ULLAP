@@ -96,10 +96,10 @@ Eval seeds [1, 2, 3]; tuning seed 100.
 
 ## 7. Hardware & Quartus Status
 - **Target Device:** Intel/Altera Cyclone IV E `EP4CE115F29C7` (Terasic DE2-115 board, Speed Grade 7)
-- **Quartus Prime Lite 25.1std Compilation:** Complete & Verified across all 3 architectures.
-- **LMS (W=11):** 1,775 LEs (1.55%), 1,069 registers, Fmax = 60.05 MHz, Setup Slack = +3.347 ns (PASS)
-- **NLMS (W=11):** 2,542 LEs (2.22%), 1,331 registers, Fmax = 58.87 MHz, Setup Slack = +3.014 ns (PASS)
-- **NLMS-Shift (W=12):** 2,690 LEs (2.35%), 1,213 registers, Fmax = 61.98 MHz, Setup Slack = +3.867 ns (PASS)
+- **Quartus Prime Lite 25.1std Compilation:** Complete & Verified across all 3 architectures at $W=12$.
+- **LMS (W=12):** 1,885 LEs (1.65%), 1,148 registers, 4 multipliers, Fmax = 59.90 MHz, Setup Slack = +3.305 ns (PASS)
+- **NLMS (W=12):** 2,697 LEs (2.36%), 1,425 registers, 4 multipliers, Fmax = 61.72 MHz, Setup Slack = +3.798 ns (PASS)
+- **NLMS-Shift (W=12):** 2,690 LEs (2.35%), 1,213 registers, 4 multipliers, Fmax = 61.98 MHz, Setup Slack = +3.867 ns (PASS)
 - **Gate B Timing Closure:** PASSED (all worst-case slow 85°C setup slacks >= +3.0 ns, exceeding +0.5 ns target).
 
 ## 8. Latency and Execution Budget Analysis
@@ -138,7 +138,44 @@ Based on the 20-seed Monte Carlo evaluation in `results/paper_numbers.csv` with 
 - **Stationary Noise:** NLMS-Shift achieves a mean final NR of $22.37\text{ dB}$ ($95\%\text{ CI: } [22.11, 22.63]\text{ dB}$), which ties fair-tuned LMS at $22.39\text{ dB}$ ($[22.12, 22.66]\text{ dB}$) and fair-tuned NLMS at $22.28\text{ dB}$ ($[22.01, 22.54]\text{ dB}$) within overlapping confidence intervals.
 - **Amplitude Steps:** NLMS-Shift achieves $24.33\text{ dB}$ ($[23.88, 24.78]\text{ dB}$), tying fair-tuned NLMS at $24.16\text{ dB}$ ($[23.58, 24.73]\text{ dB}$) as their 95% confidence intervals overlap, while both outperform LMS at $22.36\text{ dB}$ ($[21.72, 23.00]\text{ dB}$) by $\sim 2.0\text{ dB}$.
 - **Acoustic Path Switch:** NLMS-Shift reaches $18.91\text{ dB}$ ($[18.76, 19.06]\text{ dB}$), tying fair-tuned LMS at $18.95\text{ dB}$ ($[18.81, 19.09]\text{ dB}$) and fair-tuned NLMS at $18.53\text{ dB}$ ($[18.39, 18.67]\text{ dB}$) within overlapping confidence intervals.
-- **Real WAV Audio:** NLMS-Shift delivers $5.46\text{ dB}$ ($[5.42, 5.50]\text{ dB}$), losing to both fair-tuned NLMS at $5.73\text{ dB}$ ($[5.69, 5.76]\text{ dB}$) and LMS at $5.69\text{ dB}$ ($[5.66, 5.73]\text{ dB}$) by $0.23$–$0.27\text{ dB}$. In all three algorithms, cancellation is fundamentally limited below $6\text{ dB}$ by the tonal nature and harmonic sparsity of the `acoustic_chord.wav` recording rather than filter arithmetic.
+- **Real WAV Audio:** NLMS-Shift delivers $5.46\text{ dB}$ ($[5.42, 5.50]\text{ dB}$), losing to both fair-tuned NLMS at $5.73\text{ dB}$ ($[5.69, 5.76]\text{ dB}$) and LMS at $5.69\text{ dB}$ ($[5.66, 5.73]\text{ dB}$) by $0.23$–$0.27\text{ dB}$. Across all evaluated hyperparameter configurations in the tuning grids, no setting in any algorithm reached the $10\text{ dB}$ target on `acoustic_chord.wav`. Rather than an absolute algorithmic limitation, the lower cancellation on the tonal WAV benchmark represents an operating-point trade-off: tuning parameters can be selected to maximize WAV performance (reaching 8.58–8.72 dB), but doing so imposes a significant penalty on synthetic tracking performance, degrading stationary noise cancellation by ~4.5 dB (from ~22.3 dB down to ~17.5–17.9 dB) and path-switch cancellation by ~4.4 dB (from ~18.9 dB down to ~14.3–14.6 dB). At the balanced fair-tuned settings optimized for robust all-around performance, all three algorithms yield 5.46–5.73 dB on WAV audio.
+
+### Operating-Point Trade-off: Best WAV Settings vs Synthetic Performance
+
+| Algorithm | WAV-Best Setting | WAV Final NR | Stationary Final NR | Amp Steps Final NR | Path Switch Final NR | Trade-off / Cost vs Balanced Setting |
+|---|---|:---:|:---:|:---:|:---:|---|
+| **LMS** | $\mu = 0.125$ | **8.72 dB** | 17.86 dB | 23.42 dB | 14.58 dB | Stationary $-4.53\text{ dB}$, Path Switch $-4.37\text{ dB}$ |
+| **NLMS** | $\text{EPS\_EXP}=-2, \mu=0.50$ | **8.58 dB** | 17.50 dB | 24.02 dB | 14.33 dB | Stationary $-4.78\text{ dB}$, Path Switch $-4.20\text{ dB}$ |
+| **NLMS-Shift** | $\text{EPS\_EXP}=0, K=2$ | **8.70 dB** | 17.86 dB | 23.87 dB | 14.58 dB | Stationary $-4.51\text{ dB}$, Path Switch $-4.33\text{ dB}$ |
+
 - **Acoustic Feedback:** All three algorithms tie at $4.35\text{ dB}$ ($[4.31, 4.39]\text{ dB}$ for NLMS/LMS, $[4.32, 4.39]\text{ dB}$ for NLMS-Shift), bounded by the closed-loop singing margin ($D=8, g=0.88$). This scenario does not separate the algorithms.
 
-**Architectural Trade-offs:** NLMS-Shift is not uniformly superior across all metrics. It ties fair-tuned NLMS and LMS in most scenarios (stationary, amp_steps vs NLMS, path_switch, and feedback), and loses slightly to both on real tonal audio ($5.46\text{ dB}$ vs $5.73\text{ dB}$ and $5.69\text{ dB}$). Its primary advantage is architectural: it achieves a divider-free busy-cycle count of 72 cycles (a 43.3% latency reduction compared to NLMS's 127-cycle restoring divider) while preserving the $\sim 2.0\text{ dB}$ amplitude-step tracking gain over LMS ($24.33\text{ dB}$ vs $22.36\text{ dB}$). Conversely, LMS is substantially cheaper in hardware resources (1,930 LEs vs 2,690 LEs for NLMS-Shift and 2,740 LEs for NLMS), making LMS the more economical choice where logic resources are strictly constrained and abrupt noise level surges are absent.
+**Architectural Trade-offs:** NLMS-Shift is not uniformly superior across all metrics. It ties fair-tuned NLMS and LMS in most scenarios (stationary, amp_steps vs NLMS, path_switch, and feedback), and loses slightly to both on real tonal audio ($5.46\text{ dB}$ vs $5.73\text{ dB}$ and $5.69\text{ dB}$). Its primary advantage is architectural: it achieves a divider-free busy-cycle count of 72 cycles per sample (a 43.3% reduction in busy cycles per sample compared to NLMS's 127-cycle restoring divider, leaving 93% throughput headroom at 48 kHz), while input-to-output core latency is 37 clock cycles ($0.74\,\mu\text{s}$) for both NLMS and NLMS-Shift, and 35 cycles ($0.70\,\mu\text{s}$) for LMS. It preserves the $\sim 2.0\text{ dB}$ amplitude-step tracking gain over LMS ($24.33\text{ dB}$ vs $22.36\text{ dB}$). Conversely, LMS is substantially cheaper in hardware resources (1,885 LEs vs 2,690 LEs for NLMS-Shift and 2,697 LEs for NLMS), making LMS the more economical choice where logic resources are strictly constrained and abrupt noise level surges are absent.
+
+## 10. Dynamic Range & Level-Sweep Evaluation (0.25x to 4x)
+
+To evaluate robustness against analog signal scaling, all three architectures were evaluated across input scalings from 0.25x to 4x relative to nominal level (seeds 1–3, evaluated across stationary, amp_steps, path_switch, wav):
+
+| Input Scale | Algorithm | Final Mean NR (dB) | Whole-Run NR (dB) | Overflows (Total) | Status / Criterion |
+|---|---|:---:|:---:|:---:|---|
+| **0.25x** | LMS | 4.52 dB | 3.60 dB | 7,589 | FAIL (NR < 10 dB, ovf > 0; identical to NLMS-Shift) |
+| **0.25x** | NLMS | 4.50 dB | 3.56 dB | 7,267 | FAIL (NR < 10 dB, ovf > 0) |
+| **0.25x** | NLMS-Shift | 4.52 dB | 3.60 dB | 7,589 | FAIL (NR < 10 dB, ovf > 0; identical to LMS) |
+| **0.50x** | LMS | 10.69 dB | 7.44 dB | 6,393 | FAIL (Overflow criterion violated) |
+| **0.50x** | NLMS | 10.63 dB | 7.37 dB | 5,779 | FAIL (Overflow criterion violated) |
+| **0.50x** | NLMS-Shift | 10.69 dB | 7.44 dB | 6,393 | FAIL (Overflow criterion violated) |
+| **1.00x** | LMS | 17.34 dB | 12.87 dB | 0 | **PASS** (Zero overflows, NR $\ge 10\text{ dB}$) |
+| **1.00x** | NLMS | 17.67 dB | 12.35 dB | 0 | **PASS** (Zero overflows, NR $\ge 10\text{ dB}$) |
+| **1.00x** | NLMS-Shift | 17.77 dB | 12.58 dB | 0 | **PASS** (Zero overflows, NR $\ge 10\text{ dB}$) |
+| **2.00x** | LMS | 17.02 dB | 12.80 dB | 0 | **PASS** (Zero overflows, NR $\ge 10\text{ dB}$) |
+| **2.00x** | NLMS | 17.65 dB | 12.33 dB | 0 | **PASS** (Zero overflows, NR $\ge 10\text{ dB}$) |
+| **2.00x** | NLMS-Shift | 17.70 dB | 12.55 dB | 0 | **PASS** (Zero overflows, NR $\ge 10\text{ dB}$) |
+| **4.00x** | LMS | 6.00 dB | 4.90 dB | 8,192 | FAIL (NR < 10 dB, input clipping sat_in) |
+| **4.00x** | NLMS | 12.10 dB | 9.00 dB | 8,192 | FAIL (Input clipping sat_in) |
+| **4.00x** | NLMS-Shift | 12.60 dB | 9.40 dB | 8,192 | FAIL (Input clipping sat_in) |
+
+**Key Findings:**
+- All three algorithms pass the acceptance criteria only at nominal calibrated levels (1x–2x).
+- At 0.25x and 0.5x, all three algorithms fail due to coefficient weight saturation (`sat_w`), as the adaptive weights scale inversely with signal amplitude ($\mathbf{w} \approx \mathbf{h}/s$); LMS and NLMS-Shift performance and overflow counts are identical at 0.25x.
+- At 4.0x, the normalized algorithms maintain 12.1–12.6 dB cancellation (compared to LMS at 6.00 dB), but all three fail the strict zero-overflow criterion because the reference signal exceeds $\pm 1.0$, producing input clipping overflows (`sat_in`) at the simulated ADC converters.
+- Level robustness is therefore **not** an NLMS-Shift advantage; all three fixed-point implementations require proper input gain staging within the calibrated 1x–2x operating window.
