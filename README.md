@@ -89,25 +89,29 @@ All figures are exported as both high-res PNG (300 DPI) and vector PDF:
 
 Recent simulation and extended verification runs (`results/research_summary.md`):
 
-### Tuned Step Sizes & Regularisation
-- **LMS:** $\mu = 0.5009$ (Fixed step size)
-- **NLMS:** $\mu = 0.1468$ ($\epsilon = 0.25$, restoring divider)
-- **NLMS-Shift:** $K = 3$ ($\mu = 2^{-3} = 0.125$, $\text{EPS\_EXP} = 2$, dividerless leading-one barrel shift)
+### Fair-Tuned Step Sizes & Regularisation
+- **LMS:** $\mu = 0.25$ (Fixed step size)
+- **NLMS:** $\mu = 0.25$ ($\text{EPS\_EXP} = 0, \epsilon = 1.0$, restoring divider)
+- **NLMS-Shift:** $K = 3$ ($\mu = 2^{-3} = 0.125$, $\text{EPS\_EXP} = 2, \epsilon = 0.25$, dividerless leading-one barrel shift)
 
-### Performance Across Test Scenarios (W=12, L=32)
-| Scenario | Algorithm | Final NR (dB) | Whole-Run NR (dB) | Settling Time (ms) | Tracking Time (ms) | Overflows |
-|---|---|---|---|---|---|---|
-| **Stationary Noise** | LMS | 20.3 ± 0.6 | 15.2 | 1784 | n/a | 0 |
-| **Stationary Noise** | NLMS | 21.3 ± 0.6 | 14.8 | 1786 | n/a | 0 |
-| **Stationary Noise** | NLMS-Shift | **22.2 ± 0.4** | 13.2 | 1784 | n/a | **0** |
-| **Amplitude Steps** | LMS | 18.9 ± 0.7 | 18.5 | 484 | 74 | 0 |
-| **Amplitude Steps** | NLMS | 18.7 ± 0.2 | 18.9 | 465 | 198 | 0 |
-| **Amplitude Steps** | NLMS-Shift | **24.2 ± 1.8** | 16.9 | 484 | 197 | **0** |
-| **Path Switch ($t = 1.0\text{ s}$)** | LMS | 20.6 ± 0.3 | 12.0 | 722 | 706 | 0 |
-| **Path Switch ($t = 1.0\text{ s}$)** | NLMS | 20.6 ± 0.3 | 11.3 | 708 | 678 | 0 |
-| **Path Switch ($t = 1.0\text{ s}$)** | NLMS-Shift | **19.0 ± 0.5** | 9.5 | 722 | 705 | **0** |
-| **Real Audio WAV** | NLMS-Shift | **5.5 ± 0.1** | 8.9 | 128 | n/a | **0** |
-| **Acoustic Feedback** | NLMS-Shift | **4.3 ± 0.1** | 4.0 | 0 | n/a | **0** |
+### Performance Across Test Scenarios (W=12, L=32, 20-Seed Monte Carlo from `paper_numbers.csv`)
+| Scenario | Algorithm | Final NR (dB, Mean ± 95% CI) | Whole-Run NR (dB) | Overflows | Overflow Rate |
+|---|---|---|---|---|---|
+| **Stationary Noise** | LMS | 22.39 ± 0.27 | 13.23 | 0 | 0.00e+00 |
+| **Stationary Noise** | NLMS | 22.28 ± 0.27 | 12.82 | 0 | 0.00e+00 |
+| **Stationary Noise** | NLMS-Shift | 22.37 ± 0.26 | 13.19 | 0 | 0.00e+00 |
+| **Amplitude Steps** | LMS | 22.36 ± 0.64 | 16.94 | 0 | 0.00e+00 |
+| **Amplitude Steps** | NLMS | 24.16 ± 0.58 | 16.61 | 0 | 0.00e+00 |
+| **Amplitude Steps** | NLMS-Shift | 24.33 ± 0.45 | 16.86 | 0 | 0.00e+00 |
+| **Path Switch ($t = 1.0\text{ s}$)** | LMS | 18.95 ± 0.14 | 9.59 | 0 | 0.00e+00 |
+| **Path Switch ($t = 1.0\text{ s}$)** | NLMS | 18.53 ± 0.14 | 9.17 | 0 | 0.00e+00 |
+| **Path Switch ($t = 1.0\text{ s}$)** | NLMS-Shift | 18.91 ± 0.15 | 9.56 | 0 | 0.00e+00 |
+| **Real Audio WAV** | LMS | 5.69 ± 0.04 | 10.51 | 0 | 0.00e+00 |
+| **Real Audio WAV** | NLMS | 5.73 ± 0.04 | 9.75 | 0 | 0.00e+00 |
+| **Real Audio WAV** | NLMS-Shift | 5.46 ± 0.04 | 8.87 | 0 | 0.00e+00 |
+| **Acoustic Feedback** | LMS | 4.35 ± 0.04 | 4.00 | 0 | 0.00e+00 |
+| **Acoustic Feedback** | NLMS | 4.35 ± 0.04 | 3.96 | 0 | 0.00e+00 |
+| **Acoustic Feedback** | NLMS-Shift | 4.35 ± 0.04 | 3.99 | 0 | 0.00e+00 |
 
 ### Selected Cyclone IV E Hardware Synthesis (W=12, Speed Grade 7)
 - **LMS (W=12):** 1,885 LEs (1.65%), 1,148 registers, 4 DSP mults, $F_{\max} = 59.90\text{ MHz}$, Setup Slack = **+3.305 ns (PASS)**.
