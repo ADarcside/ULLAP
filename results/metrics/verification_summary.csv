@@ -1,10 +1,10 @@
 test_name,category,status,mismatches,details,timestamp
-test_reset_clean_initial_state,Reset/Enable,PASS,0,"All internal states, outputs, and taps initialized to 0",2026-10-17 18:11:22
-test_algorithm_selection_lms,Algorithm Selection,PASS,0,Bit-exact match against fixed-point specification for lms,2026-10-17 18:11:22
-test_algorithm_selection_nlms,Algorithm Selection,PASS,0,Bit-exact match against fixed-point specification for nlms,2026-10-17 18:11:23
-test_algorithm_selection_nlms_shift,Algorithm Selection,PASS,0,Bit-exact match against fixed-point specification for nlms_shift,2026-10-17 18:11:23
-test_weight_freezing_zero_mu,Weight Freezing,PASS,0,Adaptation suppressed when step size is 0; weights remain unchanged,2026-10-17 18:11:23
-test_boundary_rails_and_saturation,Boundary/Saturation,PASS,0,"Signals saturate cleanly to [-1024, +1023] without arithmetic wrap",2026-10-17 18:11:23
-test_accumulator_saturation_flag,Overflow Flags,PASS,0,Sticky overflow counter captures accumulator overflow on narrow ACC_W,2026-10-17 18:11:23
-test_sustained_operation_6k_samples,Sustained Operation,PASS,0,Sustained operation over 6000 samples without numerical divergence or drift,2026-10-17 18:11:23
-test_real_audio_wav_scenario,Real Audio Scenario,PASS,0,Verified on real audio file: acoustic_chord.wav,2026-10-17 18:11:24
+test_reset_clean_initial_state,Reset/Enable,PASS,0,"All internal states, outputs, and taps initialized to 0",2026-10-17 18:17:29
+test_algorithm_selection_lms,Algorithm Selection,PASS,0,Bit-exact match against fixed-point specification for lms,2026-10-17 18:17:29
+test_algorithm_selection_nlms,Algorithm Selection,PASS,0,Bit-exact match against fixed-point specification for nlms,2026-10-17 18:17:29
+test_algorithm_selection_nlms_shift,Algorithm Selection,PASS,0,Bit-exact match against fixed-point specification for nlms_shift,2026-10-17 18:17:29
+test_weight_freezing_zero_mu,Weight Freezing,PASS,0,Adaptation suppressed when step size is 0; weights remain unchanged,2026-10-17 18:17:29
+test_boundary_rails_and_saturation,Boundary/Saturation,PASS,0,"Signals saturate cleanly to [-1024, +1023] without arithmetic wrap",2026-10-17 18:17:29
+test_accumulator_saturation_flag,Overflow Flags,PASS,0,Sticky overflow counter captures accumulator overflow on narrow ACC_W,2026-10-17 18:17:29
+test_sustained_operation_6k_samples,Sustained Operation,PASS,0,Sustained operation over 6000 samples without numerical divergence or drift,2026-10-17 18:17:29
+test_real_audio_wav_scenario,Real Audio Scenario,PASS,0,Verified on real audio file: acoustic_chord.wav,2026-10-17 18:17:30
