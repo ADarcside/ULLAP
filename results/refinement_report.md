@@ -88,12 +88,20 @@ A systematic parameter sweep at $W=12$ across $\text{EPS\_EXP} \in \{0, 1, 2, 3,
 - **WAV Audio:** 10th% = 0.0003, 25th% = 0.0012, 50th% = 0.0114, 75th% = 0.1290, 90th% = 0.3941
 
 ### 5.2 Hybrid Evaluation with Continuous Step
-Thresholds were assigned directly from empirical percentiles ($P_{\text{low}} = 0.0826$ and $P_{\text{high}} = 1.5 P_{\text{low}} = 0.1238$ for Candidate 1; $P_{\text{low}} = 0.1081$ for Candidate 2), ensuring continuous shift $s = (P_{\text{low}} + \epsilon_i).\text{bit\_length}() - F + K$.
-- **Candidate 1 (25th percentile):** Fixed mode active $45.0\%$ (stat), $55.0\%$ (amp), $45.0\%$ (path), $72.2\%$ (wav). Delta vs EPS-only = **$+0.00\text{ dB}$ across all 4 scenarios**.
-- **Candidate 2 (50th percentile):** Fixed mode active $75.1\%$ (stat), $65.9\%$ (amp), $75.1\%$ (path), $75.2\%$ (wav). Delta vs EPS-only = **$+0.00\text{ dB}$ across all 4 scenarios**.
+Simulation across seeds 1–3 at $W=12, L=32$ with continuous shift $s = (P_{\text{low}} + \epsilon_i).\text{bit\_length}() - F + K$ yielded the following comparative results (`scratch/check_gate_a_fixed.py`):
+
+| Scenario | EPS-Only Baseline (`EPS_EXP=2, K=3`) | Second Comparison (`EPS_EXP=4, K=3`) | Hybrid ($P_{\text{low}}=0.3$) | Hybrid ($P_{\text{low}}=0.5$) | Hybrid ($P_{\text{low}}=1.0$) |
+|---|---|---|---|---|---|
+| **Stationary** | **22.22 dB** | 20.19 dB | 18.23 dB ($-3.99\text{ dB}$) | 18.23 dB ($-3.99\text{ dB}$) | 11.75 dB ($-10.47\text{ dB}$) |
+| **Amp Steps** | **24.15 dB** | 16.15 dB | 23.81 dB ($-0.35\text{ dB}$) | 23.81 dB ($-0.35\text{ dB}$) | 21.90 dB ($-2.25\text{ dB}$) |
+| **Path Switch** | **18.99 dB** | 20.71 dB | 14.80 dB ($-4.19\text{ dB}$) | 14.80 dB ($-4.19\text{ dB}$) | 8.68 dB ($-10.31\text{ dB}$) |
+| **WAV Audio** | **5.51 dB** | 6.24 dB | 8.71 dB ($+3.19\text{ dB}$) | 8.71 dB ($+3.19\text{ dB}$) | 4.88 dB ($-0.63\text{ dB}$) |
+
+*Note on Identical Rows:* For $P_{\text{low}} \in \{0.3, 0.5\}$, $(P_{\text{low}} + \epsilon_{\text{fixed}}).\text{bit\_length()}$ evaluates to the exact same fixed shift value ($s = 12$). Therefore, the simulation trajectories and final NR numbers for $P_{\text{low}}=0.3$ and $P_{\text{low}}=0.5$ are mathematically identical.
+
 - **Gate A Rule:** Adopt only if hybrid beats eps-only by $\ge 1.0\text{ dB}$ in $\ge 2$ scenarios without hurting the third by $> 0.5\text{ dB}$.
-- **VERDICT: REJECT HYBRID (Negative Finding).**  
-  **Insight:** With $\epsilon = 0.25$, $(P + \epsilon).\text{bit\_length}()$ naturally equals $(P_{\text{low}} + \epsilon).\text{bit\_length}() = 21$ throughout the quiet and nominal ranges. The eps-regularisation term inherently realizes a seamless, soft LMS-to-NLMS transition without requiring extra comparison logic.
+- **VERDICT: REJECT HYBRID (Negative Finding).** While the hybrid improved the WAV scenario by $+3.19\text{ dB}$, it severely degraded Stationary Noise by $-3.99\text{ dB}$ and Path Switch by $-4.19\text{ dB}$.
+- **Architectural Insight:** For thresholds below $\epsilon = 0.25$, the term $(P + \epsilon)$ is bounded below by $\epsilon$, keeping $(P + \epsilon).\text{bit\_length()}$ strictly constant. The eps-regularisation term inherently realizes a seamless, soft LMS-to-NLMS transition without requiring extra comparison logic.
 
 ---
 

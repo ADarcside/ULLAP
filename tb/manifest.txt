@@ -16,7 +16,8 @@ shift_W11_acc18 2 11 32 512 4 18 vectors/rtl/shift_W11_acc18 3000 10
 lms_W20_L32 0 20 32 512 4 45 vectors/rtl/lms_W20_L32 1500 10
 nlms_W16_L32 1 16 32 51 4 37 vectors/rtl/nlms_W16_L32 1500 10
 shift_W11_sat_w 2 11 32 512 1 27 vectors/rtl/shift_W11_sat_w 1500 10
-nlms_W11_sat_wg 1 11 32 512 4 27 vectors/rtl/nlms_W11_sat_wg 1500 10
+lms_W12_L32 0 12 32 512 4 29 vectors/rtl/lms_W12_L32 1500 10
+nlms_W12_L32 1 12 32 51 4 29 vectors/rtl/nlms_W12_L32 1500 10
 nlms_W11_L5 1 11 5 102 4 25 vectors/rtl/nlms_W11_L5 1000 10
 lms_W11_L2 0 11 2 512 4 23 vectors/rtl/lms_W11_L2 1000 10
 nlms_W11_L2 1 11 2 102 4 23 vectors/rtl/nlms_W11_L2 1000 10

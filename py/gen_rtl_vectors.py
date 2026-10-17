@@ -80,19 +80,21 @@ def main():
                 shipped.append(t)
     if not shipped:
         raise SystemExit("tb/manifest.txt has no 'shipped_*' entries; cannot verify/list the shipped vector sets")
-    for name, algo_id, W, L, mu_int, K, _acc, prefix, n, *_e in [t[:9] for t in shipped]:
+    for t in shipped:
+        name, algo_id, W, L, mu_int, K, _acc, prefix, n = t[:9]
+        eps_val = int(t[9]) if len(t) > 9 else 10
         al = {v: k for k, v in ALGO_ID.items()}[int(algo_id)]
         W, L, mu_int, K, n = int(W), int(L), int(mu_int), int(K), int(n)
         scen = name.split(f"_W{W}_", 1)[1]
         mu = (2.0 ** -K) if al == "nlms_shift" else mu_int / 1024.0
         sc = make_scenario(scen, S["n"], 1)
-        r = run_fixed(al, sc.x, sc.d, L, mu, FxCfg(W=W))
+        r = run_fixed(al, sc.x, sc.d, L, mu, FxCfg(W=W, eps_exp=eps_val))
         rows, w = fp.read_vec(os.path.join(ROOT, prefix), W)
         I = r["ints"]
         ref = np.stack([I["x"][:n], I["d"][:n], I["y"][:n], I["e"][:n]], 1)
         assert np.array_equal(rows, ref) and np.array_equal(w, I["W"][n - 1]), f"shipped vector mismatch {prefix}"
         man.append(dict(name=name, algo=int(algo_id), W=W, L=L, MU_INT=mu_int, K=K, ACC_W=r["acc_bits"],
-                        prefix=prefix, n=n, flags=0, counts=r["counts"], eps=10))
+                        prefix=prefix, n=n, flags=0, counts=r["counts"], eps=eps_val))
     # ---- extra sets
     X = [
         # name              algo          W   L   mu      scenario       n     xscale quiet acc_bits
@@ -107,7 +109,8 @@ def main():
         ("lms_W20_L32",     "lms",        20, 32, 0.5,    "path_switch", 1500, 1.0,   0,    None),
         ("nlms_W16_L32",    "nlms",       16, 32, 0.05,   "stationary",  1500, 1.0,   0,    None),
         ("shift_W11_sat_w", "nlms_shift", 11, 32, 0.5,    "stationary",  1500, 0.05,  0,    None),
-        ("nlms_W11_sat_wg", "nlms",       11, 32, 0.5,    "stationary",  1500, 0.05,  0,    None),
+        ("lms_W12_L32",     "lms",        12, 32, 0.5,    "stationary",  1500, 1.0,   0,    None),
+        ("nlms_W12_L32",    "nlms",       12, 32, 0.05,   "stationary",  1500, 1.0,   0,    None),
         ("nlms_W11_L5",     "nlms",       11, 5,  0.1,    "stationary",  1000, 1.0,   0,    None),
         # Focused edge-case configurations
         ("lms_W11_L2",      "lms",        11, 2,  0.5,    "stationary",  1000, 1.0,   0,    None),

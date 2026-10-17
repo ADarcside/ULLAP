@@ -31,6 +31,18 @@ Overflow counts are 0 for every grid point.
 ## Gate A (hybrid power switch)
 Not adopted. The hybrid power switch is structurally identical to eps-only for thresholds below eps: because P + eps is bounded below by eps = 0.25, the leading-one position / bit_length of (P + eps) remains strictly constant for all P < 0.25 (s = (0.25).bit_length() - F + K). Consequently, the filter naturally operates in fixed-step LMS mode during quiet intervals without requiring any explicit mode-switching threshold or comparator hardware.
 
+### Gate A Evaluation Results (Mean Final NR in dB across seeds 1–3, W=12, L=32)
+*Source: `scratch/check_gate_a_fixed.py`:*
+
+| Scenario | EPS-Only Baseline (`EPS_EXP=2, K=3`) | Second Comparison (`EPS_EXP=4, K=3`) | Hybrid ($P_{\text{low}}=0.3$) | Hybrid ($P_{\text{low}}=0.5$) | Hybrid ($P_{\text{low}}=1.0$) |
+|---|---|---|---|---|---|
+| **Stationary** | **22.22 dB** | 20.19 dB | 18.23 dB ($-3.99\text{ dB}$) | 18.23 dB ($-3.99\text{ dB}$) | 11.75 dB ($-10.47\text{ dB}$) |
+| **Amp Steps** | **24.15 dB** | 16.15 dB | 23.81 dB ($-0.35\text{ dB}$) | 23.81 dB ($-0.35\text{ dB}$) | 21.90 dB ($-2.25\text{ dB}$) |
+| **Path Switch** | **18.99 dB** | 20.71 dB | 14.80 dB ($-4.19\text{ dB}$) | 14.80 dB ($-4.19\text{ dB}$) | 8.68 dB ($-10.31\text{ dB}$) |
+| **WAV Audio** | **5.51 dB** | 6.24 dB | 8.71 dB ($+3.19\text{ dB}$) | 8.71 dB ($+3.19\text{ dB}$) | 4.88 dB ($-0.63\text{ dB}$) |
+
+*Note on Identical Rows:* For $P_{\text{low}} \in \{0.3, 0.5\}$, $(P_{\text{low}} + \epsilon_{\text{fixed}}).\text{bit\_length()}$ evaluates to the exact same fixed shift value ($s = 12$). Therefore, the simulation trajectories and final NR numbers for $P_{\text{low}}=0.3$ and $P_{\text{low}}=0.5$ are mathematically identical.
+
 Furthermore, cancellation performance in this regularised regime depends primarily on the effective step size:
 $$\mu_{\text{eff}} = 2^{\text{EPS\_EXP} - K}$$
 This is directly confirmed by the parameter sweep rows where configurations with equal $(\text{EPS\_EXP} - K)$ exhibit equivalent steady-state tracking and noise-floor behavior (e.g., EPS_EXP=2, K=3 and EPS_EXP=3, K=4 both yield $\text{EPS\_EXP}-K = -1$).
