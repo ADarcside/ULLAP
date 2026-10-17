@@ -26,7 +26,7 @@ def windows(x, L):
 
 
 def shift_k(mu):
-    k = int(round(-math.log2(mu)))
+    k = round(-math.log2(mu))
     if abs(2.0 ** -k - mu) > 1e-12:
         raise ValueError("nlms_shift needs mu = 2^-k")
     return k

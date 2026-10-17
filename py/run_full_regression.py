@@ -51,9 +51,9 @@ def main():
     elapsed = time.time() - t_start
     print("\n" + "=" * 80)
     print(f"ALL REGRESSION STAGES COMPLETED SUCCESSFULLY IN {elapsed:.1f}s!")
-    print("  ✓ 23/23 Python unit & reference tests PASSED")
-    print("  ✓ 55/55 Questa RTL hardware testbenches PASSED")
-    print("  ✓ Quartus multi-corner timing & resource metrics verified")
+    print("  [PASS] 23/23 Python unit & reference tests PASSED")
+    print("  [PASS] 55/55 Questa RTL hardware testbenches PASSED")
+    print("  [PASS] Quartus multi-corner timing & resource metrics verified")
     print("=" * 80)
     sys.exit(0)
 

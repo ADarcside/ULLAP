@@ -1,0 +1,55 @@
+{
+  "experiment_id": "anc_exp_20261017_175955",
+  "algorithms": [
+    "lms",
+    "nlms",
+    "nlms_shift"
+  ],
+  "scenarios": [
+    "stationary",
+    "amp_steps",
+    "path_switch",
+    "wav"
+  ],
+  "sample_rate": 8000,
+  "sample_count": 16000,
+  "filter_length": 32,
+  "tune_seed": 100,
+  "eval_seeds": [
+    1,
+    2,
+    3
+  ],
+  "bit_widths": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+  ],
+  "eps_exp": 2,
+  "thresholds": {
+    "mean_deg": 1.0,
+    "max_deg": 3.0,
+    "ovf_rate": 0.001,
+    "min_nr": 10.0
+  },
+  "wav_path": "C:\\Users\\Lenovo\\OneDrive\\Desktop\\esa_proj\\ULLAP\\vectors\\audio\\acoustic_chord.wav",
+  "target_fpga": "Terasic DE2-115 (Altera Cyclone IV E EP4CE115F29C7)",
+  "results_root": "C:\\Users\\Lenovo\\OneDrive\\Desktop\\esa_proj\\ULLAP\\results",
+  "quick_mode": false,
+  "jobs": 1,
+  "created_at": "2026-10-17 17:59:55"
+}
