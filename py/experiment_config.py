@@ -29,6 +29,7 @@ class ExperimentConfig:
     tune_seed: int = 100
     eval_seeds: List[int] = field(default_factory=lambda: [1, 2, 3])
     bit_widths: List[int] = field(default_factory=lambda: list(range(8, 25)))
+    eps_exp: int = 2
     thresholds: Dict[str, float] = field(default_factory=lambda: {
         "mean_deg": 1.0,
         "max_deg": 3.0,
