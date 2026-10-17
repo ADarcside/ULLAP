@@ -1,18 +1,40 @@
 {
   "mu": {
     "lms": 0.5009130066684768,
-    "nlms": 0.046415888336127774,
-    "nlms_shift": 0.0625
+    "nlms": 0.1467799267622069,
+    "nlms_shift": 0.25
   },
   "candidates": [
+    {
+      "algo": "nlms",
+      "W": 10,
+      "mu": 0.1467799267622069,
+      "nr_fixed": 14.344530627154763,
+      "nr_float": 14.118233589521449,
+      "mean_deg": -0.2262970376333137,
+      "deg_plus1": -0.2171227514932686,
+      "ovf": 0,
+      "structure": "2L+3 mult + 1 divider (or reciprocal)"
+    },
+    {
+      "algo": "nlms_shift",
+      "W": 10,
+      "mu": 0.25,
+      "nr_fixed": 13.9700433003525,
+      "nr_float": 14.046637865998708,
+      "mean_deg": 0.07659456564620619,
+      "deg_plus1": -0.4561949304460048,
+      "ovf": 0,
+      "structure": "2L mult, leading-one detect + barrel shift, no divider/mu-mult"
+    },
     {
       "algo": "lms",
       "W": 11,
       "mu": 0.5009130066684768,
-      "nr_fixed": 16.100496447929086,
-      "nr_float": 16.565048007928187,
-      "mean_deg": 0.4645515599991006,
-      "deg_plus1": 0.5635012667467858,
+      "nr_fixed": 13.728093015773476,
+      "nr_float": 14.099947709464427,
+      "mean_deg": 0.37185469369094976,
+      "deg_plus1": 0.45026503172814236,
       "ovf": 0,
       "structure": "2L+1 mult, no divider"
     }
@@ -23,7 +45,7 @@
     "ovf_rate": 0.001,
     "min_nr": 10.0
   },
-  "wav": "vectors/audio/acoustic_chord.wav",
+  "wav": "C:\\Users\\Lenovo\\OneDrive\\Desktop\\esa_proj\\ULLAP\\vectors\\audio\\acoustic_chord.wav",
   "n": 16000,
   "L": 32,
   "widths": [
@@ -45,5 +67,5 @@
     23,
     24
   ],
-  "date": "2026-10-17 12:59:37"
+  "date": "2026-10-17 16:53:53"
 }

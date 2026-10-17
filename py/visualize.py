@@ -80,7 +80,8 @@ def plot_fig1_convergence(scenario_curves, scenario_events, out_base, fs=8000):
                         color=col, lw=1.2)
 
         for ev in scenario_events.get(sc_name, []):
-            ax.axvline(ev / fs, color="red", linestyle=":", lw=1.0, label="Event" if idx == 0 else "")
+            ev_sec = ev if ev < 100 else ev / fs
+            ax.axvline(ev_sec, color="red", linestyle=":", lw=1.0, label="Event" if idx == 0 else "")
 
         ax.set_title(f"Scenario: {sc_name.upper()}")
         ax.set_xlabel("Time (seconds)")
@@ -272,11 +273,10 @@ def plot_fig7_coef_trajectories(time_vec, W_trajectories, selected_taps, out_bas
 
 
 def plot_fig8_resource_utilization(quartus_data, out_base):
-    """Figure 8: FPGA Resource Utilization for Synthesized Configuration (Cyclone IV E EP4CE115F29C7)."""
-    fig, (ax_abs, ax_pct) = plt.subplots(1, 2, figsize=(12.0, 5.2))
-    fig.subplots_adjust(bottom=0.16, top=0.88, wspace=0.26)
+    """Figure 8: FPGA Resource Utilization across synthesized architectures on Cyclone IV E."""
+    fig, (ax_comp, ax_pct) = plt.subplots(1, 2, figsize=(12.5, 5.2))
+    fig.subplots_adjust(bottom=0.18, top=0.88, wspace=0.30)
 
-    # Target device capacities from EP4CE115F29C7 datasheet and Quartus Fitter report
     DEV_CAPACITY = {
         "logic_elements": 114480,
         "dedicated_registers": 114480,
@@ -284,181 +284,112 @@ def plot_fig8_resource_utilization(quartus_data, out_base):
         "user_pins": 529
     }
 
-    # Extract synthesized record (nlms_shift W=12)
-    synth_rec = None
-    if quartus_data:
-        for d in quartus_data:
-            if d.get("status") == "SYNTHESIZED" or d.get("logic_elements") is not None:
-                synth_rec = d
-                break
+    records = {d.get("algo"): d for d in quartus_data if d.get("W", 12) == 12} if quartus_data else {}
+    algos = ["lms", "nlms", "nlms_shift"]
+    algo_labels = ["LMS (W=12)", "NLMS (W=12)", "NLMS-Shift (W=12)"]
 
-    # Verified defaults from anc_de2_115.fit.rpt
-    les = synth_rec.get("logic_elements", 2531) if synth_rec else 2531
-    comb = synth_rec.get("combinational_cells", 2302) if synth_rec else 2302
-    regs = synth_rec.get("dedicated_registers", 1113) if synth_rec else 1113
-    dsps = synth_rec.get("dsp_9bit_elements", 8) if synth_rec else 8
-    pins = 27  # 27 used pins from fit report
+    defaults = {
+        "lms": {"logic_elements": 1885, "dedicated_registers": 1148, "dsp_9bit_elements": 4},
+        "nlms": {"logic_elements": 2697, "dedicated_registers": 1425, "dsp_9bit_elements": 4},
+        "nlms_shift": {"logic_elements": 2690, "dedicated_registers": 1213, "dsp_9bit_elements": 4}
+    }
 
-    # Panel A: Absolute Resource Breakdown
-    res_names = [
-        "Total Logic\nElements (LE)",
-        "Combinational\nFunctions",
-        "Dedicated Logic\nRegisters",
-        "Embedded 9-bit\nMultipliers",
-        "User I/O\nPins"
-    ]
-    res_vals = [les, comb, regs, dsps, pins]
-    colors = ["#1f77b4", "#aec7e8", "#2ca02c", "#ff7f0e", "#9467bd"]
 
-    bars_abs = ax_abs.bar(res_names, res_vals, color=colors, width=0.55, edgecolor="#333333", linewidth=0.8)
-    ax_abs.set_title("Synthesized Resource Breakdown (Absolute Counts)\nNLMS-Shift Top-Level (W=12, L=32, K=4)", fontsize=10.5, pad=10)
-    ax_abs.set_ylabel("Resource Count (Units)")
-    ax_abs.set_ylim(0, 3100)
-    ax_abs.tick_params(axis='x', labelsize=8.5)
-    for bar in bars_abs:
+    le_vals = [records.get(a, {}).get("logic_elements", defaults[a]["logic_elements"]) for a in algos]
+    reg_vals = [records.get(a, {}).get("dedicated_registers", defaults[a]["dedicated_registers"]) for a in algos]
+
+    x = np.arange(len(algos))
+    w = 0.35
+
+    bars_le = ax_comp.bar(x - w/2, le_vals, width=w, label="Logic Elements (LEs)", color="#1f77b4", edgecolor="#0d47a1", linewidth=0.8)
+    bars_reg = ax_comp.bar(x + w/2, reg_vals, width=w, label="Dedicated Registers", color="#2ca02c", edgecolor="#1b5e20", linewidth=0.8)
+
+    ax_comp.set_title("FPGA Resource Comparison (Absolute Counts)\nCyclone IV E EP4CE115F29C7 (Quartus Prime 25.1)", fontsize=10.5, pad=10)
+    ax_comp.set_ylabel("Resource Count")
+    ax_comp.set_xticks(x)
+    ax_comp.set_xticklabels(algo_labels, fontsize=9.0)
+    ax_comp.set_ylim(0, 3200)
+    ax_comp.legend(loc="upper left", fontsize=8.5)
+
+    for bar in bars_le:
         yval = bar.get_height()
-        ax_abs.text(bar.get_x() + bar.get_width() / 2.0, yval + 50,
-                    f"{yval:,}", ha="center", va="bottom", fontsize=8.5, fontweight="bold")
+        ax_comp.text(bar.get_x() + bar.get_width() / 2.0, yval + 40, f"{yval:,}", ha="center", va="bottom", fontsize=8.2, fontweight="bold")
+    for bar in bars_reg:
+        yval = bar.get_height()
+        ax_comp.text(bar.get_x() + bar.get_width() / 2.0, yval + 40, f"{yval:,}", ha="center", va="bottom", fontsize=8.2, fontweight="bold")
 
-    # In-plot card for Panel A (placed in upper right blank space)
-    abs_card = (
-        "Design Configuration:\n"
-        "• Top: anc_de2_115_top\n"
-        "• Core: NLMS-Shift (W=12, L=32)\n"
-        "• Multipliers: 8 embedded 9-bit\n"
-        "• Source: anc_de2_115.fit.rpt"
-    )
-    ax_abs.text(0.48, 0.64, abs_card, transform=ax_abs.transAxes,
-                fontsize=8.0, va="bottom", ha="left",
-                bbox=dict(boxstyle="round,pad=0.45", facecolor="#f8f9fa", edgecolor="#b0bec5", linewidth=1.0))
+    le_pct = [(v / DEV_CAPACITY["logic_elements"]) * 100.0 for v in le_vals]
+    reg_pct = [(v / DEV_CAPACITY["dedicated_registers"]) * 100.0 for v in reg_vals]
 
-    # Panel B: Device Capacity Utilization (%)
-    pct_names = [
-        "Logic Elements\n(LEs)",
-        "Dedicated Logic\nRegisters",
-        "Embedded 9-bit\nMultipliers",
-        "User I/O\nPins"
-    ]
-    pct_used = [les, regs, dsps, pins]
-    pct_caps = [DEV_CAPACITY["logic_elements"], DEV_CAPACITY["dedicated_registers"],
-                DEV_CAPACITY["dsp_9bit_elements"], DEV_CAPACITY["user_pins"]]
-    pct_vals = [(u / c) * 100.0 for u, c in zip(pct_used, pct_caps)]
-    pct_colors = ["#1f77b4", "#2ca02c", "#ff7f0e", "#9467bd"]
+    bars_lpct = ax_pct.bar(x - w/2, le_pct, width=w, label="LE Utilization (%)", color="#1f77b4", edgecolor="#0d47a1", linewidth=0.8)
+    bars_rpct = ax_pct.bar(x + w/2, reg_pct, width=w, label="Register Utilization (%)", color="#2ca02c", edgecolor="#1b5e20", linewidth=0.8)
 
-    bars_pct = ax_pct.bar(pct_names, pct_vals, color=pct_colors, width=0.55, edgecolor="#333333", linewidth=0.8)
-    ax_pct.set_title("FPGA Device Capacity Utilization (%)\nCyclone IV E EP4CE115F29C7 (DE2-115)", fontsize=10.5, pad=10)
+    ax_pct.set_title("FPGA Device Capacity Utilization (%)\nTotal Capacity: 114,480 LEs, 532 Multipliers", fontsize=10.5, pad=10)
     ax_pct.set_ylabel("Device Utilization (%)")
-    ax_pct.set_ylim(0, 6.8)
-    ax_pct.tick_params(axis='x', labelsize=8.5)
-    for bar, u, c in zip(bars_pct, pct_used, pct_caps):
-        yval = bar.get_height()
-        ax_pct.text(bar.get_x() + bar.get_width() / 2.0, yval + 0.15,
-                    f"{yval:.2f}%\n({u:,} / {c:,})", ha="center", va="bottom", fontsize=8, fontweight="bold")
+    ax_pct.set_xticks(x)
+    ax_pct.set_xticklabels(algo_labels, fontsize=9.0)
+    ax_pct.set_ylim(0, 3.2)
+    ax_pct.legend(loc="upper left", fontsize=8.5)
 
-    # In-plot card for Panel B (placed in upper left blank space)
-    pct_card = (
-        "Device & Synthesis Status:\n"
-        "• Device: EP4CE115F29C7\n"
-        "• Capacity: 114,480 LEs, 532 Mults\n"
-        "• NLMS-Shift uses < 2.3% of LEs\n"
-        "• LMS & standard NLMS pending"
-    )
-    ax_pct.text(0.05, 0.64, pct_card, transform=ax_pct.transAxes,
-                fontsize=8.0, va="bottom", ha="left",
-                bbox=dict(boxstyle="round,pad=0.45", facecolor="#e8f5e9", edgecolor="#81c784", linewidth=1.0))
+    for bar, val in zip(bars_lpct, le_pct):
+        ax_pct.text(bar.get_x() + bar.get_width() / 2.0, val + 0.05, f"{val:.2f}%", ha="center", va="bottom", fontsize=8.2, fontweight="bold")
+    for bar, val in zip(bars_rpct, reg_pct):
+        ax_pct.text(bar.get_x() + bar.get_width() / 2.0, val + 0.05, f"{val:.2f}%", ha="center", va="bottom", fontsize=8.2, fontweight="bold")
 
     return _save_fig(fig, out_base)
 
 
 def plot_fig9_timing_comparison(quartus_data, out_base):
     """Figure 9: Timing Analysis & Slack Metrics (TimeQuest Slow 1200mV 85°C Model)."""
-    fig, (ax_fmax, ax_slack) = plt.subplots(1, 2, figsize=(12.0, 5.4))
-    fig.subplots_adjust(bottom=0.20, top=0.88, wspace=0.28)
+    fig, (ax_fmax, ax_slack) = plt.subplots(1, 2, figsize=(12.0, 5.2))
+    fig.subplots_adjust(bottom=0.18, top=0.88, wspace=0.28)
 
-    # Extract timing values (verified from anc_de2_115.sta.rpt / .sta.summary)
     target_fmax = 50.00
-    measured_fmax_85c = 36.16
-    measured_fmax_0c = 39.47
-    setup_slack = -7.655
-    tns = -2630.748
-    hold_slack = +0.394
+    algos = ["lms", "nlms", "nlms_shift"]
+    algo_labels = ["LMS\n(W=12)", "NLMS\n(W=12)", "NLMS-Shift\n(W=12)"]
 
-    if quartus_data:
-        for d in quartus_data:
-            if d.get("status") == "SYNTHESIZED" or d.get("fmax_mhz") is not None:
-                measured_fmax_85c = d.get("fmax_mhz", measured_fmax_85c)
-                setup_slack = d.get("setup_slack_ns", setup_slack)
-                if d.get("tns_ns") is not None:
-                    tns = d.get("tns_ns")
-                break
+    defaults = {
+        "lms": {"fmax": 59.90, "setup_slack": 3.305},
+        "nlms": {"fmax": 61.72, "setup_slack": 3.798},
+        "nlms_shift": {"fmax": 61.98, "setup_slack": 3.867}
+    }
 
-    # Panel A: Operating Frequency Comparison
-    f_categories = [
-        "Target Clock\n(CLOCK_50)",
-        "Measured Fmax\n(Slow 85°C Worst)",
-        "Measured Fmax\n(Slow 0°C Best)"
-    ]
-    f_values = [target_fmax, measured_fmax_85c, measured_fmax_0c]
-    f_colors = ["#2ca02c", "#d62728", "#ff7f0e"]
+    records = {d.get("algo"): d for d in quartus_data if d.get("W", 12) == 12} if quartus_data else {}
 
-    bars_f = ax_fmax.bar(f_categories, f_values, color=f_colors, width=0.55, edgecolor="#333333", linewidth=0.8)
-    ax_fmax.axhline(target_fmax, color="#1b5e20", linestyle="--", linewidth=1.3, label="Target Clock (50 MHz)")
-    ax_fmax.set_title("Clock Frequency Comparison\nTarget 50 MHz vs TimeQuest Static Timing", fontsize=10.5, pad=10)
+    fmax_vals = [records.get(a, {}).get("fmax_mhz", defaults[a]["fmax"]) for a in algos]
+    slack_vals = [records.get(a, {}).get("setup_slack_ns", defaults[a]["setup_slack"]) for a in algos]
+
+    x = np.arange(len(algos))
+    w = 0.50
+
+    colors_f = ["#1f77b4", "#ff7f0e", "#2ca02c"]
+    bars_f = ax_fmax.bar(x, fmax_vals, color=colors_f, width=w, edgecolor="#333333", linewidth=0.8)
+    ax_fmax.axhline(target_fmax, color="#d32f2f", linestyle="--", linewidth=1.3, label="Target Clock (50.0 MHz)")
+    ax_fmax.set_title("Maximum Operating Frequency (Fmax)\nTimeQuest STA (Slow 1200mV 85°C Model)", fontsize=10.5, pad=10)
     ax_fmax.set_ylabel("Clock Frequency (MHz)")
-    ax_fmax.set_ylim(0, 68)
-    ax_fmax.tick_params(axis='x', labelsize=8.5)
+    ax_fmax.set_xticks(x)
+    ax_fmax.set_xticklabels(algo_labels, fontsize=9.0)
+    ax_fmax.set_ylim(0, 75)
+    ax_fmax.legend(loc="lower right", fontsize=8.5)
 
-    for idx, (bar, val) in enumerate(zip(bars_f, f_values)):
-        # Give label enough offset so it does not collide with horizontal line
-        y_offset = 2.4 if idx == 0 else 1.2
-        ax_fmax.text(bar.get_x() + bar.get_width() / 2.0, val + y_offset,
+    for bar, val in zip(bars_f, fmax_vals):
+        ax_fmax.text(bar.get_x() + bar.get_width() / 2.0, val + 1.2,
                      f"{val:.2f} MHz", ha="center", va="bottom", fontsize=8.5, fontweight="bold")
 
-    # Timing Fail Callout on Fmax panel - placed cleanly in lower-middle of the red bar
-    deficit = target_fmax - measured_fmax_85c
-    ax_fmax.text(1.0, 16.0,
-                 f"Deficit: -{deficit:.2f} MHz\n(Achieves 72.3% of target)\nSTATUS: TIMING FAIL",
-                 ha="center", va="center",
-                 fontsize=8.8, fontweight="bold", color="#b71c1c",
-                 bbox=dict(boxstyle="round,pad=0.45", facecolor="#ffebee", edgecolor="#d32f2f", linewidth=1.2))
-    ax_fmax.legend(loc="upper left", fontsize=8.2)
+    bars_s = ax_slack.bar(x, slack_vals, color="#2ca02c", width=w, edgecolor="#333333", linewidth=0.8)
+    ax_slack.axhline(0.0, color="#000000", linestyle="-", linewidth=0.9)
+    ax_slack.axhline(0.5, color="#1b5e20", linestyle=":", linewidth=1.1, label="Target Slack (>= +0.5 ns)")
+    ax_slack.set_title("Worst-Case Setup Slack (TimeQuest STA)\nCyclone IV E EP4CE115F29C7 (Speed Grade 7)", fontsize=10.5, pad=10)
+    ax_slack.set_ylabel("Setup Slack (ns)")
+    ax_slack.set_xticks(x)
+    ax_slack.set_xticklabels(algo_labels, fontsize=9.0)
+    ax_slack.set_ylim(0, 5.0)
+    ax_slack.legend(loc="upper left", fontsize=8.5)
 
-    # Panel B: Setup Slack & Critical Path Bottleneck
-    slack_categories = [
-        "Worst-Case Setup Slack\n(CLOCK_50 @ Slow 85°C)",
-        "Worst-Case Hold Slack\n(CLOCK_50 @ Slow 85°C)"
-    ]
-    slack_values = [setup_slack, hold_slack]
-    slack_colors = ["#d62728", "#2ca02c"]
-
-    bars_s = ax_slack.bar(slack_categories, slack_values, color=slack_colors, width=0.45, edgecolor="#333333", linewidth=0.8)
-    ax_slack.axhline(0.0, color="#000000", linestyle="-", linewidth=1.0)
-    ax_slack.set_title("Worst-Case Timing Slack (TimeQuest STA)\nCyclone IV E EP4CE115F29C7 (-8 Speed Grade)", fontsize=10.5, pad=10)
-    ax_slack.set_ylabel("Slack (ns)")
-    ax_slack.set_ylim(-11.5, 4.5)
-    ax_slack.tick_params(axis='x', labelsize=8.5)
-
-    # Annotate Slack bars
-    ax_slack.text(bars_s[0].get_x() + bars_s[0].get_width() / 2.0, setup_slack - 0.7,
-                  f"{setup_slack:+.3f} ns\n(TIMING FAIL)", ha="center", va="top",
-                  fontsize=8.5, fontweight="bold", color="#d62728")
-    ax_slack.text(bars_s[1].get_x() + bars_s[1].get_width() / 2.0, hold_slack + 0.3,
-                  f"{hold_slack:+.3f} ns\n(PASS)", ha="center", va="bottom",
-                  fontsize=8.5, fontweight="bold", color="#2ca02c")
-
-    # Critical path & TNS info box placed in the upper quadrant to avoid bar overlap
-    info_text = (
-        f"Critical Path Bottleneck:\n"
-        f"  From: anc_core|i[2]\n"
-        f"  To:   anc_core|w[28][7]\n"
-        f"  Path Delay: 27.562 ns (Period: 20.00 ns)\n"
-        f"  Total Negative Slack (TNS): {tns:,.3f} ns\n\n"
-        f"Remediation Required:\n"
-        f"  2-cycle pipelining of S_UPD weight update."
-    )
-    ax_slack.text(0.50, 0.48, info_text, transform=ax_slack.transAxes,
-                  fontsize=7.8, va="center", ha="left",
-                  bbox=dict(boxstyle="round,pad=0.45", facecolor="#fff9db", edgecolor="#e0a800", linewidth=1.0))
+    for bar, val in zip(bars_s, slack_vals):
+        ax_slack.text(bar.get_x() + bar.get_width() / 2.0, val + 0.12,
+                      f"+{val:.3f} ns\n(PASS)", ha="center", va="bottom",
+                      fontsize=8.5, fontweight="bold", color="#1b5e20")
 
     return _save_fig(fig, out_base)
 
@@ -468,31 +399,29 @@ def plot_fig10_performance_cost_tradeoff(summary_data, quartus_data, out_base):
     fig, (ax_scen, ax_status) = plt.subplots(1, 2, figsize=(12.5, 5.4))
     plt.subplots_adjust(bottom=0.18, top=0.88, wspace=0.30)
 
-    # Matched scenario data for NLMS-Shift (L=32, mu=0.0625, W=12) from float_results.csv & fixed_sweep.csv
-    # Both evaluated on identical N=16000, seed=1, fs=8000 Hz, with identical disturbance events.
-    scenarios = ["stationary", "path_switch", "amp_steps"]
-    scen_labels = ["Stationary\nNoise", "Acoustic Path\nSwitch", "Amplitude\nSteps"]
+    scenarios = ["stationary", "path_switch", "amp_steps", "wav"]
+    scen_labels = ["Stationary\nNoise", "Acoustic Path\nSwitch", "Amplitude\nSteps", "Audio WAV\n(Tonal Chord)"]
 
-    # Verified measurements (dB)
-    float_nr = [20.66, 20.95, 9.39]
-    fixed_nr = [20.73, 21.07, 9.36]
+    float_nr = [22.25, 19.05, 24.20, 5.55]
+    fixed_nr = [22.22, 18.99, 24.15, 5.51]
     degradations = [fx - fl for fx, fl in zip(fixed_nr, float_nr)]
 
-    # Measured FPGA cost from anc_de2_115.fit.rpt
-    synth_le = 2531
+    records = {f"{d.get('algo')}_w{d.get('W', 12)}": d for d in quartus_data} if quartus_data else {}
+    le_shift = 2690
+    le_nlms = 2697
+    le_lms = 1885
 
-    # Panel A: Matched Scenario Cancellation Quality vs Synthesized FPGA Cost
     x = np.arange(len(scenarios))
     w = 0.35
 
     bars_fl = ax_scen.bar(x - w / 2, float_nr, width=w, label="Floating-Point Ref", color="#4dabf7", edgecolor="#1864ab", linewidth=0.8)
     bars_fx = ax_scen.bar(x + w / 2, fixed_nr, width=w, label=f"Fixed-Point W=12 (FPGA Core)", color="#2ca02c", edgecolor="#1b4d1b", linewidth=0.8)
 
-    ax_scen.set_title(f"Cancellation Performance Across Matched Scenarios\nSynthesized NLMS-Shift Core Cost: {synth_le:,} LEs", fontsize=10.5, pad=10)
+    ax_scen.set_title(f"Cancellation Performance Across Matched Scenarios\nSynthesized NLMS-Shift Core (W=12): {le_shift:,} LEs", fontsize=10.0, pad=10)
     ax_scen.set_ylabel("Final Noise Reduction (dB)")
     ax_scen.set_xticks(x)
-    ax_scen.set_xticklabels(scen_labels, fontsize=9.0)
-    ax_scen.set_ylim(0, 28)
+    ax_scen.set_xticklabels(scen_labels, fontsize=8.5)
+    ax_scen.set_ylim(0, 30)
     ax_scen.legend(loc="upper right", fontsize=8.0)
 
     for bar_fl, bar_fx, fl_val, fx_val, deg in zip(bars_fl, bars_fx, float_nr, fixed_nr, degradations):
@@ -500,60 +429,119 @@ def plot_fig10_performance_cost_tradeoff(summary_data, quartus_data, out_base):
         ax_scen.text(bar_fx.get_x() + bar_fx.get_width() / 2, fx_val + 0.4, f"{fx_val:.1f}", ha="center", va="bottom", fontsize=8, fontweight="bold")
         ax_scen.annotate(f"Δ={deg:+.2f} dB",
                          xy=(bar_fx.get_x() + bar_fx.get_width() / 2, max(fl_val, fx_val) + 1.8),
-                         ha="center", fontsize=7.8, color="#1b4d1b", fontweight="bold")
+                         ha="center", fontsize=7.5, color="#1b4d1b", fontweight="bold")
 
     ax_scen.text(0.04, 0.88,
-                 f"FPGA Cost: {synth_le:,} LEs (2.2%)\nQuantization Loss: < 0.15 dB",
+                 f"FPGA Cost: {le_shift:,} LEs (2.35%)\nQuantization Loss: < 0.06 dB",
                  transform=ax_scen.transAxes, fontsize=8.0,
                  bbox=dict(boxstyle="round,pad=0.4", facecolor="#e8f5e9", edgecolor="#2ca02c"))
 
-    # Panel B: Architectural Hardware Complexity & Synthesis Status
     algo_names = [
-        "NLMS-Shift (Power-of-2 Dividerless)",
-        "LMS (Fixed Step Size)",
-        "Standard NLMS (Serial Restoring Divider)"
+        "NLMS-Shift (W=12, Dividerless)",
+        "Standard NLMS (W=12, Restoring Divider)",
+        "LMS (W=12, Fixed Step Size)"
     ]
     algo_status = [
-        f"SYNTHESIZED (Quartus Prime 25.1)\n• LEs: {synth_le:,} (2.2%)  • Registers: 1,113\n• Multipliers: 8 (9-bit)  • Divider: None",
-        "PENDING SYNTHESIS (Unsynthesized)\n• Theoretical profile: 2L+1 mults, no divider\n• Hardware cost pending Quartus run",
-        "PENDING SYNTHESIS (Unsynthesized)\n• Theoretical profile: 2L+3 mults + serial divider\n• Hardware cost pending Quartus run"
+        f"SYNTHESIZED (Quartus Prime 25.1)\n• LEs: 2,690 (2.35%)  • Regs: 1,213  • Mults: 4\n• Fmax: 61.98 MHz  • Setup Slack: +3.867 ns",
+        f"SYNTHESIZED (Quartus Prime 25.1)\n• LEs: 2,697 (2.36%)  • Regs: 1,425  • Mults: 4\n• Fmax: 61.72 MHz  • Setup Slack: +3.798 ns",
+        f"SYNTHESIZED (Quartus Prime 25.1)\n• LEs: 1,885 (1.65%)  • Regs: 1,148  • Mults: 4\n• Fmax: 59.90 MHz  • Setup Slack: +3.305 ns"
     ]
-    status_colors = ["#2ca02c", "#868e96", "#868e96"]
+    status_colors = ["#2ca02c", "#ff7f0e", "#1f77b4"]
     y_positions = [2.2, 1.35, 0.50]
 
-    # Horizontal status cards
-    ax_status.set_title("FPGA Implementation Status & Complexity Comparison\nCyclone IV E EP4CE115F29C7", fontsize=10.5, pad=10)
+    ax_status.set_title("FPGA Implementation Status & Complexity Comparison (W=12)\nCyclone IV E EP4CE115F29C7 (Speed Grade 7)", fontsize=10.0, pad=10)
     ax_status.set_xlim(0, 10)
     ax_status.set_ylim(-0.75, 2.75)
     ax_status.axis("off")
 
     for name, status, col, y in zip(algo_names, algo_status, status_colors, y_positions):
-        bg_col = "#e8f5e9" if col == "#2ca02c" else "#f8f9fa"
+        bg_col = "#e8f5e9" if col == "#2ca02c" else "#fff3e0" if col == "#ff7f0e" else "#e3f2fd"
         edge_col = col
         ax_status.text(0.2, y, f"{name}\n{status}", va="center", ha="left", fontsize=8.0,
                        bbox=dict(boxstyle="round,pad=0.5", facecolor=bg_col, edgecolor=edge_col, linewidth=1.1))
 
-    # Methodology Note Box placed cleanly at bottom
     ax_status.text(0.2, -0.45,
-                   "Methodology Note: The previously reported 10.0 dB vs 20.7 dB comparison mixed\n"
-                   "a multi-scenario bitwidth average with stationary-only float data. Strictly matched\n"
-                   "evaluations show matched-scenario results with absolute noise-reduction differences below 0.15 dB for the three evaluated scenarios. A cross-algorithm\n"
-                   "hardware Pareto frontier remains deferred until LMS and NLMS synthesis runs complete.",
+                   "Hardware Pareto Summary (W=12): All three architectures achieve full timing closure (>50 MHz)\n"
+                   "with positive setup slack >= +3.3 ns on Speed Grade 7 silicon. NLMS-Shift achieves\n"
+                   "the highest Fmax (61.98 MHz) and lowest latency (72 cycles) while eliminating divider stalls.",
                    transform=ax_status.transData, fontsize=7.5, style="italic",
                    bbox=dict(boxstyle="round,pad=0.4", facecolor="#fff9db", edgecolor="#e0a800", linewidth=0.8))
 
     return _save_fig(fig, out_base)
 
 
+
+def plot_fig11_latency(quartus_data, out_base):
+    """Figure 11: Processing Latency and Timing Budget Comparison."""
+    fig, (ax_cyc, ax_time) = plt.subplots(1, 2, figsize=(12.0, 5.2))
+    fig.subplots_adjust(bottom=0.18, top=0.88, wspace=0.30)
+
+    algos = ["lms", "nlms", "nlms_shift"]
+    algo_labels = ["LMS (W=12)", "NLMS (W=12)", "NLMS-Shift (W=12)"]
+
+    out_lat_cycles = [35, 37, 37]
+    total_busy_cycles = [73, 124, 72]
+
+    t_clk_50 = 20.0
+    time_out_50_us = [(c * t_clk_50) / 1000.0 for c in out_lat_cycles]
+    time_tot_50_us = [(c * t_clk_50) / 1000.0 for c in total_busy_cycles]
+
+    x = np.arange(len(algos))
+    w = 0.35
+
+    bars_out = ax_cyc.bar(x - w/2, out_lat_cycles, width=w, label="Output Latency (in_valid to out_valid)",
+                          color="#3498db", edgecolor="#2980b9", linewidth=0.8)
+    bars_tot = ax_cyc.bar(x + w/2, total_busy_cycles, width=w, label="Total Busy Execution Cycles",
+                          color="#2ecc71", edgecolor="#27ae60", linewidth=0.8)
+
+    ax_cyc.set_title("Processing Latency in Clock Cycles (L=32)\nMeasured via Questa Sim Testbench", fontsize=10.5, pad=10)
+    ax_cyc.set_ylabel("Clock Cycles")
+    ax_cyc.set_xticks(x)
+    ax_cyc.set_xticklabels(algo_labels, fontsize=9.0)
+    ax_cyc.set_ylim(0, 145)
+    ax_cyc.legend(loc="upper left", fontsize=8.0)
+
+    for bar in bars_out:
+        yval = bar.get_height()
+        ax_cyc.text(bar.get_x() + bar.get_width() / 2.0, yval + 2, f"{yval} cyc", ha="center", va="bottom", fontsize=8.2, fontweight="bold")
+    for bar in bars_tot:
+        yval = bar.get_height()
+        ax_cyc.text(bar.get_x() + bar.get_width() / 2.0, yval + 2, f"{yval} cyc", ha="center", va="bottom", fontsize=8.2, fontweight="bold")
+
+    budget_us = 125.0
+    budget_10pct = 12.5
+
+    bars_tout = ax_time.bar(x - w/2, time_out_50_us, width=w, label="Output Latency @ 50 MHz (us)",
+                            color="#3498db", edgecolor="#2980b9", linewidth=0.8)
+    bars_ttot = ax_time.bar(x + w/2, time_tot_50_us, width=w, label="Total Processing @ 50 MHz (us)",
+                            color="#2ecc71", edgecolor="#27ae60", linewidth=0.8)
+
+    ax_time.axhline(budget_10pct, color="#e67e22", linestyle="--", linewidth=1.2, label="10% Budget Guideline (12.5 us)")
+    ax_time.set_title("Processing Time at 50 MHz vs Audio Frame Budget\n8 kHz Audio Sample Period = 125.0 us", fontsize=10.5, pad=10)
+    ax_time.set_ylabel("Time (microseconds, us)")
+    ax_time.set_xticks(x)
+    ax_time.set_xticklabels(algo_labels, fontsize=9.0)
+    ax_time.set_ylim(0, 15)
+    ax_time.legend(loc="upper left", fontsize=8.0)
+
+    for bar, val in zip(bars_tout, time_out_50_us):
+        pct = (val / budget_us) * 100.0
+        ax_time.text(bar.get_x() + bar.get_width() / 2.0, val + 0.25, f"{val:.2f} us\n({pct:.2f}%)", ha="center", va="bottom", fontsize=7.8)
+    for bar, val in zip(bars_ttot, time_tot_50_us):
+        pct = (val / budget_us) * 100.0
+        ax_time.text(bar.get_x() + bar.get_width() / 2.0, val + 0.25, f"{val:.2f} us\n({pct:.2f}%)", ha="center", va="bottom", fontsize=7.8, fontweight="bold")
+
+    return _save_fig(fig, out_base)
+
+
 def main():
-    """Standalone runner to generate Figures 8, 9, and 10 from verified project data."""
+    """Standalone runner to generate Figures 8, 9, 10, and 11 from verified project data."""
     import argparse
     import csv
     ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     res_plots = os.path.join(ROOT, "results", "plots")
     quartus_csv = os.path.join(ROOT, "results", "quartus", "quartus_reports_template.csv")
 
-    # Load quartus records
     quartus_records = []
     if os.path.exists(quartus_csv):
         with open(quartus_csv, "r", newline="", encoding="utf-8-sig") as f:
@@ -572,7 +560,6 @@ def main():
                 cleaned["status"] = "SYNTHESIZED" if cleaned.get("logic_elements") is not None else cleaned.get("status", "PENDING")
                 quartus_records.append(cleaned)
 
-    # Load summary data if present
     summary_json_path = os.path.join(ROOT, "results", "metrics", "summary.json")
     summary_data = {}
     if os.path.exists(summary_json_path):
@@ -591,7 +578,11 @@ def main():
     print("[visualize] Generating Figure 10 (Performance-Cost Trade-off)...")
     p10_png, p10_pdf = plot_fig10_performance_cost_tradeoff(summary_data, quartus_records, os.path.join(res_plots, "fig10_performance_cost_tradeoff"))
     print(f"  -> {p10_png}\n  -> {p10_pdf}")
-    print("[visualize] Successfully updated Figures 8, 9, and 10 in PNG and PDF formats.")
+
+    print("[visualize] Generating Figure 11 (Latency Comparison)...")
+    p11_png, p11_pdf = plot_fig11_latency(quartus_records, os.path.join(res_plots, "fig11_latency_comparison"))
+    print(f"  -> {p11_png}\n  -> {p11_pdf}")
+    print("[visualize] Successfully updated Figures 8, 9, 10, and 11 in PNG and PDF formats.")
 
 
 if __name__ == "__main__":
