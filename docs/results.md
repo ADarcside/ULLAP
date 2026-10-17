@@ -31,6 +31,9 @@ Eval seeds [1, 2, 3]; tuning seed 100.
 | feedback | nlms | 4.3 ± 0.1 | 4.1 | 0 | n/a | 3.2 | 0 |
 | feedback | nlms_shift | 4.2 ± 0.1 | 4.1 | 0 | n/a | 3.3 | 0 |
 
+> [!NOTE]
+> **WAV Scenario Confidence Intervals:** For the real WAV audio scenario (`acoustic_chord.wav`), the input recording is fixed across all runs. The random evaluation seeds vary only the background noise and secondary path perturbations, which naturally produces narrower variance and tighter confidence intervals than fully stochastic synthetic noise sequences.
+
 ## 3. Fixed-Point Precision Sweep (W = 8 to 24 bits)
 
 | Word Length W | lms | nlms | nlms_shift |

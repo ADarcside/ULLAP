@@ -25,6 +25,7 @@ Overflow counts are 0 for every grid point.
 * Level dependence: eps is in absolute Q1.(W-1) units. The test signals have reference RMS about 0.06 (P about 0.1-0.3).
   A much louder or quieter reference moves the optimum; re-run the sweep for the real codec levels.
 * `wav` (tonal chord) stays far below the 10 dB target for every setting; it is likely limited by the tonal input.
+  Confidence intervals for the WAV scenario reflect a fixed audio recording (`acoustic_chord.wav`), with random seeds varying only sensor noise and path perturbations.
 * Fixed vs float differ by up to about 2-3 dB on amp_steps / wav (final-window NR is trajectory sensitive), and the fixed
   model is sometimes better. W = 10 is clearly weaker than W = 12 or 14 for eps_exp = 2 and 3.
 

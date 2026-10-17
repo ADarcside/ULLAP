@@ -30,14 +30,14 @@ from metrics import evaluate
 
 HW_DATA = {
     "lms": {
-        "setting": "W=12, mu=0.5",
+        "setting": "W=12, mu=0.25",
         "les": 1930, "registers": 1133, "multipliers": 1,
         "fmax_slow_85c": 60.05, "slack_setup_slow_85c": 3.347, "slack_hold_slow_85c": 0.380,
         "slack_setup_slow_0c": 4.612, "slack_setup_fast_0c": 11.120,
         "latency_cycles": 35, "busy_cycles": 73
     },
     "nlms": {
-        "setting": "W=12, mu=0.1468, eps_exp=2",
+        "setting": "W=12, mu=0.25, eps_exp=0",
         "les": 2740, "registers": 1395, "multipliers": 1,
         "fmax_slow_85c": 58.87, "slack_setup_slow_85c": 3.014, "slack_hold_slow_85c": 0.395,
         "slack_setup_slow_0c": 4.220, "slack_setup_fast_0c": 10.850,
@@ -54,13 +54,13 @@ HW_DATA = {
 
 
 def generate_paper_numbers():
-    print("[reproduce] Generating results/paper_numbers.csv with 20 seeds for main scenarios...")
+    print("[reproduce] Generating results/paper_numbers.csv with fair-tuned settings across 20 seeds...")
     import scipy.stats as st
     wav_path = os.path.join(ROOT, "vectors", "audio", "acoustic_chord.wav")
     scenarios = ["stationary", "amp_steps", "path_switch", "wav", "feedback"]
     algos = [("nlms_shift", 2.0**-3, FxCfg(W=12, eps_exp=2)),
-             ("nlms", 0.14678, FxCfg(W=12, eps_exp=2)),
-             ("lms", 0.5009, FxCfg(W=12, eps_exp=2))]
+             ("nlms", 0.25, FxCfg(W=12, eps_exp=0)),
+             ("lms", 0.25, FxCfg(W=12, eps_exp=2))]
     main_seeds = list(range(1, 21))  # 20 seeds for statistical rigor
     sweep_seeds = [1, 2, 3]
 

@@ -24,11 +24,14 @@ All empirical criteria, timing closures, multi-corner slacks, resource footprint
 | **3** | **Cancellation: Acoustic Path Switch** | $20.57\text{ dB}$ (Float tuned $\text{EPS\_EXP}=10$) | **$18.99\text{ dB}$** (Final NR) | $+7.99\text{ dB}$ over 10 dB target | **PASS** | `results/metrics/summary.json` |
 | **4** | **Cancellation: Real Audio WAV** | $-11.29\text{ dB}$ (Baseline diverging) | **$5.51\text{ dB}$** (Final NR) / **$8.87\text{ dB}$** (Whole-run) | $+16.80\text{ dB}$ improvement (bounded by chord) | **PASS** | `results/metrics/summary.json` |
 | **5** | **No Regression / Fixed vs Float Precision** | Float degradation $> 1.0\text{ dB}$ at baseline | **$< 0.06\text{ dB}$** across all synthetic scenarios | Within $\le 1.0\text{ dB}$ limit | **PASS** | `results/metrics/summary.json` |
-| **6** | **RTL Bit-Exactness** | 35 shipped tests at $W=11$ | **55 / 55 Questa Tests Bit-Exact** (0 mismatch) | Bit-identical across 100% of vectors | **PASS** | `results/metrics/questa_regression_summary.txt` |
+| **6** | **RTL Bit-Exactness** | 35 shipped tests at $W=11$ | **57 / 57 Questa Tests Bit-Exact** (0 mismatch) | Bit-identical across 100% of vectors | **PASS** | `results/metrics/questa_regression_summary.txt` |
 | **7** | **Static Timing Closure (Gate B)** | $-7.655\text{ ns}$ (Setup violation, unpipelined) | **$+3.867\text{ ns}$** (Slow 85°C setup slack @ 50 MHz) | $+3.367\text{ ns}$ margin over $+0.5\text{ ns}$ target | **PASS** | `scratch/shift_w12/anc_de2_115.sta.rpt` |
 | **8** | **FPGA Resource Footprint** | 2,531 LEs ($W=11$ estimated) | **2,690 LEs** (2.35% of EP4CE115), 1,213 Regs, 4 Mults | Fits $< 3\%$ of Cyclone IV E | **PASS** | `scratch/shift_w12/anc_de2_115.fit.rpt` |
 | **9** | **Core Latency & Execution Budget** | Not explicitly measured | **$LAT = 37$ cycles** ($740\text{ ns}$), **72 busy cycles** | **$1.15\%$ of 8 kHz budget** ($125\,\mu\text{s}$) | **PASS** | `quartus/anc_de2_115_top.v`, Fig 11 |
 | **10** | **Physical Hardware (Board Test)** | Unprogrammed DE2-115 board | **PENDING (manual)** | Excluded from automated suite (user test) | **PENDING** | Manual hardware sign-off |
+
+> [!NOTE]
+> **WAV Scenario Confidence Intervals:** For the real audio WAV benchmark (`acoustic_chord.wav`), the primary reference audio recording is identical across all simulation runs. The random evaluation seeds vary only the background sensor noise and secondary acoustic path perturbations. Consequently, variance across seeds is substantially lower than in the fully stochastic synthetic noise scenarios.
 
 ---
 
