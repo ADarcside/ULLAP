@@ -14,7 +14,7 @@ L_TRUE = 16                      # length of the true noise path h
 BASE_RMS = 0.06                  # reference-noise RMS at gain 1
 SENSOR_STD = 5e-4                # primary-sensor white noise (sets the achievable floor)
 COLOR = np.array([1.0, 0.8, 0.6, 0.4, 0.2])   # FIR colouring -> correlated reference
-SCENARIOS = ("stationary", "amp_steps", "path_switch", "wav")
+SCENARIOS = ("stationary", "amp_steps", "path_switch", "wav", "feedback")
 LIMIT = 1.0 - 2.0 ** -15
 
 
@@ -27,6 +27,7 @@ class Scenario:
     events: list         # sample indices of abrupt changes
     h_segs: list         # [(start_index, true_path)] ground-truth coefficients
     n_clip: int = 0      # samples clipped to the fixed-point range
+
 
 
 def make_paths(seed=1234):
@@ -101,12 +102,25 @@ def make_scenario(name, n=16000, seed=0, wav=None):
         g[events[0]:], g[events[1]:] = 3.0, 0.25
     elif name == "path_switch":                 # abrupt change of the noise path at n/2
         events, segs = [n // 2], [(0, h1), (n // 2, h2)]
+    elif name == "feedback":                    # acoustic howling feedback scenario
+        # Speaker output re-enters primary mic through delayed acoustic path with loop gain near 1
+        events = []
     v = BASE_RMS * g * v
     nz = np.convolve(v, h1)[:n]
     if name == "path_switch":
         nz[n // 2:] = np.convolve(v, h2)[:n][n // 2:]
     s = speech_like(n)
     d = s + nz + SENSOR_STD * r.standard_normal(n)
+    if name == "feedback":
+        # Recirculating acoustic delay path: delay D=8 samples (~1 ms), loop gain 0.88 (< 1, near singing margin)
+        D_fb = 8
+        g_fb = 0.88
+        d_fb = np.zeros(n, dtype=float)
+        for idx in range(n):
+            prev = d_fb[idx - D_fb] if idx >= D_fb else 0.0
+            d_fb[idx] = d[idx] + g_fb * prev
+        d = d_fb
     x = v
     n_clip = int(np.count_nonzero((np.abs(d) > LIMIT) | (np.abs(x) > LIMIT)))
     return Scenario(name, np.clip(x, -LIMIT, LIMIT), np.clip(d, -LIMIT, LIMIT), s, events, segs, n_clip)
+
