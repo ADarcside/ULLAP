@@ -46,47 +46,7 @@ from signals import make_scenario
 from fixedpoint import FxCfg, run_fixed
 from metrics import evaluate
 
-def parse_sta_slacks(rpt_path):
-    """Parse Worst-case setup and hold slacks from a Quartus .sta.rpt file.
-
-    Returns a dict with keys:
-      slack_setup_slow_85c, slack_hold_slow_85c  (Slow 1200mV 85C Model)
-      slack_setup_slow_0c,  slack_hold_slow_0c   (Slow 1200mV 0C Model)
-      slack_setup_fast_0c,  slack_hold_fast_0c   (Fast 1200mV 0C Model)
-
-    The file is structured as three consecutive analysis blocks in the
-    message log at the bottom (lines beginning with "Info: Analyzing ...").
-    Within each block the two "Worst-case" lines appear in setup then hold order.
-    """
-    corner_map = {
-        "Slow 1200mV 85C": "slow_85c",
-        "Slow 1200mV 0C":  "slow_0c",
-        "Fast 1200mV 0C":  "fast_0c",
-    }
-    result = {}
-    current_corner = None
-    with open(rpt_path, "r", encoding="utf-8", errors="replace") as fh:
-        for line in fh:
-            # Detect model section header
-            for label, key in corner_map.items():
-                if f"Analyzing {label} Model" in line:
-                    current_corner = key
-                    break
-            if current_corner is None:
-                continue
-            m = re.search(r"Worst-case (setup|hold) slack is ([0-9.\-]+)", line)
-            if m:
-                kind = m.group(1)   # "setup" or "hold"
-                val  = float(m.group(2))
-                result[f"slack_{kind}_{current_corner}"] = val
-    missing = {k for k in [
-        "slack_setup_slow_85c", "slack_hold_slow_85c",
-        "slack_setup_slow_0c",  "slack_hold_slow_0c",
-        "slack_setup_fast_0c",  "slack_hold_fast_0c",
-    ] if k not in result}
-    if missing:
-        raise RuntimeError(f"parse_sta_slacks: missing keys {missing} in {rpt_path}")
-    return result
+from sta_parser import parse_sta_slacks, parse_sta_slacks_with_provenance
 
 
 def _load_hw_data():

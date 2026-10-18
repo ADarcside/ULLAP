@@ -287,45 +287,24 @@ def build_verification_database():
     # ns slack: only slack columns / reports (no clock period, no target thresholds, no latencies)
     add_ns(3.347, "results/metrics/quartus_summary.csv", "row 5 (exp_lms_w11_cyclone4), col=setup_slack_ns: 3.347")
     add_ns(3.014, "results/metrics/quartus_summary.csv", "row 6 (exp_nlms_w11_cyclone4), col=setup_slack_ns: 3.014")
-    for ns_val, src_file, desc in [
-        (3.305, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Setup Summary: LMS setup slack: 3.305 ns"),
-        (3.798, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Setup Summary: NLMS setup slack: 3.798 ns"),
-        (3.867, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Setup Summary: NLMS-Shift setup slack: 3.867 ns"),
-        (4.819, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 0C Model Setup Summary: LMS setup slack: 4.819 ns"),
-        (5.115, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 0C Model Setup Summary: NLMS setup slack: 5.115 ns"),
-        (5.177, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Slow 1200mV 0C Model Setup Summary: NLMS-Shift setup slack: 5.177 ns"),
-        (11.654, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Setup Summary: LMS setup slack: 11.654 ns"),
-        (11.707, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Setup Summary: NLMS setup slack: 11.707 ns"),
-        (11.688, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Setup Summary: NLMS-Shift setup slack: 11.688 ns"),
-    ]:
-        add_ns(ns_val, src_file, desc)
-
-    # Hold slacks: parsed live from the committed sta.rpt files (Slow 85C and Fast 0C corners).
-    # This avoids maintaining a separate hard-coded list that could diverge from the reports.
+    # Dynamic timing slacks parsed live from the committed sta.rpt files using sta_parser
+    from sta_parser import parse_sta_slacks_with_provenance
     _rpt_algo = [
         ("results/quartus_reports/lms_w12/anc_de2_115.sta.rpt",   "LMS"),
         ("results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt",  "NLMS"),
         ("results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "NLMS-Shift"),
     ]
-    _corner_pat = re.compile(r"Analyzing (Slow 1200mV 85C|Slow 1200mV 0C|Fast 1200mV 0C) Model")
-    _slack_pat  = re.compile(r"Worst-case (setup|hold) slack is ([0-9.\-]+)")
     for _rpt_rel, _algo_name in _rpt_algo:
         _rpt_abs = os.path.join(ROOT, _rpt_rel)
         if not os.path.exists(_rpt_abs):
             continue
-        _corner = None
-        with open(_rpt_abs, "r", encoding="utf-8", errors="replace") as _fh:
-            for _line in _fh:
-                _cm = _corner_pat.search(_line)
-                if _cm:
-                    _corner = _cm.group(1)
-                if _corner is None:
-                    continue
-                _sm = _slack_pat.search(_line)
-                if _sm and _sm.group(1) == "hold":
-                    _val = float(_sm.group(2))
-                    _desc = f"{_corner} Model Hold: {_algo_name} hold slack: {_val} ns"
-                    add_ns(_val, _rpt_rel, _desc)
+        _slacks, _prov = parse_sta_slacks_with_provenance(_rpt_abs)
+        for _k, _info in _prov.items():
+            _val = _info["value"]
+            _corner = _info["corner_label"]
+            _kind = _info["kind"]
+            _desc = f"{_corner} Model {_kind.capitalize()}: {_algo_name} {_kind} slack: {_val} ns"
+            add_ns(_val, _rpt_rel, _desc)
 
     # 7. Additional metrics from real CSV ground truth files in results/metrics/
     # All values are anchored directly to committed experiment CSVs
