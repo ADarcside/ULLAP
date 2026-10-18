@@ -437,22 +437,290 @@ def run_comprehensive_audit():
         print(f"    Source Row : {s['source_row']}")
         print(f"    Context    : {s['context']}\n")
 
+def audit_headline_tables_and_claims():
+    """Row-by-row check of headline tables and scenario claims against paper_numbers.csv (algorithm, scenario, value).
+    Flags any swapped or mismatched values where a number belongs to a different algorithm or scenario.
+    """
+    csv_path = os.path.join(ROOT, "results", "paper_numbers.csv")
+    if not os.path.exists(csv_path):
+        return []
+
+    # Map (algorithm, scenario) -> dict of expected metrics
+    ground_truth = {}
+    with open(csv_path, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for r in reader:
+            algo = r["algorithm"].lower().strip()
+            scen = r["scenario"].lower().strip()
+            # We record main benchmark scenarios
+            if scen in ["stationary", "amp_steps", "path_switch", "wav", "feedback"]:
+                ground_truth[(algo, scen)] = {
+                    "final_mean": float(r["nr_final_mean"]),
+                    "ci_margin": float(r["nr_final_ci95_margin"]),
+                    "whole_mean": float(r["nr_all_mean"]),
+                    "ovf_count": int(r["ovf_count"]),
+                }
+
+    def norm_algo(text):
+        t = text.lower().replace("_", "-").replace(" ", "").replace("*", "")
+        if "nlms-shift" in t or "nlms_shift" in t or "shift" in t:
+            return "nlms_shift"
+        if "nlms" in t:
+            return "nlms"
+        if "lms" in t:
+            return "lms"
+        return None
+
+    def norm_scen(text):
+        t = text.lower().replace("_", " ").replace("*", "").replace("-", " ")
+        if "stationary" in t:
+            return "stationary"
+        if "amplitude" in t or "amp step" in t or "amp_step" in t:
+            return "amp_steps"
+        if "path switch" in t or "path_switch" in t:
+            return "path_switch"
+        if "wav" in t or "audio" in t:
+            return "wav"
+        if "feedback" in t or "howling" in t:
+            return "feedback"
+        return None
+
+    mismatches = []
+    target_files = [os.path.join(ROOT, "README.md")]
+    target_files.extend(glob.glob(os.path.join(ROOT, "docs", "*.md")))
+    target_files.extend(glob.glob(os.path.join(ROOT, "results", "*.md")))
+
+    for fpath in sorted(target_files):
+        rel = os.path.relpath(fpath, ROOT)
+        with open(fpath, "r", encoding="utf-8", errors="replace") as f:
+            lines = f.readlines()
+
+        # 1. Row-by-row markdown table parser
+        in_table = False
+        headers = []
+        cur_scen = None
+        cur_algo = None
+
+        for line_idx, line in enumerate(lines, 1):
+            sline = line.strip()
+            if sline.startswith("|") and sline.endswith("|"):
+                cells = [c.strip() for c in sline[1:-1].split("|")]
+                # Header row
+                if any("scenario" in c.lower() for c in cells) and any("algorithm" in c.lower() for c in cells):
+                    headers = [c.lower() for c in cells]
+                    in_table = True
+                    cur_scen = None
+                    cur_algo = None
+                    continue
+                if in_table and all(set(c).issubset({"-", ":", " "}) for c in cells):
+                    continue
+                if in_table:
+                    row_data = {}
+                    for h, c in zip(headers, cells):
+                        row_data[h] = c
+
+                    scen_val = None
+                    algo_val = None
+                    nr_val_str = None
+
+                    for h, c in row_data.items():
+                        if "scenario" in h:
+                            scen_val = norm_scen(c)
+                        elif "algorithm" in h:
+                            if c:
+                                algo_val = norm_algo(c)
+                        elif "final nr" in h or "mean final nr" in h or "balanced baseline" in h:
+                            nr_val_str = c
+
+                    if algo_val:
+                        cur_algo = algo_val
+
+                    active_scen = scen_val
+                    active_algo = algo_val or cur_algo
+
+                    if active_algo and active_scen and nr_val_str:
+                        m_nr = re.search(r"([0-9]+\.[0-9]+)", nr_val_str)
+                        if m_nr and (active_algo, active_scen) in ground_truth:
+                            val = float(m_nr.group(1))
+                            expected = ground_truth[(active_algo, active_scen)]["final_mean"]
+                            if abs(val - expected) > 0.05:
+                                mismatches.append({
+                                    "file": rel,
+                                    "line": line_idx,
+                                    "algo": active_algo,
+                                    "scenario": active_scen,
+                                    "found": val,
+                                    "expected": expected,
+                                    "context": sline
+                                })
+            else:
+                in_table = False
+                headers = []
+                cur_algo = None
+
+            # 2. Textual bullet assertions parser
+            # e.g.: - **Stationary Noise:** ... fair-tuned NLMS at $24.33\text{ dB}$ ...
+            m_bullet = re.match(r"^\s*-\s*\*\*([^*]+)\*\*:?\s*(.*)", sline)
+            if m_bullet:
+                scen_header = m_bullet.group(1).rstrip(":").strip()
+                scen_key = norm_scen(scen_header)
+                bullet_body = m_bullet.group(2)
+                if scen_key:
+                    for algo_token, algo_key in [("nlms-shift", "nlms_shift"), ("nlms", "nlms"), ("lms", "lms")]:
+                        if algo_key == "nlms":
+                            pattern = r"\bnlms(?!-shift)\b[^\.\,\;\n]*?(?:at|of|reaches|achieves|delivers|yielding|ties)\s*(?:a\s*mean\s*final\s*NR\s*of\s*)?\$?([0-9]+\.[0-9]+)\s*(?:\\text\{\s*)?dB(?:\})?"
+                        elif algo_key == "nlms_shift":
+                            pattern = r"\bnlms-shift\b[^\.\,\;\n]*?(?:at|of|reaches|achieves|delivers|yielding|ties)\s*(?:a\s*mean\s*final\s*NR\s*of\s*)?\$?([0-9]+\.[0-9]+)\s*(?:\\text\{\s*)?dB(?:\})?"
+                        else:
+                            pattern = r"\blms\b[^\.\,\;\n]*?(?:at|of|reaches|achieves|delivers|yielding|ties)\s*(?:a\s*mean\s*final\s*NR\s*of\s*)?\$?([0-9]+\.[0-9]+)\s*(?:\\text\{\s*)?dB(?:\})?"
+
+                        for m_claim in re.finditer(pattern, bullet_body, re.IGNORECASE):
+                            val = float(m_claim.group(1))
+                            if (algo_key, scen_key) in ground_truth:
+                                expected = ground_truth[(algo_key, scen_key)]["final_mean"]
+                                if abs(val - expected) > 0.05:
+                                    mismatches.append({
+                                        "file": rel,
+                                        "line": line_idx,
+                                        "algo": algo_key,
+                                        "scenario": scen_key,
+                                        "found": val,
+                                        "expected": expected,
+                                        "context": sline
+                                    })
+
+    return mismatches
+
+
+def run_comprehensive_audit():
+    print("=" * 110)
+    print("COMPREHENSIVE MULTI-METRIC AUDIT: dB, Overflows, LEs, Busy Cycles, MHz, and ns")
+    print("Checked against results/paper_numbers.csv and raw experimental/synthesis ground truth")
+    print("=" * 110)
+
+    db = build_verification_database()
+
+    target_files = [os.path.join(ROOT, "README.md")]
+    target_files.extend(glob.glob(os.path.join(ROOT, "docs", "*.md")))
+    target_files.extend(glob.glob(os.path.join(ROOT, "results", "*.md")))
+
+    counts = {k: {"scanned": 0, "matched": 0, "flagged": 0} for k in ["db", "overflow", "le", "busy", "mhz", "ns"]}
+    all_matched = []
+    all_flagged = []
+
+    for fpath in sorted(target_files):
+        rel = os.path.relpath(fpath, ROOT)
+        items = find_metrics_in_file(fpath)
+
+        for item in items:
+            m = item["metric"]
+            counts[m]["scanned"] += 1
+            val = item["val"]
+            src_map = db[m]
+
+            matched = False
+            src_info = None
+
+            if m in ["overflow", "le", "busy"]:
+                if val in src_map:
+                    matched = True
+                    src_info = src_map[val]
+            else: # float values: db, mhz, ns
+                dec = len(item["val_str"].split(".")[1]) if "." in item["val_str"] else 0
+                if dec >= 3:
+                    keys = (round(val, 3),)
+                elif dec == 2:
+                    keys = (round(val, 2),)
+                elif dec == 1:
+                    keys = (round(val, 1), round(val, 2))
+                else:
+                    keys = (round(val, 0), round(val, 1), round(val, 2))
+                for r in keys:
+                    if r in src_map:
+                        matched = True
+                        src_info = src_map[r]
+                        break
+
+            item_record = {
+                "metric": m,
+                "file": rel,
+                "line": item["line"],
+                "val_str": item["val_str"],
+                "val": val,
+                "context": item["context"],
+                "source_file": src_info[0] if src_info else "UNMATCHED",
+                "source_row": src_info[1] if src_info else "NO MATCH FOUND"
+            }
+
+            if matched:
+                counts[m]["matched"] += 1
+                all_matched.append(item_record)
+            else:
+                counts[m]["flagged"] += 1
+                all_flagged.append(item_record)
+
+    # Print summary table
+    print(f"\n{'Metric Category':20} | {'Total Scanned':15} | {'Verified & Matched':20} | {'Flagged / Mismatches':20}")
+    print("-" * 85)
+    for m in ["db", "overflow", "le", "busy", "mhz", "ns"]:
+        c = counts[m]
+        print(f"{m.upper():20} | {c['scanned']:15d} | {c['matched']:20d} | {c['flagged']:20d}")
+    print("-" * 85)
+    tot_scan = sum(c["scanned"] for c in counts.values())
+    tot_mat = sum(c["matched"] for c in counts.values())
+    tot_flag = sum(c["flagged"] for c in counts.values())
+    print(f"{'TOTAL':20} | {tot_scan:15d} | {tot_mat:20d} | {tot_flag:20d}\n")
+
+    # Run row-by-row headline table and scenario claim audit
+    print("=" * 110)
+    print("ROW-BY-ROW HEADLINE TABLE & SCENARIO CLAIM AUDIT (Algorithm x Scenario Mapping)")
+    print("Checked row-by-row against paper_numbers.csv ground truth values")
+    print("=" * 110)
+    row_mismatches = audit_headline_tables_and_claims()
+    if not row_mismatches:
+        print("  [PASS] All headline tables and scenario assertions match expected (algorithm, scenario) ground truth!\n")
+    else:
+        print(f"  [FAIL] Detected {len(row_mismatches)} swapped / mismatched (algorithm, scenario) values!\n")
+        for rm in row_mismatches:
+            print(f"  FLAGGED ROW/CLAIM MISMATCH in {rm['file']}:{rm['line']}:")
+            print(f"    Algorithm: {rm['algo'].upper()} | Scenario: {rm['scenario'].upper()}")
+            print(f"    Expected : {rm['expected']:.2f} dB (from paper_numbers.csv)")
+            print(f"    Found    : {rm['found']:.2f} dB (SWAPPED / MISMATCHED)")
+            print(f"    Context  : {rm['context']}\n")
+
+    # Print 10 randomly chosen matched numbers with source file and row
+    random.seed(42)  # reproducible selection
+    sample_size = min(10, len(all_matched))
+    sample = random.sample(all_matched, sample_size)
+    print("=" * 110)
+    print(f"SAMPLE OF 10 RANDOMLY CHOSEN MATCHED NUMBERS WITH GROUND TRUTH PROVENANCE:")
+    print("=" * 110)
+    for idx, s in enumerate(sample, 1):
+        print(f"{idx:2d}. [{s['metric'].upper()}] Value: {s['val_str']} | Document: {s['file']}:{s['line']}")
+        print(f"    Source File: {s['source_file']}")
+        print(f"    Source Row : {s['source_row']}")
+        print(f"    Context    : {s['context']}\n")
+
     # Print flagged / mismatches if any
-    if all_flagged:
+    if all_flagged or row_mismatches:
         print("=" * 110)
         print("FLAGGED / UNMATCHED NUMBERS DETECTED:")
         print("=" * 110)
         for f in all_flagged:
-            print(f"FLAGGED: [{f['metric'].upper()}] {f['val_str']} in {f['file']}:{f['line']}")
+            print(f"FLAGGED VALUE: [{f['metric'].upper()}] {f['val_str']} in {f['file']}:{f['line']}")
             print(f"  Context: {f['context']}\n")
+        for rm in row_mismatches:
+            print(f"FLAGGED ROW: [{rm['algo'].upper()} in {rm['scenario'].upper()}] Found {rm['found']:.2f} dB (Expected {rm['expected']:.2f} dB) in {rm['file']}:{rm['line']}")
+            print(f"  Context: {rm['context']}\n")
     else:
         print("=" * 110)
         print("VERIFICATION RESULT: ALL numbers across all 6 metrics matched verified ground truth!")
         print("=" * 110)
 
-    return len(all_flagged) == 0
+    return (len(all_flagged) == 0) and (len(row_mismatches) == 0)
 
 
 if __name__ == "__main__":
     success = run_comprehensive_audit()
     exit(0 if success else 1)
+

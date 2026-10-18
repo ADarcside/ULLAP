@@ -45,3 +45,7 @@ build/
 
 # Generated Questa session state
 *.cr.mti
+
+# Scratch and editor configs
+scratch/
+.vscode/

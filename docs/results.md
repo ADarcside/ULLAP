@@ -11,6 +11,9 @@ Eval seeds [1, 2, 3]; tuning seed 100.
 | nlms | 0.1468 | 13 |
 | nlms_shift | 0.25 | 9 |
 
+> [!NOTE]
+> Note that the earlier single-seed tuning (seed 100) shown in this section was superseded by the multi-seed fair hyperparameter tuning across unseen seeds 101–103 (LMS: $\mu=0.25$, NLMS: $\mu=0.25, \text{EPS\_EXP}=0$, NLMS-Shift: $K=3, \text{EPS\_EXP}=2$), evaluated across seeds 1–20 in Section 9.
+
 ## 2. Floating-Point Performance Across Scenarios
 
 | Scenario | Algorithm | NR Final (dB) | NR Whole-Run (dB) | Settling Time (ms) | Tracking Time (ms) | Misalignment (dB) | Diverged |
