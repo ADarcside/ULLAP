@@ -27,6 +27,7 @@ def run_task2():
     print(header)
     print("-" * len(header))
 
+    out_rows = []
     for eps_exp in eps_list:
         for K in k_list:
             mu = 2.0 ** -K
@@ -55,6 +56,27 @@ def run_task2():
                 tag += " [SELECTED OP]"
 
             print(f"{eps_exp:7d} | {K:3d} | {mu:8.4f} | {st_fin:11.2f} | {as_fin:11.2f} | {ps_fin:11.2f} | {wv_fin:11.2f} | {wv_all:11.2f} | {tot_ovf:11d} | {tag}")
+            out_rows.append({
+                "eps_exp": eps_exp, "K": K, "mu": mu,
+                "stationary_nr": round(float(st_fin), 2),
+                "stationary_all_nr": round(float(st_all), 2),
+                "amp_steps_nr": round(float(as_fin), 2),
+                "amp_steps_all_nr": round(float(as_all), 2),
+                "path_switch_nr": round(float(ps_fin), 2),
+                "path_switch_all_nr": round(float(ps_all), 2),
+                "wav_final_nr": round(float(wv_fin), 2),
+                "wav_all_nr": round(float(wv_all), 2),
+                "ovf_total": tot_ovf, "meets": tag
+            })
+
+    out_csv = os.path.join(ROOT, "results", "metrics", "task2_eps_k_sweep.csv")
+    import csv
+    with open(out_csv, "w", newline="", encoding="utf-8") as f:
+        fieldnames = ["eps_exp", "K", "mu", "stationary_nr", "stationary_all_nr", "amp_steps_nr", "amp_steps_all_nr", "path_switch_nr", "path_switch_all_nr", "wav_final_nr", "wav_all_nr", "ovf_total", "meets"]
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(out_rows)
+    print(f"[task2] Saved {len(out_rows)} rows to {out_csv}")
 
 if __name__ == "__main__":
     run_task2()

@@ -75,8 +75,24 @@ def run_wav_tradeoff():
     print("\n--- SUMMARY TABLE: BEST WAV SETTINGS PER ALGORITHM ---", flush=True)
     print(f"{'Algorithm':12} | {'Setting':18} | {'WAV NR':10} | {'Stationary':12} | {'Amp Steps':12} | {'Path Switch':12}")
     print("-" * 85, flush=True)
+    out_rows = []
     for name, setting, m in [best_lms, best_nlms, best_shift]:
         print(f"{name:12} | {setting:18} | {m['wav']:6.2f} dB  | {m['stationary']:6.2f} dB    | {m['amp_steps']:6.2f} dB   | {m['path_switch']:6.2f} dB", flush=True)
+        out_rows.append({
+            "algo": name, "setting": setting,
+            "wav_final_nr": round(float(m["wav"]), 2),
+            "stationary_final_nr": round(float(m["stationary"]), 2),
+            "amp_steps_final_nr": round(float(m["amp_steps"]), 2),
+            "path_switch_final_nr": round(float(m["path_switch"]), 2),
+        })
+
+    out_csv = os.path.join(ROOT, "results", "metrics", "wav_tradeoff_seeds101_103.csv")
+    import csv
+    with open(out_csv, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["algo", "setting", "wav_final_nr", "stationary_final_nr", "amp_steps_final_nr", "path_switch_final_nr"])
+        writer.writeheader()
+        writer.writerows(out_rows)
+    print(f"[wav_tradeoff] Saved {len(out_rows)} rows to {out_csv}")
 
     return {"lms": best_lms, "nlms": best_nlms, "nlms_shift": best_shift}
 

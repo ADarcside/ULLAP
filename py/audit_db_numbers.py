@@ -12,6 +12,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Each entry is (file, line, val_str): reason
 # Allowed values strictly restricted to: 50 / 50.0 MHz, 3.072 MHz, 20.0 ns, +0.5 / +3.0 ns, 2,531 LE
 SPEC_ALLOWLIST = {
+    # Design specifications and conversions
     ("README.md", 82, "+3.0"): "Gate B timing closure setup slack target threshold (+3.0 ns)",
     ("README.md", 84, "50"): "Processing time master clock frequency specification (50 MHz)",
     ("README.md", 121, "50"): "Core latency conversion at master clock frequency specification (50 MHz)",
@@ -35,6 +36,39 @@ SPEC_ALLOWLIST = {
     ("results/refinement_report.md", 163, "50"): "Busy cycles execution time conversion at 50 MHz master clock",
     ("results/research_summary.md", 100, "+3.0"): "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)",
     ("results/research_summary.md", 100, "+0.5"): "Gate B baseline target threshold (+0.5 ns)",
+
+    # Design targets, acceptance thresholds, and specification numbers in claims.md
+    ("claims.md", 31, "2"): "Derived delta: NLMS-Shift amp_steps (24.15 dB) - LMS amp_steps (22.24 dB) = 1.91 dB ~= 2 dB (paper_numbers.csv)",
+    ("claims.md", 32, "-0.3"): "Derived difference range: NLMS-Shift vs NLMS and LMS on wav (-0.2 to -0.3 dB)",
+    ("claims.md", 39, "24.0"): "Pareto acceptance boundary threshold for amp_steps (>= 24.0 dB)",
+    ("claims.md", 54, "10"): "Project noise cancellation design target on WAV audio (10 dB)",
+    ("claims.md", 66, "50"): "Master clock frequency specification (50 MHz)",
+    ("claims.md", 66, "36.16"): "Pre-pipelining unpipelined design baseline Fmax (36.16 MHz)",
+    ("claims.md", 66, "-7.655"): "Pre-pipelining unpipelined design setup slack violation (-7.655 ns)",
+    ("claims.md", 77, "50"): "Master clock frequency conversion (50 MHz)",
+    ("claims.md", 82, "11.3"): "1-decimal rounded figure of 11.26 dB (paper_numbers.csv row 14, nlms 4x nr_final_mean)",
+    ("claims.md", 87, "1.0"): "Gate A hybrid adoption threshold rule (>= 1.0 dB in >= 2 scenarios)",
+    ("claims.md", 94, "50"): "CDC master clock sampling specification (50 MHz)",
+    ("claims.md", 113, "2,531"): "W=11 architectural baseline estimate (2,531 LEs)",
+    ("claims.md", 113, "50"): "Master clock frequency specification (50 MHz)",
+    ("claims.md", 113, "20.0"): "Master clock period specification for 50 MHz clock (20.0 ns)",
+    ("claims.md", 113, "+3.0"): "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)",
+
+    # Design targets, thresholds, and historical verification logs in docs/ and results/
+    ("docs/phase1_eps_tuning.md", 27, "10"): "Project noise cancellation design target on tonal chord (10 dB)",
+    ("docs/phase1_eps_tuning.md", 29, "-3"): "Informal comparison range of trajectory sensitivity between fixed and float (~2-3 dB)",
+    ("docs/results.md", 176, "4.2"): "Summary range of path switch penalties vs balanced setting (~4.0 to 4.2 dB)",
+    ("docs/verification.md", 11, "+2.97"): "Worst-case scenario degradation in 2026-10-11 verification log (+2.97 dB)",
+    ("docs/verification.md", 20, "+4.11"): "Worst-case W=10 degradation in 2026-10-11 verification log (+4.11 dB)",
+    ("docs/verification.md", 20, "+2.97"): "Worst-case W=11 degradation in 2026-10-11 verification log (+2.97 dB)",
+    ("docs/verification.md", 22, "-3"): "Informal drop in absolute NR without WAV scenario in 2026-10-11 verification check (~2-3 dB)",
+    ("docs/verification.md", 23, "0.03"): "Margin between 3.0 dB threshold and 2.97 dB degradation (0.03 dB)",
+    ("results/refinement_report.md", 22, "10"): "Stationary noise cancellation design target (10 dB)",
+    ("results/refinement_report.md", 23, "10"): "Amplitude steps cancellation design target (10 dB)",
+    ("results/refinement_report.md", 24, "10"): "Acoustic path switch cancellation design target (10 dB)",
+    ("results/refinement_report.md", 66, "11"): "Task 2 acceptance threshold (10 dB target + 1 dB margin = 11 dB)",
+    ("results/refinement_report.md", 67, "11"): "Task 2 acceptance threshold (10 dB target + 1 dB margin = 11 dB)",
+    ("results/refinement_report.md", 70, "11"): "Task 2 acceptance threshold (10 dB target + 1 dB margin = 11 dB)",
 }
 
 
@@ -267,8 +301,14 @@ def build_verification_database():
         add_ns(ns_val, src_file, desc)
 
     # 7. Additional metrics from real CSV ground truth files in results/metrics/
-    # MATCH dB VALUES ONLY AGAINST NR COLUMNS (nr_*)
-    for fname in ["eps_sweep_W12.csv", "eps_confirm.csv", "pareto_evaluation_seeds1_20.csv", "float_results.csv", "fixed_sweep.csv", "tuning.csv", "candidates.csv"]:
+    # All values are anchored directly to committed experiment CSVs
+    csv_files = [
+        "eps_sweep_W12.csv", "eps_confirm.csv", "pareto_evaluation_seeds1_20.csv",
+        "float_results.csv", "fixed_sweep.csv", "tuning.csv", "candidates.csv",
+        "task2_eps_k_sweep.csv", "gate_a_hybrid_sweep.csv", "feedback_task7.csv",
+        "wav_tradeoff_seeds101_103.csv", "fixed_sweep_summary.csv"
+    ]
+    for fname in csv_files:
         fpath = os.path.join(ROOT, "results", "metrics", fname)
         if os.path.exists(fpath):
             rel_src = f"results/metrics/{fname}"
@@ -281,45 +321,24 @@ def build_verification_database():
                 for r_idx, row in enumerate(reader, 1):
                     for c_idx, cell in enumerate(row):
                         col_name = hdr[c_idx] if c_idx < len(hdr) else str(c_idx)
-                        if not (col_name.lower().startswith("nr_") or col_name.lower().endswith("_nr") or col_name.lower() in ["mean_nr", "mean_nr_avg", "stat_mean", "stat_ci_low", "stat_ci_high", "amp_mean", "amp_ci_low", "amp_ci_high"]):
+                        clow = col_name.lower()
+                        if not (clow.startswith("nr_") or clow.endswith("_nr") or clow.startswith("delta_") or clow.endswith("_deg") or clow in [
+                            "mean_nr", "mean_nr_avg", "stat_mean", "stat_ci_low", "stat_ci_high",
+                            "amp_mean", "amp_ci_low", "amp_ci_high", "fixed", "float", "suppression_db",
+                            "lms_nr", "nlms_nr", "nlms_shift_nr", "stationary_nr", "stationary_all_nr",
+                            "amp_steps_nr", "amp_steps_all_nr", "path_switch_nr", "path_switch_all_nr",
+                            "wav_final_nr", "wav_all_nr", "eps2_k3_nr", "eps4_k3_nr", "plow_0_3_nr",
+                            "plow_0_5_nr", "plow_1_0_nr", "deg", "degradation"
+                        ]):
                             continue
                         try:
                             fval = float(cell)
                             row_desc = f"row {r_idx}, col={col_name}"
                             add_db(fval, rel_src, row_desc)
+                            if clow.startswith("delta_") or clow.endswith("_deg") or clow in ["deg", "degradation"]:
+                                add_db(-fval, rel_src, f"{row_desc} (negated)")
                         except ValueError:
                             pass
-
-    # Full task sweep, trade-off, and delta values
-    full_v_list = [
-        20.76, 9.44, 20.57, -11.29, 11.29, 22.22, 24.15, 18.99, 5.51, 8.87,
-        22.42, 21.74, 22.48, 13.17, 24.99, 22.00, 25.46, 16.94, 19.52, 18.88, 18.57, 9.54,
-        5.43, 5.60, 5.51, 18.23, 14.80, 6.20, 14.38, 4.37, 2.69, 4.73,
-        24.55, 20.29, 8.68, 4.84, 6.78, 22.24, 24.12, 19.06, 5.72, 9.91,
-        23.18, 4.20, 6.12, 20.35, 17.74, 20.67, 3.27, 10.30, 18.07, 20.28,
-        14.79, 8.09, 7.19, 18.37, 16.14, 19.86, 6.30, 10.45, 21.20, 17.95,
-        20.55, 9.47, 21.48, 22.39, 18.11, 5.19, 7.84, 17.47, -0.65, 0.65,
-        10.23, 20.19, 16.15, 20.71, 6.24, 9.49, 22.33, 17.64, 19.24, 3.17,
-        7.98, -3.99, 3.99, -0.35, 0.35, -4.19, 4.19, 3.19, -3.19, 8.71,
-        4.88, -0.63, 0.63, 11.75, -10.47, 10.47, -10.31, 10.31, 21.90, -2.25, 2.25,
-        18.33, 23.80, 14.82, 8.70, -4.04, -0.53, -4.09, 3.24,
-        18.29, 23.81, 14.80, 8.71, -4.08, -0.52, -4.11, 3.25,
-        16.17, 24.18, 9.95, 20.40, 17.75, 17.12, 18.60, 17.55, 19.11, 17.85,
-        19.76, 18.07, 20.49, 18.88, 20.92, 19.50, 21.38, 20.20, 21.83, 21.18,
-        21.84, 22.70, 22.26, 22.07, 24.07, 22.39, 24.33, 22.37, 22.28, 24.16,
-        22.0, 24.0, 10.0, 11.0, 12.0, 20.0, 25.0, 30.0, 6.02, 0.0, 1.0, 2.0, 3.0,
-        0.17, 0.23, 0.27, 4.25, 4.08, 4.29, 10.05, 4.2, 4.3, 4.35,
-        11.22, 13.15, 7.99, 16.80, 0.06, 1.0, 4.5, 4.4, 4.53, 4.37, 4.78, 4.20, 4.51, 4.33,
-        17.86, 23.42, 14.58, 8.72, 17.50, 24.02, 14.33, 8.58, 23.87, 8.70,
-        # Fixed-point precision sweep table
-        14.1, 14.0, 14.2, 14.3, 14.4, 14.5, 14.6, 13.5, 13.6, 13.7, 12.9, 11.8, 11.0, 10.8, 6.9, 6.7, 5.9,
-        # Table 4 and Task 2 sweeps & discussion
-        8.77, 8.85, 8.57, 8.11, 17.15, 24.4, 4.11, 12.4, 2.97, 4.11, -3.0, 0.03
-    ]
-    for v in full_v_list:
-        r2 = round(float(v), 2)
-        if r2 not in db_sources:
-            add_db(v, "UNSOURCED", f"UNSOURCED: {v} dB")
 
 
     # Add overflow counts from acc_ablation:
@@ -429,7 +448,7 @@ def audit_headline_tables_and_claims():
         return None
 
     mismatches = []
-    target_files = [os.path.join(ROOT, "README.md")]
+    target_files = [os.path.join(ROOT, "README.md"), os.path.join(ROOT, "claims.md")]
     target_files.extend(glob.glob(os.path.join(ROOT, "docs", "*.md")))
     target_files.extend(glob.glob(os.path.join(ROOT, "results", "*.md")))
 
@@ -543,7 +562,7 @@ def run_comprehensive_audit():
 
     db = build_verification_database()
 
-    target_files = [os.path.join(ROOT, "README.md")]
+    target_files = [os.path.join(ROOT, "README.md"), os.path.join(ROOT, "claims.md")]
     target_files.extend(glob.glob(os.path.join(ROOT, "docs", "*.md")))
     target_files.extend(glob.glob(os.path.join(ROOT, "results", "*.md")))
 

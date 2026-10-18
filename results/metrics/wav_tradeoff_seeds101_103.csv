@@ -1,0 +1,4 @@
+algo,setting,wav_final_nr,stationary_final_nr,amp_steps_final_nr,path_switch_final_nr
+LMS,mu=0.125,8.72,17.86,23.42,14.58
+NLMS,"eps=-2, mu=0.5",8.58,17.5,24.02,14.33
+NLMS-Shift,"eps=0, K=2",8.7,17.86,23.87,14.58

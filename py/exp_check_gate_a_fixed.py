@@ -102,12 +102,34 @@ def run_check_gate_a():
     print(header)
     print("-" * len(header))
 
+    out_rows = []
     for s in scenarios:
         e2_m = np.mean(eps2_res[s])
         e4_m = np.mean(eps4_res[s])
-        row = f"{s:15} | {e2_m:14.2f} | {e4_m:14.2f} | "
-        row += " | ".join(f"{np.mean(hybrid_res[pl][s]):14.2f}" for pl in p_low_candidates)
+        p03_m = np.mean(hybrid_res[0.3][s])
+        p05_m = np.mean(hybrid_res[0.5][s])
+        p10_m = np.mean(hybrid_res[1.0][s])
+        row = f"{s:15} | {e2_m:14.2f} | {e4_m:14.2f} | {p03_m:14.2f} | {p05_m:14.2f} | {p10_m:14.2f}"
         print(row)
+        out_rows.append({
+            "scenario": s,
+            "eps2_k3_nr": round(float(e2_m), 2),
+            "eps4_k3_nr": round(float(e4_m), 2),
+            "plow_0_3_nr": round(float(p03_m), 2),
+            "plow_0_5_nr": round(float(p05_m), 2),
+            "plow_1_0_nr": round(float(p10_m), 2),
+            "delta_plow_0_3": round(float(p03_m - e2_m), 2),
+            "delta_plow_0_5": round(float(p05_m - e2_m), 2),
+            "delta_plow_1_0": round(float(p10_m - e2_m), 2),
+        })
+
+    out_csv = os.path.join(ROOT, "results", "metrics", "gate_a_hybrid_sweep.csv")
+    import csv
+    with open(out_csv, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["scenario", "eps2_k3_nr", "eps4_k3_nr", "plow_0_3_nr", "plow_0_5_nr", "plow_1_0_nr", "delta_plow_0_3", "delta_plow_0_5", "delta_plow_1_0"])
+        writer.writeheader()
+        writer.writerows(out_rows)
+    print(f"[gate_a] Saved {len(out_rows)} rows to {out_csv}")
 
     print("------------------------------------------------------------------------------------------")
     print("\nDelta vs Best EPS-only (EPS_EXP=2, K=3):")
