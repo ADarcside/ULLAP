@@ -78,7 +78,8 @@ def setup_library():
 
 def run_manifest_tests(filter_str=""):
     manifest_path = os.path.join(ROOT, "tb", "manifest.txt")
-    lines = [l.strip().split() for l in open(manifest_path) if l.strip() and not l.startswith("#")]
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        lines = [l.strip().split() for l in f if l.strip() and not l.startswith("#")]
     results = []
 
     print(f"[Questa] Running {len(lines)} manifest regression configurations...", flush=True)

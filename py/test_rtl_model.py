@@ -141,7 +141,8 @@ class T(unittest.TestCase):
         self.assertEqual(m_lms["w"], I_lms["W"][-1].tolist())
 
     def test_manifest_vectors(self):
-        lines = [l.split() for l in open(os.path.join(ROOT, "tb", "manifest.txt")) if l.strip() and l[0] != "#"]
+        with open(os.path.join(ROOT, "tb", "manifest.txt")) as f:
+            lines = [l.split() for l in f if l.strip() and l[0] != "#"]
         self.assertEqual(len(lines), 53)
         for name, algo, W, L, mi, K, accw, prefix, n, eps in lines:
             algo, W, L, mi, K, accw, n, eps = map(int, (algo, W, L, mi, K, accw, n, eps))

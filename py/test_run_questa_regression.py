@@ -4,6 +4,8 @@ import sys
 import unittest
 from unittest import mock
 
+import io
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import run_questa_regression as rq
@@ -23,7 +25,8 @@ class TestPassCriteria(unittest.TestCase):
         self.assertFalse(rq.is_pass(0, "TB_RESULT PASS x\n", "TB_PROTO"))
 
     def _run(self, rc, out):
-        with mock.patch.object(rq, "run_cmd", return_value=(rc, out)):
+        with mock.patch.object(rq, "run_cmd", return_value=(rc, out)), \
+             mock.patch("sys.stdout", new_callable=io.StringIO):
             return rq.run_manifest_tests("shipped_lms_W11_stationary"), rq.run_protocol_tests()
 
     def test_runner_counts_pass_only_when_rc0_and_marker(self):
