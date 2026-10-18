@@ -63,7 +63,7 @@ Settings with the best wav result (selected on seeds 101-103, evaluated on seeds
 | 9-bit multipliers | 4 | 4 | 4 |
 | Fmax, slow 85C (MHz) | 59.90 | 61.72 | 61.98 |
 
-- C10. All three compile and meet 50 MHz. NLMS-Shift: setup slack +3.867 ns (slow 85C), hold +0.402 ns. The pre-pipelining design failed at -7.655 ns / 36.16 MHz.
+- C10. All three compile and meet 50 MHz. NLMS-Shift: setup slack +3.867 ns (slow 85C), hold +0.402 ns (slow 85C; fast 0C hold is +0.181 ns). The pre-pipelining design failed at -7.655 ns / 36.16 MHz.
 - C11. LMS is about 30% smaller than NLMS-Shift in logic elements. NLMS-Shift and NLMS are about equal in logic elements.
 - Power: not measured (vectorless analysis unavailable).
 
@@ -74,7 +74,7 @@ Settings with the best wav result (selected on seeds 101-103, evaluated on seeds
 | Input-to-output latency, cycles | 35 | 37 | 37 |
 | Busy cycles per sample | 73 | 127 | 72 |
 
-- C12. NLMS-Shift needs 43% fewer busy cycles per sample than NLMS (72 vs 127) with no divider. At fs = 48 kHz (about 1041 cycles at 50 MHz) busy fractions are 7.0% / 12.2% / 6.9%.
+- C12. NLMS-Shift needs 43% fewer busy cycles per sample than NLMS (72 vs 127) with no divider. At fs = 48 kHz (about 1041 cycles at 50 MHz) busy fractions are 7.0% / 12.2% / 6.9%. Simulated signals are 8 kHz (6250 cycles per sample at 50 MHz): busy fractions 1.17% / 2.03% / 1.15%. The codec runs at 48 kHz.
 - Claim NOT made: a latency reduction. Input-to-output latency is the same for NLMS and NLMS-Shift. The codec's internal filter delay is not included (the datasheet figures could not be verified).
 
 ## 6. Level robustness — RAW
@@ -99,7 +99,7 @@ Settings with the best wav result (selected on seeds 101-103, evaluated on seeds
 
 - No board measurement exists. All performance and timing claims are from simulation and Quartus reports. OPEN: programme the NLMS-Shift .sof, observe flags, bypass and freeze, measure latency with a scope.
 - No real recorded noise. Scenarios are synthetic plus one fixed chord recording. OPEN.
-- Novelty is not claimed. Related work found by an AI literature search but not read by the author or reviewer: Huang & Yao 2026 (leading-one detector and barrel shifter NLMS), Yao & Huang 2024 (CSD divisors), Zhao et al. 2018 (division-free LMS), Lee 2024 (LUT dividerless NLMS thesis). OPEN: read them and position the work.
+- Novelty is not claimed. REPORTED related work, from an AI deep-research tool (not read by the author): Pathi et al. 2026, IEEE ICICV (NLMS with leading-one detector, priority encoder and barrel shifter, claims about 50% fewer LUTs and 30% lower latency; abstract only seen), Huang & Yao 2026, Circuits Systems and Signal Processing (binary reciprocal approximation for adaptive IIR NLMS; opened by the tool, different algorithm), Yao & Huang 2024, IEEE TCAS-II (CSD fast-division NLMS; abstract), Zhao et al. 2018, IEEE Access (division-free variable-regularized LMS; opened by the tool), Huang, Yao & Lee 2024, ICCE-Taiwan (LUT reciprocal NLMS; abstract), Oba, Kim & Arai 2006, ISPACS (FPGA LMS/NLMS with bit-shift division; abstract, secondary description only), and a 1996 patent by Ding on eliminating division in NLMS. A "Lee 2024 thesis" could not be found. OPEN: read Pathi 2026 and Oba 2006 in full and position the work.
 - No comparison with the base paper's numbers is possible: it reports no numeric results.
 - No power, no real-speech intelligibility, no listening test.
 
@@ -111,6 +111,7 @@ Known limits:
 1. The explanation given for an earlier paper_numbers.csv diff (nr_avg vs nr_all) does not match the diff shown (its direction is reversed, and the cited change is not in the displayed reproduce.py diff). What is relied on is the end state: the regenerated CSV equals the committed CSV, and its level-sweep rows (including 4x) agree with the raw level-sweep output. An earlier committed version of the CSV held stale level-sweep rows from the old tuning.
 2. The number audit is a typo guard, not independent verification. It matches numbers by value within metric-specific columns of the repo's own CSVs and Quartus reports (markdown files were removed from its ground-truth pool), so it cannot catch a wrong number that equals another valid number in the same column family. The row-by-row headline-table check was tuned against two planted errors. Coverage of confidence intervals, percentages (43%, 30%) and derived busy fractions is not confirmed.
 3. Quartus reports are tracked in results/quartus_reports/ and the audit reads them from there; results/metrics/quartus_summary.csv is the summary. Specification numbers (50 MHz clock, 20.0 ns period, +0.5 / +3.0 ns Gate B targets, the 2,531 LE estimate) are not measured values and are not matched by the audit.
-4. Not done: board test, push to a remote.
+4. Not done: board test.
 5. The audit's allowlist has 55 entries (spec 18, threshold 20, derived 8, historical 9; counts printed in its summary block). Historical entries are numbers from earlier runs with no reproducible source. The audit also matches numbers by value across all CSV columns, so a "matched" number can be matched to an unrelated cell.
 6. The committed raw sweep (results/metrics/fixed_sweep.csv) has word lengths 8, 10, 12, 14, 16, 20 and 24 only. There are no W=9 or W=11 data points in the repository, so the evidence for choosing W=12 over W=11 (worst-case degradation 2.97 dB against a 3.0 dB threshold, docs/verification.md) cannot be reproduced. An earlier precision table in docs/results.md did not match the raw data and was replaced. The NLMS degradation column uses a differently tuned float reference and is not a pure quantisation loss.
+7. C1 and C2 'ties' mean overlapping 95% CIs, not an equivalence test; paired per-seed differences are not computed (per-seed values exist on disk for 3 seeds only). The 22/24 dB Pareto thresholds were chosen post hoc.

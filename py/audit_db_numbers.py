@@ -55,6 +55,7 @@ SPEC_ALLOWLIST = {
     ("claims.md", 113, "20.0"): ("spec", "Master clock period specification for 50 MHz clock (20.0 ns)"),
     ("claims.md", 113, "+3.0"): ("threshold", "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)"),
     ("claims.md", 116, "2.97"): ("historical", "W=11 degradation figure from the 2026-10-11 log in docs/verification.md; no reproducible source"),
+    ("claims.md", 117, "24"): ("threshold", "Pareto acceptance boundary threshold for amp_steps (24 dB; post hoc threshold)"),
 
     # Design targets, thresholds, and historical verification logs in docs/ and results/
     ("docs/phase1_eps_tuning.md", 27, "10"): ("threshold", "Project noise cancellation design target on tonal chord (10 dB)"),
