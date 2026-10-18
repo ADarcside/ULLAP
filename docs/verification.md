@@ -132,7 +132,7 @@ For physical hardware laboratory verification of the synthesized design on the T
    - Inject a full-scale digital impulse $\delta[n] = 16\text{'h7FFF}$ on the reference channel $x[n]$.
    - Trigger the oscilloscope on the rising edge of `AUD_ADCLRCK` or `in_valid`.
    - Measure time delay to `out_valid`: **Exactly $740.0\text{ ns}$ (37 cycles @ 50 MHz)** for NLMS-Shift ($W=12, L=32$).
-   - This consumes only $0.59\%$ of the 8 kHz frame budget ($125\ \mu\text{s}$), well below the 10% audio latency budget.
+   - The 37-cycle core latency ($740.0\text{ ns}$) is $0.59\%$ of the 8 kHz frame period ($125\ \mu\text{s}$). Busy time (all pipeline stages active) is 72 cycles $= 1.44\ \mu\text{s} = 1.15\%$ of the frame period; both are well below the 10% audio latency budget.
 3. **Acoustic Noise Reduction (NR) Validation:**
    - Inject stationary band-limited noise into $x[n]$ and secondary-filtered noise into $d[n]$.
    - Toggle `SW[0]` between 1 (Bypass passthrough) and 0 (Normal ANC).

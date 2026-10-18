@@ -20,6 +20,7 @@ Usage:
 """
 import argparse
 import os
+import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -45,32 +46,85 @@ from signals import make_scenario
 from fixedpoint import FxCfg, run_fixed
 from metrics import evaluate
 
-HW_DATA = {
-    "lms": {
-        "setting": "W=12, mu=0.25",
-        "les": 1885, "registers": 1148, "multipliers": 4,
-        "fmax_slow_85c": 59.90, "slack_setup_slow_85c": 3.305,
-        "slack_hold_slow_85c": 0.402, "slack_hold_fast_0c": 0.182,
-        "slack_setup_slow_0c": 4.819, "slack_setup_fast_0c": 11.654,
-        "latency_cycles": 35, "busy_cycles": 73
-    },
-    "nlms": {
-        "setting": "W=12, mu=0.25, eps_exp=0",
-        "les": 2697, "registers": 1425, "multipliers": 4,
-        "fmax_slow_85c": 61.72, "slack_setup_slow_85c": 3.798,
-        "slack_hold_slow_85c": 0.401, "slack_hold_fast_0c": 0.181,
-        "slack_setup_slow_0c": 5.115, "slack_setup_fast_0c": 11.707,
-        "latency_cycles": 37, "busy_cycles": 127
-    },
-    "nlms_shift": {
-        "setting": "W=12, K=3, EPS_EXP=2",
-        "les": 2690, "registers": 1213, "multipliers": 4,
-        "fmax_slow_85c": 61.98, "slack_setup_slow_85c": 3.867,
-        "slack_hold_slow_85c": 0.402, "slack_hold_fast_0c": 0.181,
-        "slack_setup_slow_0c": 5.177, "slack_setup_fast_0c": 11.688,
-        "latency_cycles": 37, "busy_cycles": 72
+def parse_sta_slacks(rpt_path):
+    """Parse Worst-case setup and hold slacks from a Quartus .sta.rpt file.
+
+    Returns a dict with keys:
+      slack_setup_slow_85c, slack_hold_slow_85c  (Slow 1200mV 85C Model)
+      slack_setup_slow_0c,  slack_hold_slow_0c   (Slow 1200mV 0C Model)
+      slack_setup_fast_0c,  slack_hold_fast_0c   (Fast 1200mV 0C Model)
+
+    The file is structured as three consecutive analysis blocks in the
+    message log at the bottom (lines beginning with "Info: Analyzing ...").
+    Within each block the two "Worst-case" lines appear in setup then hold order.
+    """
+    corner_map = {
+        "Slow 1200mV 85C": "slow_85c",
+        "Slow 1200mV 0C":  "slow_0c",
+        "Fast 1200mV 0C":  "fast_0c",
     }
-}
+    result = {}
+    current_corner = None
+    with open(rpt_path, "r", encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            # Detect model section header
+            for label, key in corner_map.items():
+                if f"Analyzing {label} Model" in line:
+                    current_corner = key
+                    break
+            if current_corner is None:
+                continue
+            m = re.search(r"Worst-case (setup|hold) slack is ([0-9.\-]+)", line)
+            if m:
+                kind = m.group(1)   # "setup" or "hold"
+                val  = float(m.group(2))
+                result[f"slack_{kind}_{current_corner}"] = val
+    missing = {k for k in [
+        "slack_setup_slow_85c", "slack_hold_slow_85c",
+        "slack_setup_slow_0c",  "slack_hold_slow_0c",
+        "slack_setup_fast_0c",  "slack_hold_fast_0c",
+    ] if k not in result}
+    if missing:
+        raise RuntimeError(f"parse_sta_slacks: missing keys {missing} in {rpt_path}")
+    return result
+
+
+def _load_hw_data():
+    """Build HW_DATA, parsing all slack values live from the committed sta.rpt files."""
+    rpt_dir = os.path.join(ROOT, "results", "quartus_reports")
+    algo_rpt = {
+        "lms":       os.path.join(rpt_dir, "lms_w12",   "anc_de2_115.sta.rpt"),
+        "nlms":      os.path.join(rpt_dir, "nlms_w12",  "anc_de2_115.sta.rpt"),
+        "nlms_shift": os.path.join(rpt_dir, "shift_w12", "anc_de2_115.sta.rpt"),
+    }
+    static = {
+        "lms": {
+            "setting": "W=12, mu=0.25",
+            "les": 1885, "registers": 1148, "multipliers": 4,
+            "fmax_slow_85c": 59.90,
+            "latency_cycles": 35, "busy_cycles": 73,
+        },
+        "nlms": {
+            "setting": "W=12, mu=0.25, eps_exp=0",
+            "les": 2697, "registers": 1425, "multipliers": 4,
+            "fmax_slow_85c": 61.72,
+            "latency_cycles": 37, "busy_cycles": 127,
+        },
+        "nlms_shift": {
+            "setting": "W=12, K=3, EPS_EXP=2",
+            "les": 2690, "registers": 1213, "multipliers": 4,
+            "fmax_slow_85c": 61.98,
+            "latency_cycles": 37, "busy_cycles": 72,
+        },
+    }
+    hw = {}
+    for al, rpt in algo_rpt.items():
+        slacks = parse_sta_slacks(rpt)
+        hw[al] = {**static[al], **slacks}
+    return hw
+
+
+HW_DATA = _load_hw_data()
 
 
 def generate_paper_numbers(from_existing=True):
