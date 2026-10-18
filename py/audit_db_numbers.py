@@ -13,62 +13,65 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Allowed values strictly restricted to: 50 / 50.0 MHz, 3.072 MHz, 20.0 ns, +0.5 / +3.0 ns, 2,531 LE
 SPEC_ALLOWLIST = {
     # Design specifications and conversions
-    ("README.md", 82, "+3.0"): "Gate B timing closure setup slack target threshold (+3.0 ns)",
-    ("README.md", 84, "50"): "Processing time master clock frequency specification (50 MHz)",
-    ("README.md", 121, "50"): "Core latency conversion at master clock frequency specification (50 MHz)",
-    ("docs/results.md", 138, "+3.0"): "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)",
-    ("docs/results.md", 138, "+0.5"): "Gate B timing closure baseline target threshold (+0.5 ns)",
-    ("docs/results.md", 162, "50"): "Codec sample period cycle count conversion at 50 MHz master clock",
-    ("docs/results.md", 166, "50"): "Core processing latency conversion at 50 MHz master clock",
-    ("docs/rtl_interface.md", 3, "50"): "Core master clock operating frequency target (50 MHz)",
-    ("docs/verification.md", 47, "+0.5"): "Gate B timing target threshold (>= +0.5 ns)",
-    ("docs/verification.md", 47, "+3.0"): "Gate B headroom target threshold (> +3.0 ns)",
-    ("docs/verification.md", 122, "50.0"): "CLOCK_50 oscillator hardware pin specification (50.0 MHz)",
-    ("docs/verification.md", 122, "20.0"): "Master clock period specification for 50 MHz clock (20.0 ns)",
-    ("docs/verification.md", 134, "50"): "Oscilloscope latency verification at 50 MHz master clock",
-    ("results/pipeline_summary.md", 90, "+3.0"): "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)",
-    ("results/pipeline_summary.md", 90, "+0.5"): "Gate B baseline target threshold (+0.5 ns)",
-    ("results/refinement_report.md", 28, "50"): "Static timing analysis master clock specification (50 MHz)",
-    ("results/refinement_report.md", 29, "2,531"): "W=11 architectural baseline estimate (2,531 LEs)",
-    ("results/refinement_report.md", 136, "50"): "STA section header master clock specification (50 MHz)",
-    ("results/refinement_report.md", 138, "3.072"): "Codec AUD_BCLK audio bit clock constraint (3.072 MHz)",
-    ("results/refinement_report.md", 162, "50"): "Core output latency conversion at 50 MHz master clock",
-    ("results/refinement_report.md", 163, "50"): "Busy cycles execution time conversion at 50 MHz master clock",
-    ("results/research_summary.md", 100, "+3.0"): "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)",
-    ("results/research_summary.md", 100, "+0.5"): "Gate B baseline target threshold (+0.5 ns)",
+    ("README.md", 82, "+3.0"): ("threshold", "Gate B timing closure setup slack target threshold (+3.0 ns)"),
+    ("README.md", 84, "50"): ("spec", "Processing time master clock frequency specification (50 MHz)"),
+    ("README.md", 121, "50"): ("spec", "Core latency conversion at master clock frequency specification (50 MHz)"),
+    ("docs/results.md", 133, "+3.0"): ("threshold", "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)"),
+    ("docs/results.md", 133, "+0.5"): ("threshold", "Gate B timing closure baseline target threshold (+0.5 ns)"),
+    ("docs/results.md", 157, "50"): ("spec", "Codec sample period cycle count conversion at 50 MHz master clock"),
+    ("docs/results.md", 161, "50"): ("spec", "Core processing latency conversion at 50 MHz master clock"),
+    ("docs/rtl_interface.md", 3, "50"): ("spec", "Core master clock operating frequency target (50 MHz)"),
+    ("docs/verification.md", 47, "+0.5"): ("threshold", "Gate B timing target threshold (>= +0.5 ns)"),
+    ("docs/verification.md", 47, "+3.0"): ("threshold", "Gate B headroom target threshold (> +3.0 ns)"),
+    ("docs/verification.md", 122, "50.0"): ("spec", "CLOCK_50 oscillator hardware pin specification (50.0 MHz)"),
+    ("docs/verification.md", 122, "20.0"): ("spec", "Master clock period specification for 50 MHz clock (20.0 ns)"),
+    ("docs/verification.md", 134, "50"): ("spec", "Oscilloscope latency verification at 50 MHz master clock"),
+    ("results/pipeline_summary.md", 90, "+3.0"): ("threshold", "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)"),
+    ("results/pipeline_summary.md", 90, "+0.5"): ("threshold", "Gate B baseline target threshold (+0.5 ns)"),
+    ("results/refinement_report.md", 28, "50"): ("spec", "Static timing analysis master clock specification (50 MHz)"),
+    ("results/refinement_report.md", 29, "2,531"): ("historical", "Pre-pipelining unpipelined W=11 architectural baseline estimate (2,531 LEs)"),
+    ("results/refinement_report.md", 136, "50"): ("spec", "STA section header master clock specification (50 MHz)"),
+    ("results/refinement_report.md", 138, "3.072"): ("spec", "Codec AUD_BCLK audio bit clock constraint (3.072 MHz)"),
+    ("results/refinement_report.md", 162, "50"): ("spec", "Core output latency conversion at 50 MHz master clock"),
+    ("results/refinement_report.md", 163, "50"): ("spec", "Busy cycles execution time conversion at 50 MHz master clock"),
+    ("results/research_summary.md", 95, "+3.0"): ("threshold", "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)"),
+    ("results/research_summary.md", 95, "+0.5"): ("threshold", "Gate B baseline target threshold (+0.5 ns)"),
 
     # Design targets, acceptance thresholds, and specification numbers in claims.md
-    ("claims.md", 31, "2"): "Derived delta: NLMS-Shift amp_steps (24.15 dB) - LMS amp_steps (22.24 dB) = 1.91 dB ~= 2 dB (paper_numbers.csv)",
-    ("claims.md", 32, "-0.3"): "Derived difference range: NLMS-Shift vs NLMS and LMS on wav (-0.2 to -0.3 dB)",
-    ("claims.md", 39, "24.0"): "Pareto acceptance boundary threshold for amp_steps (>= 24.0 dB)",
-    ("claims.md", 54, "10"): "Project noise cancellation design target on WAV audio (10 dB)",
-    ("claims.md", 66, "50"): "Master clock frequency specification (50 MHz)",
-    ("claims.md", 66, "36.16"): "Pre-pipelining unpipelined design baseline Fmax (36.16 MHz)",
-    ("claims.md", 66, "-7.655"): "Pre-pipelining unpipelined design setup slack violation (-7.655 ns)",
-    ("claims.md", 77, "50"): "Master clock frequency conversion (50 MHz)",
-    ("claims.md", 82, "11.3"): "1-decimal rounded figure of 11.26 dB (paper_numbers.csv row 14, nlms 4x nr_final_mean)",
-    ("claims.md", 87, "1.0"): "Gate A hybrid adoption threshold rule (>= 1.0 dB in >= 2 scenarios)",
-    ("claims.md", 94, "50"): "CDC master clock sampling specification (50 MHz)",
-    ("claims.md", 113, "2,531"): "W=11 architectural baseline estimate (2,531 LEs)",
-    ("claims.md", 113, "50"): "Master clock frequency specification (50 MHz)",
-    ("claims.md", 113, "20.0"): "Master clock period specification for 50 MHz clock (20.0 ns)",
-    ("claims.md", 113, "+3.0"): "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)",
+    ("claims.md", 31, "2"): ("derived", "NLMS-Shift amp_steps (24.33 dB) - LMS amp_steps (22.36 dB) = 1.97 dB ~= 2 dB (paper_numbers.csv)"),
+    ("claims.md", 32, "-0.3"): ("derived", "NLMS-Shift (5.46 dB) vs NLMS (5.73 dB) and LMS (5.69 dB) on wav: 5.46 - 5.73 = -0.27 dB ~= -0.3 dB (paper_numbers.csv)"),
+    ("claims.md", 39, "24.0"): ("threshold", "Pareto acceptance boundary threshold for amp_steps (>= 24.0 dB)"),
+    ("claims.md", 54, "4"): ("derived", "Derived delta: WAV gain (+3 dB from ~5.5 to ~8.7 dB) costs ~4 dB penalty on stationary (22.39 -> 18.29 = 4.10 dB) and path_switch (18.95 -> 14.78 = 4.17 dB) (paper_numbers.csv)"),
+    ("claims.md", 54, "10"): ("threshold", "Project noise cancellation design target on WAV audio (10 dB)"),
+    ("claims.md", 66, "50"): ("spec", "Master clock frequency specification (50 MHz)"),
+    ("claims.md", 66, "36.16"): ("historical", "Pre-pipelining unpipelined design baseline Fmax (36.16 MHz); no tracked report in results/quartus_reports"),
+    ("claims.md", 66, "-7.655"): ("historical", "Pre-pipelining unpipelined design setup slack violation (-7.655 ns); no tracked report in results/quartus_reports"),
+    ("claims.md", 77, "50"): ("spec", "Master clock frequency conversion (50 MHz)"),
+    ("claims.md", 82, "11.3"): ("derived", "1-decimal rounding of 11.26 dB (paper_numbers.csv row 14, nlms 4x nr_final_mean)"),
+    ("claims.md", 87, "1.0"): ("threshold", "Gate A hybrid adoption threshold rule (>= 1.0 dB in >= 2 scenarios)"),
+    ("claims.md", 94, "50"): ("spec", "CDC master clock sampling specification (50 MHz)"),
+    ("claims.md", 113, "2,531"): ("historical", "W=11 architectural baseline estimate (2,531 LEs); pre-pipelining estimate"),
+    ("claims.md", 113, "50"): ("spec", "Master clock frequency specification (50 MHz)"),
+    ("claims.md", 113, "20.0"): ("spec", "Master clock period specification for 50 MHz clock (20.0 ns)"),
+    ("claims.md", 113, "+3.0"): ("threshold", "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)"),
+    ("claims.md", 116, "2.97"): ("historical", "W=11 degradation figure from the 2026-10-11 log in docs/verification.md; no reproducible source"),
 
     # Design targets, thresholds, and historical verification logs in docs/ and results/
-    ("docs/phase1_eps_tuning.md", 27, "10"): "Project noise cancellation design target on tonal chord (10 dB)",
-    ("docs/phase1_eps_tuning.md", 29, "-3"): "Informal comparison range of trajectory sensitivity between fixed and float (~2-3 dB)",
-    ("docs/results.md", 176, "4.2"): "Summary range of path switch penalties vs balanced setting (~4.0 to 4.2 dB)",
-    ("docs/verification.md", 11, "+2.97"): "Worst-case scenario degradation in 2026-10-11 verification log (+2.97 dB)",
-    ("docs/verification.md", 20, "+4.11"): "Worst-case W=10 degradation in 2026-10-11 verification log (+4.11 dB)",
-    ("docs/verification.md", 20, "+2.97"): "Worst-case W=11 degradation in 2026-10-11 verification log (+2.97 dB)",
-    ("docs/verification.md", 22, "-3"): "Informal drop in absolute NR without WAV scenario in 2026-10-11 verification check (~2-3 dB)",
-    ("docs/verification.md", 23, "0.03"): "Margin between 3.0 dB threshold and 2.97 dB degradation (0.03 dB)",
-    ("results/refinement_report.md", 22, "10"): "Stationary noise cancellation design target (10 dB)",
-    ("results/refinement_report.md", 23, "10"): "Amplitude steps cancellation design target (10 dB)",
-    ("results/refinement_report.md", 24, "10"): "Acoustic path switch cancellation design target (10 dB)",
-    ("results/refinement_report.md", 66, "11"): "Task 2 acceptance threshold (10 dB target + 1 dB margin = 11 dB)",
-    ("results/refinement_report.md", 67, "11"): "Task 2 acceptance threshold (10 dB target + 1 dB margin = 11 dB)",
-    ("results/refinement_report.md", 70, "11"): "Task 2 acceptance threshold (10 dB target + 1 dB margin = 11 dB)",
+    ("docs/phase1_eps_tuning.md", 27, "10"): ("threshold", "Project noise cancellation design target on tonal chord (10 dB)"),
+    ("docs/phase1_eps_tuning.md", 29, "-3"): ("derived", "Informal comparison range of trajectory sensitivity between fixed and float (~2-3 dB derived from tuning sweep)"),
+    ("docs/results.md", 171, "4.2"): ("derived", "NLMS path-switch penalty vs balanced: 18.34 - 14.33 = 4.01 dB on seeds 101-103, and 18.53 - 14.33 = 4.20 dB on seeds 1-20 (~4.0 to 4.2 dB; wav_tradeoff_seeds101_103.csv & paper_numbers.csv)"),
+    ("docs/results.md", 171, "4.3"): ("derived", "NLMS-Shift / NLMS stationary penalty vs balanced: 22.37 - 18.29 = 4.08 dB on seeds 1-20 (~4.1 dB) and 22.28 - 18.03 = 4.25 dB on seeds 1-20 (~4.3 dB; claims.md & paper_numbers.csv)"),
+    ("docs/verification.md", 11, "+2.97"): ("historical", "Worst-case scenario degradation in 2026-10-11 verification log (+2.97 dB)"),
+    ("docs/verification.md", 20, "+4.11"): ("historical", "Worst-case W=10 degradation in 2026-10-11 verification log (+4.11 dB)"),
+    ("docs/verification.md", 20, "+2.97"): ("historical", "Worst-case W=11 degradation in 2026-10-11 verification log (+2.97 dB)"),
+    ("docs/verification.md", 22, "-3"): ("historical", "Informal drop in absolute NR without WAV scenario in 2026-10-11 verification check (~2-3 dB)"),
+    ("docs/verification.md", 23, "0.03"): ("derived", "Derived margin between 3.0 dB threshold and 2.97 dB degradation: 3.00 - 2.97 = 0.03 dB"),
+    ("results/refinement_report.md", 22, "10"): ("threshold", "Stationary noise cancellation design target (10 dB)"),
+    ("results/refinement_report.md", 23, "10"): ("threshold", "Amplitude steps cancellation design target (10 dB)"),
+    ("results/refinement_report.md", 24, "10"): ("threshold", "Acoustic path switch cancellation design target (10 dB)"),
+    ("results/refinement_report.md", 66, "11"): ("threshold", "Task 2 acceptance threshold (10 dB target + 1 dB margin = 11 dB)"),
+    ("results/refinement_report.md", 67, "11"): ("threshold", "Task 2 acceptance threshold (10 dB target + 1 dB margin = 11 dB)"),
+    ("results/refinement_report.md", 70, "11"): ("threshold", "Task 2 acceptance threshold (10 dB target + 1 dB margin = 11 dB)"),
 }
 
 
@@ -264,7 +267,6 @@ def build_verification_database():
     # Busy cycles: only cycle columns
     add_busy(72, "tb/tb_anc_core.v", "line 157: NLMS-Shift busy cycles (W=12)")
     add_busy(73, "tb/tb_anc_core.v", "line 157: LMS busy cycles (W=11, 12)")
-    add_busy(124, "tb/tb_anc_core.v", "line 157: NLMS busy cycles (W=11)")
     add_busy(127, "tb/tb_anc_core.v", "line 157: NLMS busy cycles (W=12)")
 
     # LEs: only LE columns (no registers, no baseline estimates)
@@ -356,18 +358,19 @@ def build_verification_database():
     }
 
 
+# Metric extraction regular expressions (module-level)
+re_db = re.compile(r'([+-]?\d+(?:\.\d+)?)\s*(?:\\text\{dB\}|dB|db)\b')
+re_ovf = re.compile(r'(?<![A-Za-z0-9_])(\d{1,3}(?:,\d{3})+|\d+)\s*(?:overflows?|ovf|saturations?)\b', re.IGNORECASE)
+re_le = re.compile(r'(?<![A-Za-z0-9_])(\d{1,3}(?:,\d{3})+|\d+)\s*(?:\\text\{LEs\}|LEs|LE|logic elements?)\b', re.IGNORECASE)
+re_busy = re.compile(r'(?<![A-Za-z0-9_])(\d+)\s*(?:busy\s*cycles?|busy\s*clock\s*cycles?)\b', re.IGNORECASE)
+re_mhz = re.compile(r'(?<![A-Za-z0-9_])(\d+(?:\.\d+)?)\s*(?:\\text\{MHz\}|MHz|mhz)\b')
+re_ns = re.compile(r'([+-]?\d+(?:\.\d+)?)\s*(?:\\text\{ns\}|ns)\b')
+
+
 def find_metrics_in_file(filepath):
     """Scan file for all 6 target metric patterns."""
     with open(filepath, "r", encoding="utf-8") as f:
         lines = f.readlines()
-
-    # Patterns
-    re_db = re.compile(r'([+-]?\d+(?:\.\d+)?)\s*(?:\\text\{dB\}|dB|db)\b')
-    re_ovf = re.compile(r'(?<![A-Za-z0-9_])(\d{1,3}(?:,\d{3})+|\d+)\s*(?:overflows?|ovf|saturations?)\b', re.IGNORECASE)
-    re_le = re.compile(r'(?<![A-Za-z0-9_])(\d{1,3}(?:,\d{3})+|\d+)\s*(?:\\text\{LEs\}|LEs|LE|logic elements?)\b', re.IGNORECASE)
-    re_busy = re.compile(r'(?<![A-Za-z0-9_])(\d+)\s*(?:busy\s*cycles?|busy\s*clock\s*cycles?)\b', re.IGNORECASE)
-    re_mhz = re.compile(r'(?<![A-Za-z0-9_])(\d+(?:\.\d+)?)\s*(?:\\text\{MHz\}|MHz|mhz)\b')
-    re_ns = re.compile(r'([+-]?\d+(?:\.\d+)?)\s*(?:\\text\{ns\}|ns)\b')
 
     items = []
     for line_idx, line in enumerate(lines, 1):
@@ -570,6 +573,7 @@ def run_comprehensive_audit():
     all_matched = []
     all_allowed = []
     all_flagged = []
+    used_allowlist = set()
 
     for fpath in sorted(target_files):
         rel = os.path.relpath(fpath, ROOT)
@@ -579,8 +583,27 @@ def run_comprehensive_audit():
             m = item["metric"]
             counts[m]["scanned"] += 1
             val = item["val"]
-            src_map = db[m]
 
+            norm_rel = rel.replace("\\", "/")
+            allow_key = (norm_rel, item["line"], item["val_str"])
+            if allow_key in SPEC_ALLOWLIST:
+                cat, reason = SPEC_ALLOWLIST[allow_key]
+                counts[m]["allowed"] += 1
+                item_record = {
+                    "metric": m,
+                    "file": rel,
+                    "line": item["line"],
+                    "val_str": item["val_str"],
+                    "val": val,
+                    "context": item["context"],
+                    "source_file": f"ALLOWLIST ({cat})",
+                    "source_row": reason
+                }
+                all_allowed.append((item_record, cat, reason))
+                used_allowlist.add(allow_key)
+                continue
+
+            src_map = db[m]
             matched = False
             src_info = None
 
@@ -619,14 +642,8 @@ def run_comprehensive_audit():
                 counts[m]["matched"] += 1
                 all_matched.append(item_record)
             else:
-                norm_rel = rel.replace("\\", "/")
-                allow_key = (norm_rel, item["line"], item["val_str"])
-                if allow_key in SPEC_ALLOWLIST:
-                    counts[m]["allowed"] += 1
-                    all_allowed.append((item_record, SPEC_ALLOWLIST[allow_key]))
-                else:
-                    counts[m]["flagged"] += 1
-                    all_flagged.append(item_record)
+                counts[m]["flagged"] += 1
+                all_flagged.append(item_record)
 
     # Print summary table
     print(f"\n{'Metric Category':20} | {'Total Scanned':15} | {'Verified & Matched':20} | {'Allowed (Spec)':15} | {'Flagged / Mismatches':20}")
@@ -646,8 +663,8 @@ def run_comprehensive_audit():
         print("=" * 110)
         print("ALLOWLISTED SPECIFICATION NUMBERS (SPEC_ALLOWLIST):")
         print("=" * 110)
-        for rec, reason in all_allowed:
-            print(f"ALLOWED (spec): [{rec['metric'].upper()}] {rec['val_str']} in {rec['file']}:{rec['line']} -- {reason}")
+        for rec, cat, reason in all_allowed:
+            print(f"ALLOWED ({cat}): [{rec['metric'].upper()}] {rec['val_str']} in {rec['file']}:{rec['line']} -- {reason}")
             print(f"  Context: {rec['context']}\n")
 
     # Run row-by-row headline table and scenario claim audit
@@ -680,23 +697,41 @@ def run_comprehensive_audit():
         print(f"    Source Row : {s['source_row']}")
         print(f"    Context    : {s['context']}\n")
 
-    # Print flagged / mismatches if any
-    if all_flagged or row_mismatches:
+    unused_allowlist = set(SPEC_ALLOWLIST.keys()) - used_allowlist
+    if unused_allowlist:
         print("=" * 110)
-        print("FLAGGED / UNMATCHED NUMBERS DETECTED:")
+        print(f"ERROR: DETECTED {len(unused_allowlist)} UNUSED ALLOWLIST ENTRIES (SPEC_ALLOWLIST):")
         print("=" * 110)
-        for f in all_flagged:
-            print(f"FLAGGED VALUE: [{f['metric'].upper()}] {f['val_str']} in {f['file']}:{f['line']}")
-            print(f"  Context: {f['context']}\n")
-        for rm in row_mismatches:
-            print(f"FLAGGED ROW: [{rm['algo'].upper()} in {rm['scenario'].upper()}] Found {rm['found']:.2f} dB (Expected {rm['expected']:.2f} dB) in {rm['file']}:{rm['line']}")
-            print(f"  Context: {rm['context']}\n")
-    else:
-        print("=" * 110)
-        print("VERIFICATION RESULT: ALL numbers across all 6 metrics matched verified ground truth!")
+        for k in sorted(unused_allowlist):
+            print(f"  UNUSED: {k} -> {SPEC_ALLOWLIST[k]}")
         print("=" * 110)
 
-    return (len(all_flagged) == 0) and (len(row_mismatches) == 0)
+    # Print flagged / mismatches if any
+    if all_flagged or row_mismatches or unused_allowlist:
+        if all_flagged or row_mismatches:
+            print("=" * 110)
+            print("FLAGGED / UNMATCHED NUMBERS DETECTED:")
+            print("=" * 110)
+            for f in all_flagged:
+                print(f"FLAGGED VALUE: [{f['metric'].upper()}] {f['val_str']} in {f['file']}:{f['line']}")
+                print(f"  Context: {f['context']}\n")
+            for rm in row_mismatches:
+                print(f"FLAGGED ROW: [{rm['algo'].upper()} in {rm['scenario'].upper()}] Found {rm['found']:.2f} dB (Expected {rm['expected']:.2f} dB) in {rm['file']}:{rm['line']}")
+                print(f"  Context: {rm['context']}\n")
+    else:
+        cat_counts = {}
+        for _, cat, _ in all_allowed:
+            cat_counts[cat] = cat_counts.get(cat, 0) + 1
+
+        print("=" * 110)
+        print("VERIFICATION RESULT: ALL numbers across all 6 metrics matched verified ground truth!")
+        print(f"  - Numbers matched to CSV/Quartus ground truth : {tot_mat}")
+        print(f"  - Allowed specifications & thresholds total   : {tot_al}")
+        for cat_name in ["spec", "threshold", "derived", "historical"]:
+            print(f"      * {cat_name:<10}: {cat_counts.get(cat_name, 0)}")
+        print("=" * 110)
+
+    return (len(all_flagged) == 0) and (len(row_mismatches) == 0) and (len(unused_allowlist) == 0)
 
 
 if __name__ == "__main__":

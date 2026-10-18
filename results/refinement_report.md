@@ -168,11 +168,11 @@ All three designs were compiled in `C:\work\ULLAP\quartus` outside OneDrive. SDC
 
 ## 8. TASK 7: Closed-Loop Acoustic Feedback (Howling) Scenario
 
-A feedback scenario was incorporated into `py/signals.py` with an acoustic loop delay of $D=8$ samples (~1 ms) and loop gain $g_{\text{loop}} = 0.88$ (< 1, near singing margin):
+A feedback scenario was incorporated into `py/signals.py` with an acoustic loop delay of $D=8$ samples (~1 ms) and loop gain $g_{\text{loop}} = 0.88$ (< 1, near singing margin). This exploratory run used seeds 1–3 at aggressive step sizes $\mu=0.5$ (LMS, NLMS) and $K=3$ (NLMS-Shift); the formal fair-tuned 20-seed result in `claims.md` Section 1 is 4.35 dB for all three algorithms:
 - **LMS (W=12):** Final NR = 4.25 dB, Whole-Run NR = 4.11 dB, Overflows = 0, Diverged = NO (Stable).
 - **NLMS (W=12):** Final NR = 4.08 dB, Whole-Run NR = 4.11 dB, Overflows = 19, Diverged = NO (Stable).
 - **NLMS-Shift (W=12):** Final NR = 4.29 dB, Whole-Run NR = 3.99 dB, Overflows = 0, Diverged = NO (Stable).
-- **Closed-Loop AFC Simulation:** Dynamic feedback cancellation achieved 10.05 dB suppression without divergence.
+- **ANC Power Reduction Ratio:** Total microphone power reduction $E[d^2]/E[e^2] = 10.05\text{ dB}$ suppression (overall energy ratio of an ANC run, not AFC howling cancellation).
 - **Physical Limitation:** Open-loop feedforward ANC filters cannot suppress howling because reference $x[n]$ is uncorrelated with speech loop recirculations, and 32-tap FIR cannot synthesize sharp IIR resonant poles. True feedback suppression requires internal closed-loop AFC.
 
 ---

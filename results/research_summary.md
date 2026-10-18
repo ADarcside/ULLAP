@@ -35,23 +35,18 @@ Eval seeds [1, 2, 3]; tuning seed 100.
 
 | Word Length W | lms | nlms | nlms_shift |
 |---|---|---|---|
-| 8 | 6.7 dB / +7.36 deg / 0 ovf | 5.9 dB / +8.18 deg / 0 ovf | 6.9 dB / +7.15 deg / 0 ovf |
-| 9 | 11.0 dB / +3.07 deg / 0 ovf | 10.8 dB / +3.34 deg / 0 ovf | 11.8 dB / +2.24 deg / 0 ovf |
-| 10 | 12.9 dB / +1.21 deg / 0 ovf | 14.3 dB / -0.23 deg / 0 ovf | 14.0 dB / +0.08 deg / 0 ovf |
-| 11 | 13.7 dB / +0.37 deg / 0 ovf | 14.3 dB / -0.22 deg / 0 ovf | 14.5 dB / -0.46 deg / 0 ovf |
-| 12 | 13.6 dB / +0.45 deg / 0 ovf | 14.0 dB / +0.15 deg / 0 ovf | 13.5 dB / +0.53 deg / 0 ovf |
-| 13 | 14.5 dB / -0.39 deg / 0 ovf | 14.6 dB / -0.47 deg / 0 ovf | 14.4 dB / -0.40 deg / 0 ovf |
-| 14 | 14.5 dB / -0.38 deg / 0 ovf | 14.5 dB / -0.34 deg / 0 ovf | 14.5 dB / -0.41 deg / 0 ovf |
-| 15 | 14.1 dB / -0.04 deg / 0 ovf | 14.2 dB / -0.04 deg / 0 ovf | 14.1 dB / -0.05 deg / 0 ovf |
-| 16 | 14.1 dB / +0.01 deg / 0 ovf | 14.1 dB / -0.00 deg / 0 ovf | 14.0 dB / +0.00 deg / 0 ovf |
-| 17 | 14.1 dB / +0.00 deg / 0 ovf | 14.1 dB / +0.00 deg / 0 ovf | 14.0 dB / +0.01 deg / 0 ovf |
-| 18 | 14.1 dB / +0.00 deg / 0 ovf | 14.1 dB / +0.00 deg / 0 ovf | 14.0 dB / +0.00 deg / 0 ovf |
-| 19 | 14.1 dB / +0.00 deg / 0 ovf | 14.1 dB / -0.01 deg / 0 ovf | 14.0 dB / -0.00 deg / 0 ovf |
-| 20 | 14.1 dB / -0.00 deg / 0 ovf | 14.1 dB / -0.00 deg / 0 ovf | 14.0 dB / +0.00 deg / 0 ovf |
-| 21 | 14.1 dB / +0.00 deg / 0 ovf | 14.1 dB / -0.00 deg / 0 ovf | 14.0 dB / +0.00 deg / 0 ovf |
-| 22 | 14.1 dB / +0.00 deg / 0 ovf | 14.1 dB / -0.00 deg / 0 ovf | 14.0 dB / -0.00 deg / 0 ovf |
-| 23 | 14.1 dB / +0.00 deg / 0 ovf | 14.1 dB / -0.00 deg / 0 ovf | 14.0 dB / +0.00 deg / 0 ovf |
-| 24 | 14.1 dB / +0.00 deg / 0 ovf | 14.1 dB / -0.00 deg / 0 ovf | 14.0 dB / +0.00 deg / 0 ovf |
+| 8 | 4.3 dB / +10.19 deg / 0 ovf | 4.0 dB / +8.75 deg / 0 ovf | 4.3 dB / +10.29 deg / 0 ovf |
+| 10 | 11.8 dB / +2.76 deg / 0 ovf | 12.0 dB / +0.66 deg / 0 ovf | 12.4 dB / +2.16 deg / 0 ovf |
+| 12 | 14.77 dB / -0.23 deg / 0 ovf | 15.35 dB / -2.65 deg / 0 ovf | 15.33 dB / -0.75 deg / 0 ovf |
+| 14 | 14.6 dB / -0.11 deg / 0 ovf | 14.6 dB / -1.94 deg / 0 ovf | 14.6 dB / -0.07 deg / 0 ovf |
+| 16 | 14.6 dB / -0.04 deg / 0 ovf | 14.6 dB / -1.89 deg / 0 ovf | 14.6 dB / -0.06 deg / 0 ovf |
+| 20 | 14.5 dB / -0.00 deg / 0 ovf | 14.5 dB / -1.84 deg / 0 ovf | 14.6 dB / -0.00 deg / 0 ovf |
+| 24 | 14.5 dB / -0.00 deg / 0 ovf | 14.5 dB / -1.84 deg / 0 ovf | 14.6 dB / -0.00 deg / 0 ovf |
+
+An earlier version of this table covered W=8..24 and did not match the committed raw sweep (results/metrics/fixed_sweep.csv, W = 8, 10, 12, 14, 16, 20, 24 only). It could not be reproduced and was removed; it may have used nature1.wav, which is not in the repository.
+Noise reduction (NR) is mean final-window cancellation (nr_final) averaged across five scenarios (stationary, amp_steps, path_switch, wav, and feedback) evaluated on seed 1; degradation (deg) is relative to the floating-point baseline for each scenario on seed 1 (from float_results.csv).
+deg for NLMS is relative to a differently tuned float reference and is not a pure quantisation loss.
+
 
 ## 4. Hardware Candidates for DE2-115 Cyclone IV E
 

@@ -1,6 +1,6 @@
 # RTL interface specification (portable Verilog; implemented in `rtl/anc_core.v`)
 
-Status: Fully synthesized in Quartus Prime Lite 25.1std and verified across 55 test suites in Questa (bit-exact on all vector sets). Setup slack: +3.867 ns at 50 MHz (Fmax = 61.98 MHz). Measured LAT (in_valid to out_valid) = L+3 = 35 cycles (LMS), L+5 = 37 cycles (NLMS, NLMS-shift). Total busy cycles: 73 (LMS), 124 (NLMS), 72 (NLMS-shift).
+Status: Fully synthesized in Quartus Prime Lite 25.1std and verified across 57 test suites in Questa (bit-exact on all vector sets). Setup slack: +3.867 ns at 50 MHz (Fmax = 61.98 MHz). Measured LAT (in_valid to out_valid) = L+3 = 35 cycles (LMS), L+5 = 37 cycles (NLMS, NLMS-shift). Total busy cycles: 73 (LMS), 127 (NLMS), 72 (NLMS-shift).
 Original text of this spec is kept below; implementation-time clarifications (extra `busy` port, `in` flag, coefficient
 readout, input pacing, MU_INT/K defaults) are in `docs/verification.md` section 4.
 The Python model `py/fixedpoint.py` is the bit-level reference; the RTL reproduces it bit-for-bit.
