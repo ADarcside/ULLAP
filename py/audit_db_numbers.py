@@ -165,7 +165,7 @@ def build_verification_database():
                 if row.get("fmax_slow_85c"):
                     add_mhz(row["fmax_slow_85c"], "results/paper_numbers.csv", f"{desc}, col=fmax_slow_85c")
                 # ns slacks
-                for col in ["slack_setup_slow_85c", "slack_hold_slow_85c", "slack_setup_slow_0c", "slack_setup_fast_0c"]:
+                for col in ["slack_setup_slow_85c", "slack_hold_slow_85c", "slack_hold_fast_0c", "slack_setup_slow_0c", "slack_setup_fast_0c"]:
                     if row.get(col):
                         add_ns(row[col], "results/paper_numbers.csv", f"{desc}, col={col}")
 
@@ -298,6 +298,8 @@ def build_verification_database():
         (11.688, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Setup Summary: NLMS-Shift setup slack: 11.688 ns"),
         (0.182, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Hold Summary: LMS hold slack: 0.182 ns"),
         (0.181, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Hold Summary: NLMS hold slack: 0.181 ns"),
+        (0.402, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Hold Summary: LMS hold slack: 0.402 ns"),
+        (0.401, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Hold Summary: NLMS hold slack: 0.401 ns"),
         (0.402, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Hold Summary: NLMS-Shift hold slack: 0.402 ns"),
     ]:
         add_ns(ns_val, src_file, desc)
