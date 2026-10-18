@@ -17,6 +17,13 @@ from typing import List, Dict, Any, Optional
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Canonical, fair-tuned hardware parameters (W=12, L=32, selected on tuning seeds 101-103)
+FAIR_TUNED_SETTINGS = {
+    "lms": {"mu": 0.25, "eps_exp": 2, "W": 12, "L": 32},
+    "nlms": {"mu": 0.25, "eps_exp": 0, "W": 12, "L": 32},
+    "nlms_shift": {"K": 3, "mu": 0.125, "eps_exp": 2, "W": 12, "L": 32}
+}
+
 
 @dataclass
 class ExperimentConfig:

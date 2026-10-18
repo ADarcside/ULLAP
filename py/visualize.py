@@ -38,6 +38,8 @@ plt.rcParams.update({
     "figure.autolayout": True
 })
 
+from experiment_config import FAIR_TUNED_SETTINGS
+
 ALGO_COLORS = {
     "lms": "#1f77b4",        # Blue
     "nlms": "#ff7f0e",       # Orange
@@ -45,9 +47,9 @@ ALGO_COLORS = {
 }
 
 ALGO_LABELS = {
-    "lms": "LMS (Fixed Step)",
-    "nlms": "NLMS (Normalized)",
-    "nlms_shift": "NLMS-Shift (Power-of-2 Dividerless)"
+    "lms": f"LMS ($\\mu={FAIR_TUNED_SETTINGS['lms']['mu']}$)",
+    "nlms": f"NLMS ($\\mu={FAIR_TUNED_SETTINGS['nlms']['mu']}, \\epsilon=2^{{-{FAIR_TUNED_SETTINGS['nlms']['eps_exp']}}}$)",
+    "nlms_shift": f"NLMS-Shift ($K={FAIR_TUNED_SETTINGS['nlms_shift']['K']}, \\epsilon=2^{{-{FAIR_TUNED_SETTINGS['nlms_shift']['eps_exp']}}}$)"
 }
 
 

@@ -25,20 +25,18 @@ import sys
 import time
 from multiprocessing import Pool
 
+
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from algos import run_float
-from experiment_config import ExperimentConfig
+from experiment_config import ExperimentConfig, FAIR_TUNED_SETTINGS
 from fixedpoint import FxCfg, run_fixed, write_vec
 from import_quartus import load_quartus_csv, DEFAULT_TEMPLATE
-from metrics import evaluate, curves, compute_fixed_vs_float_error, FS
+from metrics import evaluate, curves, FS
 from signals import make_scenario, SCENARIOS
 from verify_core import run_verification_suite
 from visualize import (
-    plot_fig1_convergence, plot_fig2_waveforms, plot_fig3_residual_error,
-    plot_fig4_tracking_response, plot_fig5_noise_reduction_comparison,
-    plot_fig6_bitwidth_sweep, plot_fig7_coef_trajectories,
     plot_fig8_resource_utilization, plot_fig9_timing_comparison,
     plot_fig10_performance_cost_tradeoff, plot_fig11_latency
 )
@@ -66,9 +64,13 @@ def job(t):
         r = run_fixed(algo, sc.x, sc.d, L, mu, cfg)
         cnt = r["counts"]
     m = evaluate(sc, r["e"], r["W"], L)
+    w_bits = cfg.W if isinstance(cfg, FxCfg) else 0
+    acc_bits = int(r.get("acc_bits", 0))  # type: ignore[arg-type]
+    ovf_keys = ("acc", "y", "e", "g", "w")
+    cnt_int: dict[str, int] = {k: int(v) for k, v in cnt.items()}
     m.update(kind=kind, algo=algo, scenario=name, seed=seed, mu=float(mu),
-             Wbits=cfg.W if cfg else 0, acc_bits=r.get("acc_bits", 0),
-             ovf=sum(cnt.values()), **cnt)
+             Wbits=w_bits, acc_bits=acc_bits,
+             ovf=sum(cnt_int.get(k, 0) for k in ovf_keys), **cnt_int)
     return m
 
 
@@ -164,11 +166,11 @@ def main():
         for mu in grid[al]:
             mean_nr = np.mean([r["nr_avg"] for r in tune_rows if r["algo"] == al and r["mu"] == float(mu)])
             tune_summary.append(dict(algo=al, mu=float(mu), mean_nr_avg=mean_nr))
-        best_mu[al] = max((t for t in tune_summary if t["algo"] == al), key=lambda t: t["mean_nr_avg"])["mu"]
+        best_mu[al] = FAIR_TUNED_SETTINGS[al]["mu"]
 
     save_csv(os.path.join(res_metrics, "tuning.csv"), tune_summary)
     save_csv(os.path.join(docs_data, "tuning.csv"), tune_summary)
-    log(f"Tuned step sizes: {best_mu}")
+    log(f"Canonical fair-tuned step sizes (from FAIR_TUNED_SETTINGS): {best_mu}")
 
     # -------------------------------------------------------------------------
     # 2. Floating-Point Multi-Seed Simulation
@@ -199,7 +201,7 @@ def main():
     # 3. Fixed-Point Precision Sweep (W = 8 to 24 bits)
     # -------------------------------------------------------------------------
     log(f"Sweeping fixed-point bit-widths {cfg_obj.bit_widths}...")
-    fx_tasks = [("fixed", al, nm, 1, best_mu[al], FxCfg(W=w, eps_exp=cfg_obj.eps_exp), wav, n, L)
+    fx_tasks = [("fixed", al, nm, cfg_obj.eval_seeds[0], best_mu[al], FxCfg(W=w, eps_exp=int(FAIR_TUNED_SETTINGS[al]["eps_exp"])), wav, n, L)
                 for al in ALGOS for w in cfg_obj.bit_widths for nm in names]
     fx_rows = pmap(fx_tasks, cfg_obj.jobs)
 
@@ -248,8 +250,9 @@ def main():
 
     abl = []
     for c in cands:
+        eps_exp_c = FAIR_TUNED_SETTINGS[c["algo"]]["eps_exp"]
         for ab in (2 * c["W"] + (L - 1).bit_length(), 2 * c["W"], 2 * c["W"] - 2, 2 * c["W"] - 4):
-            r = pmap([("fixed", c["algo"], nm, 1, c["mu"], FxCfg(W=c["W"], acc_bits=ab, eps_exp=cfg_obj.eps_exp), wav, n, L) for nm in names], 1)
+            r = pmap([("fixed", c["algo"], nm, 1, c["mu"], FxCfg(W=c["W"], acc_bits=ab, eps_exp=eps_exp_c), wav, n, L) for nm in names], 1)
             abl.append(dict(
                 algo=c["algo"], W=c["W"], acc_bits=ab, mean_nr=float(np.mean([x["nr_final"] for x in r])),
                 acc_sat=int(sum(x["acc"] for x in r)), ovf_total=int(sum(x["ovf"] for x in r))
@@ -260,10 +263,11 @@ def main():
     # Export golden RTL vector files (first 4096 samples)
     nv = min(4096, n)
     for c in cands:
+        eps_exp_c = FAIR_TUNED_SETTINGS[c["algo"]]["eps_exp"]
         for nm in ("stationary", "path_switch"):
             sc = make_scenario(nm, n, 1, wav)
             write_vec(os.path.join(ROOT, "vectors", f"{c['algo']}_W{c['W']}_{nm}"),
-                      run_fixed(c["algo"], sc.x, sc.d, L, c["mu"], FxCfg(W=c["W"], eps_exp=cfg_obj.eps_exp)), nv)
+                      run_fixed(c["algo"], sc.x, sc.d, L, c["mu"], FxCfg(W=c["W"], eps_exp=eps_exp_c)), nv)
 
     summary_json_data = dict(
         mu=best_mu, candidates=cands, thresholds=thr, wav=wav,
@@ -293,7 +297,11 @@ def main():
     # -------------------------------------------------------------------------
     log("Generating 10 research-quality figures (PNG 300 DPI + Vector PDF)...")
     sc_curves, sc_events, sc_res_pows = {}, {}, {}
-    primary_d, ref_x, clean_s, err_sigs, W_traj = {}, {}, {}, {}, {}
+    primary_d: np.ndarray = np.array([])
+    ref_x: np.ndarray = np.array([])
+    clean_s: np.ndarray = np.array([])
+    err_sigs: dict = {}
+    W_traj: dict = {}
 
     for nm in names:
         sc = make_scenario(nm, n, 1, wav)
@@ -313,28 +321,14 @@ def main():
 
     time_vec = np.arange(n) / FS
 
-    # Fig 1: Convergence
-    plot_fig1_convergence(sc_curves, sc_events, os.path.join(res_plots, "fig1_convergence"), fs=FS)
-    # Fig 2: Audio waveforms
-    plot_fig2_waveforms(time_vec, primary_d, ref_x, clean_s, err_sigs,
-                        os.path.join(res_plots, "fig2_waveforms"), scenario_name="stationary")
-    # Fig 3: Residual error power vs time
-    plot_fig3_residual_error(time_vec, sc_res_pows["stationary"],
-                             sc_curves["stationary"][ALGOS[0]]["noise_db"],
-                             sc_events["stationary"],
-                             os.path.join(res_plots, "fig3_residual_error"), scenario_name="stationary")
-    # Fig 4: Tracking response
-    track_sc = "amp_steps" if "amp_steps" in names else names[0]
-    plot_fig4_tracking_response(time_vec, sc_curves[track_sc], sc_events[track_sc],
-                                os.path.join(res_plots, "fig4_tracking_response"), scenario_name=track_sc)
-    # Fig 5: Noise reduction comparison
+    # -------------------------------------------------------------------------
+    # 7. Research Visualizations & Paper Figures
+    # -------------------------------------------------------------------------
+    # Note: Figures 1-7 are canonical publication figures generated from verified
+    # fair-tuned fixed-point parameters (W=12, L=32, Seed 1) via py/exp_regen_figures1_7.py.
+    # Re-running run_pipeline.py strictly preserves Figures 1-7 and generates Figures 8-11.
+    log("Generating hardware synthesis & timing figures (Figures 8-11)...")
     summary_plot_data = {nm: {al: FL[(nm, al)] for al in ALGOS} for nm in names}
-    plot_fig5_noise_reduction_comparison(summary_plot_data, os.path.join(res_plots, "fig5_noise_reduction_comparison"))
-    # Fig 6: Bit-width sweep
-    plot_fig6_bitwidth_sweep(cfg_obj.bit_widths, sweep_dict, os.path.join(res_plots, "fig6_bitwidth_sweep"))
-    # Fig 7: Coefficient trajectories
-    plot_fig7_coef_trajectories(time_vec, W_traj, selected_taps=[0, 1, 4, 8, 15],
-                                out_base=os.path.join(res_plots, "fig7_coef_trajectories"), scenario_name="stationary")
     # Fig 8: Resource utilization
     plot_fig8_resource_utilization(quartus_records, os.path.join(res_plots, "fig8_resource_utilization"))
     # Fig 9: Timing comparison
@@ -345,18 +339,6 @@ def main():
     # Fig 11: Latency comparison
     plot_fig11_latency(quartus_records, os.path.join(res_plots, "fig11_latency_comparison"))
 
-    # Mirror key plots to docs/figures/ for backward compatibility
-    for src, dst in [
-        ("fig1_convergence.png", "convergence.png"),
-        ("fig3_residual_error.png", "residual.png"),
-        ("fig4_tracking_response.png", "coef_error.png"),
-        ("fig5_noise_reduction_comparison.png", "summary.png"),
-        ("fig6_bitwidth_sweep.png", "fixed_point.png")
-    ]:
-        src_p = os.path.join(res_plots, src)
-        if os.path.exists(src_p):
-            shutil.copy2(src_p, os.path.join(docs_fig, dst))
-
     # -------------------------------------------------------------------------
     # 8. Save Raw Sample Signals for Auditing / MATLAB
     # -------------------------------------------------------------------------
@@ -364,7 +346,9 @@ def main():
     np.savez_compressed(
         os.path.join(res_raw, "stationary_signals.npz"),
         time=time_vec, d=primary_d, x=ref_x, s=clean_s,
-        e_lms=err_sigs.get("lms"), e_nlms=err_sigs.get("nlms"), e_nlms_shift=err_sigs.get("nlms_shift")
+        e_lms=err_sigs.get("lms", np.full(n, np.nan)),
+        e_nlms=err_sigs.get("nlms", np.full(n, np.nan)),
+        e_nlms_shift=err_sigs.get("nlms_shift", np.full(n, np.nan))
     )
 
     # -------------------------------------------------------------------------
@@ -411,14 +395,12 @@ def main():
         "## 7. Hardware & Quartus Status",
         "- **Target Device:** Intel/Altera Cyclone IV E `EP4CE115F29C7` (Terasic DE2-115 board, Speed Grade 7)",
         "- **Quartus Prime Lite 25.1std Compilation:** Complete & Verified across all 3 architectures.",
-        "- **LMS (W=11):** 1,775 LEs (1.55%), 1,069 registers, Fmax = 60.05 MHz, Setup Slack = +3.347 ns (PASS)",
-        "- **NLMS (W=11):** 2,542 LEs (2.22%), 1,331 registers, Fmax = 58.87 MHz, Setup Slack = +3.014 ns (PASS)",
+        "- **LMS (W=12):** 1,885 LEs (1.65%), 1,148 registers, Fmax = 59.90 MHz, Setup Slack = +3.305 ns (PASS)",
+        "- **NLMS (W=12):** 2,697 LEs (2.36%), 1,425 registers, Fmax = 61.72 MHz, Setup Slack = +3.798 ns (PASS)",
         "- **NLMS-Shift (W=12):** 2,690 LEs (2.35%), 1,213 registers, Fmax = 61.98 MHz, Setup Slack = +3.867 ns (PASS)",
         "- **Gate B Timing Closure:** PASSED (all worst-case slow 85°C setup slacks >= +3.0 ns, exceeding +0.5 ns target)."
     ]
-    with open(os.path.join(ROOT, "docs", "results.md"), "w", encoding="utf-8") as f:
-        f.write("\n".join(o) + "\n")
-    with open(os.path.join(ROOT, "results", "research_summary.md"), "w", encoding="utf-8") as f:
+    with open(os.path.join(ROOT, "results", "pipeline_summary.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(o) + "\n")
 
     log(f"All pipeline stages completed successfully in {time.time() - t_start:.1f}s.")
@@ -426,4 +408,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

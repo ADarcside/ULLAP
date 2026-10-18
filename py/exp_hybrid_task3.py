@@ -38,8 +38,8 @@ def run_task3():
         print(f"  p{q:02d}: {np.percentile(p_arr, q):.4f}")
 
     print("\n--- Gate A Hybrid Comparison (P_low thresholds vs eps-only) ---")
-    print("Finding: For thresholds P_low < eps = 0.25, the bit_length of (P + eps) is constant (s=8).")
-    print("The hybrid switch is structurally identical to eps-only in that regime.")
+    print("Finding: The hybrid is not conclusively tested; for thresholds below eps = 0.25, the bit_length of (P + eps) is constant (s=8).")
+    print("The hybrid switch is structurally identical to eps-only in that regime and remains locked in fixed mode.")
 
 if __name__ == "__main__":
     run_task3()

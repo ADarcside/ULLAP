@@ -10,5 +10,8 @@
     "${workspaceFolder}/scratch",
     "${workspaceFolder}"
   ],
-  "python.envFile": "${workspaceFolder}/.env"
+  "python.envFile": "${workspaceFolder}/.env",
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingTypeStubs": "none"
+  }
 }

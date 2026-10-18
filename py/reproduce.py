@@ -2,12 +2,21 @@
 """Unified Reproducibility Driver for all Refinement Experiments.
 
 Usage:
-  python py/reproduce.py                  # runs all tasks (1, 2, 3, 5, 7)
-  python py/reproduce.py --task 1         # runs task 1 (amp_steps reproducibility)
-  python py/reproduce.py --task 2         # runs task 2 (fixed-point sweep)
-  python py/reproduce.py --task 3         # runs task 3 (gate A hybrid)
-  python py/reproduce.py --task 5         # runs task 5 (level robustness)
-  python py/reproduce.py --task 7         # runs task 7 (acoustic feedback)
+  python py/reproduce.py                  # runs all tasks (1, 2, 3, 5, 7, fair_tuning, wav_tradeoff, eval_wav_best, test_nlms_eps, audit_gate_a, check_gate_a, regen_figures, numbers)
+  python py/reproduce.py --task 1         # runs Task 1 (amp_steps reproducibility & operating point audit)
+  python py/reproduce.py --task 2         # runs Task 2 (fixed-point operating point sweep across EPS_EXP and K)
+  python py/reproduce.py --task 3         # runs Task 3 (Gate A hybrid mode evaluation & power profiling; not conclusively tested)
+  python py/reproduce.py --task 5         # runs Task 5 (input level robustness sweep across LMS, NLMS, and NLMS-Shift)
+  python py/reproduce.py --task 7         # runs Task 7 (acoustic feedback / howling scenario analysis)
+  python py/reproduce.py --task fair_tuning   # runs fair hyperparameter tuning search on unseen seeds 101-103
+  python py/reproduce.py --task wav_tradeoff  # runs WAV vs synthetic tracking trade-off evaluation
+  python py/reproduce.py --task eval_wav_best # runs evaluation of WAV-best settings across seeds 1-20
+  python py/reproduce.py --task test_nlms_eps # runs NLMS epsilon grid sweep
+  python py/reproduce.py --task audit_gate_a  # runs Gate A mode fraction audit
+  python py/reproduce.py --task check_gate_a  # runs Gate A continuous hybrid fixed-point check
+  python py/reproduce.py --task regen_figures # regenerates publication Figures 1-7 from verified fixed-point model
+  python py/reproduce.py --task pareto        # runs Pareto frontier audit (stationary vs amp_steps across seeds 1-20)
+  python py/reproduce.py --task numbers       # generates results/paper_numbers.csv
 """
 import argparse
 import os
@@ -24,6 +33,14 @@ import exp_sweep_task2
 import exp_hybrid_task3
 import exp_level_robustness
 import exp_feedback_task7
+import exp_fair_tuning
+import exp_wav_tradeoff_focused
+import exp_eval_wav_best_seeds1_20
+import exp_test_nlms_eps_grid
+import exp_audit_gate_a_modes
+import exp_check_gate_a_fixed
+import exp_regen_figures1_7
+import exp_pareto_audit
 from signals import make_scenario
 from fixedpoint import FxCfg, run_fixed
 from metrics import evaluate
@@ -101,7 +118,7 @@ def generate_paper_numbers():
                 "nr_final_seed2": round(float(s_nrs[1]), 2),
                 "nr_final_seed3": round(float(s_nrs[2]), 2),
                 "nr_all_mean": round(float(np.mean(s_all)), 2),
-                "ovf_count": int(s_ovf),
+                "ovf_count": s_ovf,
                 "ovf_rate": f"{ovf_rate:.6e}",
                 "les": hw["les"],
                 "registers": hw["registers"],
@@ -156,7 +173,7 @@ def generate_paper_numbers():
                 "nr_final_seed2": round(float(s_nrs[1]), 2),
                 "nr_final_seed3": round(float(s_nrs[2]), 2),
                 "nr_all_mean": round(float(np.mean(s_all)), 2),
-                "ovf_count": int(s_ovf),
+                "ovf_count": s_ovf,
                 "ovf_rate": f"{ovf_rate:.6e}",
                 "les": hw["les"],
                 "registers": hw["registers"],
@@ -182,8 +199,12 @@ def generate_paper_numbers():
 
 def main():
     parser = argparse.ArgumentParser(description="Unified Refinement Reproduction Suite")
-    parser.add_argument("--task", choices=["1", "2", "3", "5", "7", "all", "numbers"], default="all",
-                        help="Select specific task to run (default: all)")
+    parser.add_argument("--task", choices=[
+        "1", "2", "3", "5", "7",
+        "fair_tuning", "wav_tradeoff", "eval_wav_best", "test_nlms_eps",
+        "audit_gate_a", "check_gate_a", "regen_figures", "pareto",
+        "all", "numbers"
+    ], default="all", help="Select specific task to run (default: all)")
     args = parser.parse_args()
 
     t = args.task
@@ -197,6 +218,22 @@ def main():
         exp_level_robustness.run_level_robustness()
     if t in ("7", "all"):
         exp_feedback_task7.run_feedback()
+    if t in ("fair_tuning", "all"):
+        exp_fair_tuning.run_fair_tuning()
+    if t in ("wav_tradeoff", "all"):
+        exp_wav_tradeoff_focused.run_wav_tradeoff()
+    if t in ("eval_wav_best", "all"):
+        exp_eval_wav_best_seeds1_20.run_eval_wav_best()
+    if t in ("test_nlms_eps", "all"):
+        exp_test_nlms_eps_grid.run_test_nlms_eps()
+    if t in ("audit_gate_a", "all"):
+        exp_audit_gate_a_modes.run_audit_gate_a()
+    if t in ("check_gate_a", "all"):
+        exp_check_gate_a_fixed.run_check_gate_a()
+    if t in ("regen_figures", "all"):
+        exp_regen_figures1_7.run_regen_figures()
+    if t in ("pareto",):
+        exp_pareto_audit.run_pareto_audit()
 
     # Generate master paper_numbers.csv
     generate_paper_numbers()
