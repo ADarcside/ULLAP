@@ -23,7 +23,6 @@ def build_verification_database():
             f = float(val)
             s = str(val).strip()
             db_sources[round(f, 2)] = (src_file, row_desc)
-            db_sources[round(f, 1)] = (src_file, row_desc)
             if "." not in s or s.endswith(".0") or s.endswith(".00"):
                 db_sources[round(f, 0)] = (src_file, row_desc)
         except (ValueError, TypeError):
@@ -59,7 +58,6 @@ def build_verification_database():
             s = str(val).strip()
             mhz_sources[round(f, 3)] = (src_file, row_desc)
             mhz_sources[round(f, 2)] = (src_file, row_desc)
-            mhz_sources[round(f, 1)] = (src_file, row_desc)
             if "." not in s or s.endswith(".0") or s.endswith(".00") or s.endswith(".000"):
                 mhz_sources[round(f, 0)] = (src_file, row_desc)
         except (ValueError, TypeError):
@@ -71,7 +69,6 @@ def build_verification_database():
             s = str(val).strip()
             ns_sources[round(f, 3)] = (src_file, row_desc)
             ns_sources[round(f, 2)] = (src_file, row_desc)
-            ns_sources[round(f, 1)] = (src_file, row_desc)
             if "." not in s or s.endswith(".0") or s.endswith(".00") or s.endswith(".000"):
                 ns_sources[round(f, 0)] = (src_file, row_desc)
         except (ValueError, TypeError):
@@ -201,43 +198,29 @@ def build_verification_database():
         add_db(abs(val), src, desc)
 
     # 6. Hardware Timing & Architecture (Questa logs, Quartus reports & SDC)
-    # Busy cycles
+    # Busy cycles: only cycle columns
     add_busy(72, "tb/tb_anc_core.v", "line 157: NLMS-Shift busy cycles (W=12)")
     add_busy(73, "tb/tb_anc_core.v", "line 157: LMS busy cycles (W=11, 12)")
     add_busy(124, "tb/tb_anc_core.v", "line 157: NLMS busy cycles (W=11)")
     add_busy(127, "tb/tb_anc_core.v", "line 157: NLMS busy cycles (W=12)")
-    add_busy(70, "UNSOURCED", "UNSOURCED: analytical pre-pipeline LMS busy cycles (70)")
-    add_busy(91, "UNSOURCED", "UNSOURCED: analytical pre-pipeline NLMS busy cycles (91)")
 
-    # LEs
-    add_le(1885, "results/quartus_reports/lms_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: LMS W=12 LEs: 1885")
-    add_le(2697, "results/quartus_reports/nlms_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: NLMS W=12 LEs: 2697")
-    add_le(2690, "results/quartus_reports/shift_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: NLMS-Shift W=12 LEs: 2690")
-    add_le(2531, "UNSOURCED", "UNSOURCED: baseline estimate W=11 LEs (2531)")
-
-    # Dedicated registers
-    add_le(1148, "results/quartus_reports/lms_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: LMS W=12 registers: 1148")
-    add_le(1425, "results/quartus_reports/nlms_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: NLMS W=12 registers: 1425")
-    add_le(1213, "results/quartus_reports/shift_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: NLMS-Shift W=12 registers: 1213")
-
-    # W=11 Shipped Hardware Synthesis & Clock Specs (results/metrics/quartus_summary.csv and quartus/anc_de2_115.sdc)
+    # LEs: only LE columns (no registers, no baseline estimates)
+    add_le(1885, "results/quartus_reports/lms_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: Total logic elements: 1885")
+    add_le(2697, "results/quartus_reports/nlms_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: Total logic elements: 2697")
+    add_le(2690, "results/quartus_reports/shift_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: Total logic elements: 2690")
     add_le(1775, "results/metrics/quartus_summary.csv", "row 5 (exp_lms_w11_cyclone4), col=logic_elements: 1775")
     add_le(2542, "results/metrics/quartus_summary.csv", "row 6 (exp_nlms_w11_cyclone4), col=logic_elements: 2542")
+
+    # Fmax MHz: only Fmax columns / reports (no clock constraints)
     add_mhz(58.87, "results/metrics/quartus_summary.csv", "row 6 (exp_nlms_w11_cyclone4), col=fmax_mhz: 58.87")
     add_mhz(60.05, "results/metrics/quartus_summary.csv", "row 5 (exp_lms_w11_cyclone4), col=fmax_mhz: 60.05")
-    add_ns(3.347, "results/metrics/quartus_summary.csv", "row 5 (exp_lms_w11_cyclone4), col=setup_slack_ns: 3.347")
-    add_ns(3.014, "results/metrics/quartus_summary.csv", "row 6 (exp_nlms_w11_cyclone4), col=setup_slack_ns: 3.014")
-    add_ns(20.0, "quartus/anc_de2_115.sdc", "line 5 (create_clock -period 20.000): 20.0 ns")
-
-    # Fmax MHz
-    add_mhz(50, "quartus/anc_de2_115.sdc", "line 5 (50 MHz master clock): 50 MHz")
-    add_mhz(50.0, "quartus/anc_de2_115.sdc", "line 5 (50 MHz master clock): 50.0 MHz")
-    add_mhz(3.072, "quartus/anc_de2_115.sdc", "line 12 (3.072 MHz AUD_BCLK): 3.072 MHz")
     add_mhz(59.90, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Fmax Summary: LMS Slow 85C Fmax: 59.90 MHz")
     add_mhz(61.72, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Fmax Summary: NLMS Slow 85C Fmax: 61.72 MHz")
     add_mhz(61.98, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Fmax Summary: NLMS-Shift Slow 85C Fmax: 61.98 MHz")
 
-    # ns timing & latency (verified from sta.rpt files and hardware testbench)
+    # ns slack: only slack columns / reports (no clock period, no target thresholds, no latencies)
+    add_ns(3.347, "results/metrics/quartus_summary.csv", "row 5 (exp_lms_w11_cyclone4), col=setup_slack_ns: 3.347")
+    add_ns(3.014, "results/metrics/quartus_summary.csv", "row 6 (exp_nlms_w11_cyclone4), col=setup_slack_ns: 3.014")
     for ns_val, src_file, desc in [
         (3.305, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Setup Summary: LMS setup slack: 3.305 ns"),
         (3.798, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Setup Summary: NLMS setup slack: 3.798 ns"),
@@ -250,32 +233,12 @@ def build_verification_database():
         (11.688, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Setup Summary: NLMS-Shift setup slack: 11.688 ns"),
         (0.182, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Hold Summary: LMS hold slack: 0.182 ns"),
         (0.181, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Hold Summary: NLMS hold slack: 0.181 ns"),
-        (740, "tb/tb_anc_core.v", "line 157: NLMS-Shift 37 cycles @ 50 MHz core latency: 740 ns"),
-        (596.9, "UNSOURCED", "UNSOURCED: NLMS-Shift 37 cycles @ 61.98 MHz (596.9 ns)"),
-        (700, "tb/tb_anc_core.v", "line 157: LMS 35 cycles @ 50 MHz core latency: 700 ns"),
-        (0.74, "tb/tb_anc_core.v", "line 157: NLMS-Shift core latency in us (0.74 us)"),
-        (0.70, "tb/tb_anc_core.v", "line 157: LMS core latency in us (0.70 us)"),
-        (1.44, "tb/tb_anc_core.v", "line 157: NLMS-Shift 72 cycles busy time in us (1.44 us)"),
-        (1.46, "tb/tb_anc_core.v", "line 157: LMS 73 cycles busy time in us (1.46 us)"),
-        (2.54, "tb/tb_anc_core.v", "line 157: NLMS 127 cycles busy time in us (2.54 us)"),
-        (2.48, "tb/tb_anc_core.v", "line 157: NLMS 124 cycles busy time in us (2.48 us)"),
-        (0.5, "UNSOURCED", "UNSOURCED: Gate B minimum slack target (0.5 ns)"),
-        (3.0, "UNSOURCED", "UNSOURCED: Gate B verified margin (3.0 ns)"),
-        (3.367, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Slow 85C slack margin over 0.5 ns target: 3.367 ns"),
-        (-7.655, "UNSOURCED", "UNSOURCED: Baseline setup slack unpipelined (-7.655 ns)"),
-        (20.83, "UNSOURCED", "UNSOURCED: 48 kHz audio sample period in us (20.83 us)"),
-        (20.833, "UNSOURCED", "UNSOURCED: 48 kHz audio sample period in us (20.833 us)"),
-        (250.0, "UNSOURCED", "UNSOURCED: ADC decimation filter delay in us (250.0 us)"),
-        (229.2, "UNSOURCED", "UNSOURCED: DAC interpolation filter delay in us (229.2 us)"),
-        (375.0, "UNSOURCED", "UNSOURCED: DAC interpolation filter alternative delay in us (375.0 us)"),
-        (41.7, "UNSOURCED", "UNSOURCED: I2S framing delay in us (41.7 us)"),
-        (521.6, "UNSOURCED", "UNSOURCED: Total acoustic loop delay in us (521.6 us)"),
-        (0.52, "UNSOURCED", "UNSOURCED: Total acoustic loop delay in ms (0.52 ms)"),
-        (290.0, "UNSOURCED", "UNSOURCED: Acoustic propagation delay for 10 cm in us (290.0 us)")
+        (0.402, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Hold Summary: NLMS-Shift hold slack: 0.402 ns"),
     ]:
         add_ns(ns_val, src_file, desc)
 
     # 7. Additional metrics from real CSV ground truth files in results/metrics/
+    # MATCH dB VALUES ONLY AGAINST NR COLUMNS (nr_*)
     for fname in ["eps_sweep_W12.csv", "eps_confirm.csv", "pareto_evaluation_seeds1_20.csv", "float_results.csv", "fixed_sweep.csv", "tuning.csv", "candidates.csv"]:
         fpath = os.path.join(ROOT, "results", "metrics", fname)
         if os.path.exists(fpath):
@@ -288,9 +251,11 @@ def build_verification_database():
                     continue
                 for r_idx, row in enumerate(reader, 1):
                     for c_idx, cell in enumerate(row):
+                        col_name = hdr[c_idx] if c_idx < len(hdr) else str(c_idx)
+                        if not (col_name.lower().startswith("nr_") or col_name.lower().endswith("_nr") or col_name.lower() in ["mean_nr", "mean_nr_avg", "stat_mean", "stat_ci_low", "stat_ci_high", "amp_mean", "amp_ci_low", "amp_ci_high"]):
+                            continue
                         try:
                             fval = float(cell)
-                            col_name = hdr[c_idx] if c_idx < len(hdr) else str(c_idx)
                             row_desc = f"row {r_idx}, col={col_name}"
                             add_db(fval, rel_src, row_desc)
                         except ValueError:
@@ -395,6 +360,8 @@ def run_comprehensive_audit():
     db = build_verification_database()
 
     target_files = [os.path.join(ROOT, "README.md")]
+    if os.path.exists(os.path.join(ROOT, "claims.md")):
+        target_files.append(os.path.join(ROOT, "claims.md"))
     target_files.extend(glob.glob(os.path.join(ROOT, "docs", "*.md")))
     target_files.extend(glob.glob(os.path.join(ROOT, "results", "*.md")))
 
@@ -426,9 +393,9 @@ def run_comprehensive_audit():
                 elif dec == 2:
                     keys = (round(val, 2),)
                 elif dec == 1:
-                    keys = (round(val, 1), round(val, 2))
+                    keys = (round(val, 1),)
                 else:
-                    keys = (round(val, 0), round(val, 1), round(val, 2))
+                    keys = (round(val, 0),)
                 for r in keys:
                     if r in src_map:
                         matched = True
@@ -528,6 +495,8 @@ def audit_headline_tables_and_claims():
 
     mismatches = []
     target_files = [os.path.join(ROOT, "README.md")]
+    if os.path.exists(os.path.join(ROOT, "claims.md")):
+        target_files.append(os.path.join(ROOT, "claims.md"))
     target_files.extend(glob.glob(os.path.join(ROOT, "docs", "*.md")))
     target_files.extend(glob.glob(os.path.join(ROOT, "results", "*.md")))
 

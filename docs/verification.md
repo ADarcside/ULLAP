@@ -18,7 +18,7 @@ Date of checks: 2026-10-11. Everything below was run in this session; items not 
    `wav` scenario (it prints a note). The shipped `results.md` therefore cannot be regenerated from the ZIP alone.
 2. **The candidate selection (W = 11) depends on that one scenario.** In the shipped fixed-point data the `wav` scenario is the
    worst case at W = 10 and 11 (NLMS-shift degradation +4.11 dB at W=10, +2.97 dB at W=11 against a 3.0 dB threshold;
-   NLMS +5.42 / +1.39; LMS +4.36 / +0.95). Rerun without it, NLMS and NLMS-shift pass at **W = 10** (NR 16.8 / 17.1 dB) and LMS
+   NLMS +5.42 / +1.39; LMS +4.36 / +0.95). Rerun without it, NLMS and NLMS-shift pass at **W = 10** (NR 16.8 / 17.12 dB) and LMS
    at W = 11, and the absolute NR numbers drop by ~2-3 dB (they are averages over different scenario sets). Conclusion: "W = 11" is
    a result of the WAV scenario and the NLMS-shift W = 11 point passes the worst-case threshold by only 0.03 dB. The vectors
    in `vectors/` are valid for what they are (W = 11 candidates), but the choice of W should be revisited with the real noise file.

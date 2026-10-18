@@ -14,6 +14,31 @@ Eval seeds [1, 2, 3]; tuning seed 100.
 > [!NOTE]
 > Note that the earlier single-seed tuning (seed 100) shown in this section was superseded by the multi-seed fair hyperparameter tuning across unseen seeds 101–103 (LMS: $\mu=0.25$, NLMS: $\mu=0.25, \text{EPS\_EXP}=0$, NLMS-Shift: $K=3, \text{EPS\_EXP}=2$), evaluated across seeds 1–20 in Section 9.
 
+## Noise Reduction Metric Definitions
+
+All noise reduction (NR) metrics evaluate cancellation relative to known clean signal $s[n]$, primary noise $nz[n] = d[n] - s[n]$, and filter residual error $r[n] = e[n] - s[n]$:
+
+1. **`nr_final` (Final-Window Steady-State NR, dB):**
+   - **Exact Window:** Final 25% of the run ($\text{samples } [0.75N, N)$).
+   - **Definition:** Linear power ratio of noise to residual in the steady-state window, converted to dB:
+     $$\text{NR}_{\text{final}} = 10 \log_{10} \left( \frac{\frac{1}{0.25 N} \sum_{n=0.75N}^{N-1} nz^2[n]}{\frac{1}{0.25 N} \sum_{n=0.75N}^{N-1} r^2[n] + 10^{-20}} \right)$$
+   - **Usage:** Primary benchmark metric reported across all scenario evaluations in `results/paper_numbers.csv` to measure settled adaptive filter performance.
+
+2. **`nr_all` (Full-Run Linear Energy NR, dB):**
+   - **Exact Window:** 100% of the run ($\text{samples } [0, N)$).
+   - **Definition:** Ratio of total accumulated noise energy to total residual error energy across the entire run in the linear domain, converted to dB:
+     $$\text{NR}_{\text{all}} = 10 \log_{10} \left( \frac{\frac{1}{N} \sum_{n=0}^{N-1} nz^2[n]}{\frac{1}{N} \sum_{n=0}^{N-1} r^2[n] + 10^{-20}} \right)$$
+   - **Usage:** Measures overall energy attenuation across the full signal, including initial transient convergence and disturbance tracking bursts. Because linear squared error is summed, large transient or clipping spikes dominate the denominator.
+
+3. **`nr_avg` (Full-Run Smoothed Curve Time-Average, dB):**
+   - **Exact Window:** 100% of the run ($\text{samples } [0, N)$), with a 256-sample moving-average smoothing window.
+   - **Definition:** Arithmetic time-average of the 256-sample smoothed NR curve evaluated sample-by-sample in the logarithmic (dB) domain:
+     $$\text{NR}_{\text{avg}} = \frac{1}{N} \sum_{n=0}^{N-1} 10 \log_{10} \left( \frac{\text{smooth}(nz^2[n], 256) + 10^{-20}}{\text{smooth}(r^2[n], 256) + 10^{-20}} \right)$$
+   - **Usage:** Historically used in hyperparameter tuning grids. Unlike `nr_all`, computing the mean in the log (dB) domain prevents single massive error spikes from dominating the entire metric.
+
+> [!IMPORTANT]
+> **Distinction Between `nr_avg` and `nr_all`:** Text must not conflate `nr_avg` with `nr_all` as they are fundamentally distinct mathematical operations (mean of smoothed dB curve vs. ratio of total linear energies). For example, at 4.0x input level in Section 10, LMS produces heavy clipping that drives total linear energy ratio $\text{NR}_{\text{all}}$ down to $-0.47\text{ dB}$, while the logarithmic time-average $\text{NR}_{\text{avg}}$ evaluates to $6.00\text{ dB}$; they are not equivalent.
+
 ## 2. Floating-Point Performance Across Scenarios
 
 | Scenario | Algorithm | NR Final (dB) | NR Whole-Run (dB) | Settling Time (ms) | Tracking Time (ms) | Misalignment (dB) | Diverged |
@@ -183,9 +208,9 @@ Based on the 20-seed Monte Carlo evaluation in `results/paper_numbers.csv` with 
 
 ## 10. Dynamic Range & Level-Sweep Evaluation (0.25x to 4x)
 
-*Source: Direct unedited execution of `py/exp_level_robustness.py` (W=12, L=32, seeds 1–3, evaluated across stationary, amp_steps, path_switch, wav, total 192,000 samples per test point). Pass criterion as coded: `ovf_rate = total_ovf / total_samples < 1e-3` (reported NR is whole-run power-averaged `nr_avg` / `nr_all`):*
+*Source: Direct unedited execution of `py/exp_level_robustness.py` (W=12, L=32, seeds 1–3, evaluated across stationary, amp_steps, path_switch, wav, total 192,000 samples per test point). Pass criterion as coded: `ovf_rate = total_ovf / total_samples < 1e-3`. Reported NR is `nr_avg` (time-average of the 256-sample smoothed NR curve in dB over the full run; note that `nr_avg` is distinct from whole-run linear energy ratio `nr_all`, which evaluates to -0.47 dB for LMS at 4x vs 6.00 dB for `nr_avg`):*
 
-| Scale | Algorithm | NR avg (dB) | Total Ovf | Total Samples | Ovf Rate | Pass (< 1e-3)? |
+| Scale | Algorithm | NR avg (time-avg smoothed dB, full run) | Total Ovf | Total Samples | Ovf Rate | Pass (< 1e-3)? |
 |:---:|---|:---:|:---:|:---:|:---:|:---:|
 | **0.25x** | LMS ($\mu=0.25$) | 3.60 | 7,589 | 192,000 | 3.95e-02 | FAIL |
 | **0.25x** | NLMS ($\mu=0.25, \text{eps}=0$) | 3.57 | 7,267 | 192,000 | 3.78e-02 | FAIL |
@@ -204,7 +229,7 @@ Based on the 20-seed Monte Carlo evaluation in `results/paper_numbers.csv` with 
 | **4.00x** | NLMS-Shift ($K=3, \text{eps}=2$) | 12.59 | 2,323 | 192,000 | 1.21e-02 | FAIL |
 
 **Reconciliation Note:**
-The previous table had manually rounded/approximated 4x overflows to 8,192 and omitted the small 2x overflows (68 / 63 / 63), whereas `py/exp_level_robustness.py` measures exact cumulative bit-level saturations (`sat_in` + `sat_w` + `sat_y` + `sat_e`) and reports whole-run average noise reduction (`nr_avg` / `nr_all`), with the pass criterion strictly evaluated as `ovf_rate = total_ovf / total_samples < 1e-3`.
+The previous table had manually rounded/approximated 4x overflows to 8,192 and omitted the small 2x overflows (68 / 63 / 63), whereas `py/exp_level_robustness.py` measures exact cumulative bit-level saturations (`sat_in` + `sat_w` + `sat_y` + `sat_e`) and reports full-run smoothed time-average noise reduction (`nr_avg`, distinct from whole-run linear energy ratio `nr_all`), with the pass criterion strictly evaluated as `ovf_rate = total_ovf / total_samples < 1e-3`.
 
 **Key Findings:**
 - All three algorithms pass the acceptance criteria only at nominal calibrated levels (1x–2x).

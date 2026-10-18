@@ -26,9 +26,9 @@ def run_level_robustness():
     print("=" * 105)
     print("LEVEL ROBUSTNESS SWEEP (0.25x to 4.0x scale, W=12, L=32, Criterion: Overflow Rate < 1e-3)")
     print("=" * 105)
-    header = f"{'Scale':6} | {'Algorithm':25} | {'NR avg (dB)':12} | {'Total Ovf':10} | {'Total Samples':13} | {'Ovf Rate':12} | {'Pass (< 1e-3)?'}"
-    print(header)
-    print("-" * len(header))
+    header = f"{'Scale':6} | {'Algorithm':25} | {'NR avg (time-avg smoothed dB, full run)':38} | {'Total Ovf':10} | {'Total Samples':13} | {'Ovf Rate':12} | {'Pass (< 1e-3)?'}"
+    print(header, flush=True)
+    print("-" * len(header), flush=True)
 
     results = []
     for scale in scales:
@@ -46,7 +46,7 @@ def run_level_robustness():
                     total_samples += len(sc.x)
             ovf_rate = total_ovf / total_samples
             passes = "PASS" if ovf_rate < 1e-3 else "FAIL"
-            print(f"{scale:6.2f} | {label:25} | {np.mean(nrs):12.2f} | {total_ovf:10d} | {total_samples:13d} | {ovf_rate:12.2e} | {passes}")
+            print(f"{scale:6.2f} | {label:25} | {np.mean(nrs):38.2f} | {total_ovf:10d} | {total_samples:13d} | {ovf_rate:12.2e} | {passes}", flush=True)
             results.append({
                 "scale": scale, "algo": label, "nr_avg": float(np.mean(nrs)),
                 "ovf": total_ovf, "samples": total_samples, "rate": ovf_rate, "pass": passes

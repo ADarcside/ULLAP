@@ -37,7 +37,7 @@ Eval seeds [1]; tuning seed 100.
 |---|---|---|---|
 | 8 | 4.3 dB / +10.19 deg / 0 ovf | 4.0 dB / +8.75 deg / 0 ovf | 4.3 dB / +10.29 deg / 0 ovf |
 | 10 | 11.8 dB / +2.76 deg / 0 ovf | 12.0 dB / +0.66 deg / 0 ovf | 12.4 dB / +2.16 deg / 0 ovf |
-| 12 | 14.8 dB / -0.23 deg / 0 ovf | 15.4 dB / -2.65 deg / 0 ovf | 15.3 dB / -0.75 deg / 0 ovf |
+| 12 | 14.77 dB / -0.23 deg / 0 ovf | 15.35 dB / -2.65 deg / 0 ovf | 15.33 dB / -0.75 deg / 0 ovf |
 | 14 | 14.6 dB / -0.11 deg / 0 ovf | 14.6 dB / -1.94 deg / 0 ovf | 14.6 dB / -0.07 deg / 0 ovf |
 | 16 | 14.6 dB / -0.04 deg / 0 ovf | 14.6 dB / -1.89 deg / 0 ovf | 14.6 dB / -0.06 deg / 0 ovf |
 | 20 | 14.5 dB / -0.00 deg / 0 ovf | 14.5 dB / -1.84 deg / 0 ovf | 14.6 dB / -0.00 deg / 0 ovf |
@@ -47,9 +47,9 @@ Eval seeds [1]; tuning seed 100.
 
 | Algorithm | W (bits) | mu | Fixed NR (dB) | Float NR (dB) | Degradation (dB) | Overflows | Arithmetic Architecture |
 |---|---|---|---|---|---|---|---|
-| nlms | 12 | 0.25 | 15.4 | 12.7 | -2.65 | 0 | 2L+3 mult + 1 divider (or reciprocal) |
-| nlms_shift | 12 | 0.125 | 15.3 | 14.6 | -0.75 | 0 | 2L mult, leading-one detect + barrel shift, no divider/mu-mult |
-| lms | 12 | 0.25 | 14.8 | 14.5 | -0.23 | 0 | 2L+1 mult, no divider |
+| nlms | 12 | 0.25 | 15.35 | 12.70 | -2.65 | 0 | 2L+3 mult + 1 divider (or reciprocal) |
+| nlms_shift | 12 | 0.125 | 15.33 | 14.58 | -0.75 | 0 | 2L mult, leading-one detect + barrel shift, no divider/mu-mult |
+| lms | 12 | 0.25 | 14.77 | 14.54 | -0.23 | 0 | 2L+1 mult, no divider |
 
 ## 5. Accumulator Ablation
 
