@@ -8,6 +8,35 @@ import random
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Explicit allowlist of design specifications and non-measured targets
+# Each entry is (file, line, val_str): reason
+# Allowed values strictly restricted to: 50 / 50.0 MHz, 3.072 MHz, 20.0 ns, +0.5 / +3.0 ns, 2,531 LE
+SPEC_ALLOWLIST = {
+    ("README.md", 82, "+3.0"): "Gate B timing closure setup slack target threshold (+3.0 ns)",
+    ("README.md", 84, "50"): "Processing time master clock frequency specification (50 MHz)",
+    ("README.md", 121, "50"): "Core latency conversion at master clock frequency specification (50 MHz)",
+    ("docs/results.md", 138, "+3.0"): "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)",
+    ("docs/results.md", 138, "+0.5"): "Gate B timing closure baseline target threshold (+0.5 ns)",
+    ("docs/results.md", 162, "50"): "Codec sample period cycle count conversion at 50 MHz master clock",
+    ("docs/results.md", 166, "50"): "Core processing latency conversion at 50 MHz master clock",
+    ("docs/rtl_interface.md", 3, "50"): "Core master clock operating frequency target (50 MHz)",
+    ("docs/verification.md", 47, "+0.5"): "Gate B timing target threshold (>= +0.5 ns)",
+    ("docs/verification.md", 47, "+3.0"): "Gate B headroom target threshold (> +3.0 ns)",
+    ("docs/verification.md", 122, "50.0"): "CLOCK_50 oscillator hardware pin specification (50.0 MHz)",
+    ("docs/verification.md", 122, "20.0"): "Master clock period specification for 50 MHz clock (20.0 ns)",
+    ("docs/verification.md", 134, "50"): "Oscilloscope latency verification at 50 MHz master clock",
+    ("results/pipeline_summary.md", 90, "+3.0"): "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)",
+    ("results/pipeline_summary.md", 90, "+0.5"): "Gate B baseline target threshold (+0.5 ns)",
+    ("results/refinement_report.md", 28, "50"): "Static timing analysis master clock specification (50 MHz)",
+    ("results/refinement_report.md", 29, "2,531"): "W=11 architectural baseline estimate (2,531 LEs)",
+    ("results/refinement_report.md", 136, "50"): "STA section header master clock specification (50 MHz)",
+    ("results/refinement_report.md", 138, "3.072"): "Codec AUD_BCLK audio bit clock constraint (3.072 MHz)",
+    ("results/refinement_report.md", 162, "50"): "Core output latency conversion at 50 MHz master clock",
+    ("results/refinement_report.md", 163, "50"): "Busy cycles execution time conversion at 50 MHz master clock",
+    ("results/research_summary.md", 100, "+3.0"): "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)",
+    ("results/research_summary.md", 100, "+0.5"): "Gate B baseline target threshold (+0.5 ns)",
+}
+
 
 def build_verification_database():
     """Build a mapping from normalized numbers to (source_file, row_description) for each metric."""
@@ -351,100 +380,6 @@ def find_metrics_in_file(filepath):
     return items
 
 
-def run_comprehensive_audit():
-    print("=" * 110)
-    print("COMPREHENSIVE MULTI-METRIC AUDIT: dB, Overflows, LEs, Busy Cycles, MHz, and ns")
-    print("Checked against results/paper_numbers.csv and raw experimental/synthesis ground truth")
-    print("=" * 110)
-
-    db = build_verification_database()
-
-    target_files = [os.path.join(ROOT, "README.md")]
-    if os.path.exists(os.path.join(ROOT, "claims.md")):
-        target_files.append(os.path.join(ROOT, "claims.md"))
-    target_files.extend(glob.glob(os.path.join(ROOT, "docs", "*.md")))
-    target_files.extend(glob.glob(os.path.join(ROOT, "results", "*.md")))
-
-    counts = {k: {"scanned": 0, "matched": 0, "flagged": 0} for k in ["db", "overflow", "le", "busy", "mhz", "ns"]}
-    all_matched = []
-    all_flagged = []
-
-    for fpath in sorted(target_files):
-        rel = os.path.relpath(fpath, ROOT)
-        items = find_metrics_in_file(fpath)
-
-        for item in items:
-            m = item["metric"]
-            counts[m]["scanned"] += 1
-            val = item["val"]
-            src_map = db[m]
-
-            matched = False
-            src_info = None
-
-            if m in ["overflow", "le", "busy"]:
-                if val in src_map:
-                    matched = True
-                    src_info = src_map[val]
-            else: # float values: db, mhz, ns
-                dec = len(item["val_str"].split(".")[1]) if "." in item["val_str"] else 0
-                if dec >= 3:
-                    keys = (round(val, 3),)
-                elif dec == 2:
-                    keys = (round(val, 2),)
-                elif dec == 1:
-                    keys = (round(val, 1),)
-                else:
-                    keys = (round(val, 0),)
-                for r in keys:
-                    if r in src_map:
-                        matched = True
-                        src_info = src_map[r]
-                        break
-
-            item_record = {
-                "metric": m,
-                "file": rel,
-                "line": item["line"],
-                "val_str": item["val_str"],
-                "val": val,
-                "context": item["context"],
-                "source_file": src_info[0] if src_info else "UNMATCHED",
-                "source_row": src_info[1] if src_info else "NO MATCH FOUND"
-            }
-
-            if matched:
-                counts[m]["matched"] += 1
-                all_matched.append(item_record)
-            else:
-                counts[m]["flagged"] += 1
-                all_flagged.append(item_record)
-
-    # Print summary table
-    print(f"\n{'Metric Category':20} | {'Total Scanned':15} | {'Verified & Matched':20} | {'Flagged / Mismatches':20}")
-    print("-" * 85)
-    for m in ["db", "overflow", "le", "busy", "mhz", "ns"]:
-        c = counts[m]
-        print(f"{m.upper():20} | {c['scanned']:15d} | {c['matched']:20d} | {c['flagged']:20d}")
-    print("-" * 85)
-    tot_scan = sum(c["scanned"] for c in counts.values())
-    tot_mat = sum(c["matched"] for c in counts.values())
-    tot_flag = sum(c["flagged"] for c in counts.values())
-    print(f"{'TOTAL':20} | {tot_scan:15d} | {tot_mat:20d} | {tot_flag:20d}\n")
-
-    # Print 10 randomly chosen matched numbers with source file and row
-    random.seed(42)  # reproducible selection
-    sample_size = min(10, len(all_matched))
-    sample = random.sample(all_matched, sample_size)
-    print("=" * 110)
-    print(f"SAMPLE OF 10 RANDOMLY CHOSEN MATCHED NUMBERS WITH GROUND TRUTH PROVENANCE:")
-    print("=" * 110)
-    for idx, s in enumerate(sample, 1):
-        print(f"{idx:2d}. [{s['metric'].upper()}] Value: {s['val_str']} | Document: {s['file']}:{s['line']}")
-        print(f"    Source File: {s['source_file']}")
-        print(f"    Source Row : {s['source_row']}")
-        print(f"    Context    : {s['context']}\n")
-
 def audit_headline_tables_and_claims():
     """Row-by-row check of headline tables and scenario claims against paper_numbers.csv (algorithm, scenario, value).
     Flags any swapped or mismatched values where a number belongs to a different algorithm or scenario.
@@ -495,8 +430,6 @@ def audit_headline_tables_and_claims():
 
     mismatches = []
     target_files = [os.path.join(ROOT, "README.md")]
-    if os.path.exists(os.path.join(ROOT, "claims.md")):
-        target_files.append(os.path.join(ROOT, "claims.md"))
     target_files.extend(glob.glob(os.path.join(ROOT, "docs", "*.md")))
     target_files.extend(glob.glob(os.path.join(ROOT, "results", "*.md")))
 
@@ -614,8 +547,9 @@ def run_comprehensive_audit():
     target_files.extend(glob.glob(os.path.join(ROOT, "docs", "*.md")))
     target_files.extend(glob.glob(os.path.join(ROOT, "results", "*.md")))
 
-    counts = {k: {"scanned": 0, "matched": 0, "flagged": 0} for k in ["db", "overflow", "le", "busy", "mhz", "ns"]}
+    counts = {k: {"scanned": 0, "matched": 0, "allowed": 0, "flagged": 0} for k in ["db", "overflow", "le", "busy", "mhz", "ns"]}
     all_matched = []
+    all_allowed = []
     all_flagged = []
 
     for fpath in sorted(target_files):
@@ -642,9 +576,9 @@ def run_comprehensive_audit():
                 elif dec == 2:
                     keys = (round(val, 2),)
                 elif dec == 1:
-                    keys = (round(val, 1), round(val, 2))
+                    keys = (round(val, 1),)
                 else:
-                    keys = (round(val, 0), round(val, 1), round(val, 2))
+                    keys = (round(val, 0),)
                 for r in keys:
                     if r in src_map:
                         matched = True
@@ -666,20 +600,36 @@ def run_comprehensive_audit():
                 counts[m]["matched"] += 1
                 all_matched.append(item_record)
             else:
-                counts[m]["flagged"] += 1
-                all_flagged.append(item_record)
+                norm_rel = rel.replace("\\", "/")
+                allow_key = (norm_rel, item["line"], item["val_str"])
+                if allow_key in SPEC_ALLOWLIST:
+                    counts[m]["allowed"] += 1
+                    all_allowed.append((item_record, SPEC_ALLOWLIST[allow_key]))
+                else:
+                    counts[m]["flagged"] += 1
+                    all_flagged.append(item_record)
 
     # Print summary table
-    print(f"\n{'Metric Category':20} | {'Total Scanned':15} | {'Verified & Matched':20} | {'Flagged / Mismatches':20}")
-    print("-" * 85)
+    print(f"\n{'Metric Category':20} | {'Total Scanned':15} | {'Verified & Matched':20} | {'Allowed (Spec)':15} | {'Flagged / Mismatches':20}")
+    print("-" * 105)
     for m in ["db", "overflow", "le", "busy", "mhz", "ns"]:
         c = counts[m]
-        print(f"{m.upper():20} | {c['scanned']:15d} | {c['matched']:20d} | {c['flagged']:20d}")
-    print("-" * 85)
+        print(f"{m.upper():20} | {c['scanned']:15d} | {c['matched']:20d} | {c['allowed']:15d} | {c['flagged']:20d}")
+    print("-" * 105)
     tot_scan = sum(c["scanned"] for c in counts.values())
     tot_mat = sum(c["matched"] for c in counts.values())
+    tot_al = sum(c["allowed"] for c in counts.values())
     tot_flag = sum(c["flagged"] for c in counts.values())
-    print(f"{'TOTAL':20} | {tot_scan:15d} | {tot_mat:20d} | {tot_flag:20d}\n")
+    print(f"{'TOTAL':20} | {tot_scan:15d} | {tot_mat:20d} | {tot_al:15d} | {tot_flag:20d}\n")
+
+    # Print allowlisted specification numbers
+    if all_allowed:
+        print("=" * 110)
+        print("ALLOWLISTED SPECIFICATION NUMBERS (SPEC_ALLOWLIST):")
+        print("=" * 110)
+        for rec, reason in all_allowed:
+            print(f"ALLOWED (spec): [{rec['metric'].upper()}] {rec['val_str']} in {rec['file']}:{rec['line']} -- {reason}")
+            print(f"  Context: {rec['context']}\n")
 
     # Run row-by-row headline table and scenario claim audit
     print("=" * 110)

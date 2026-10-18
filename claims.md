@@ -79,7 +79,7 @@ Settings with the best wav result (selected on seeds 101-103, evaluated on seeds
 
 ## 6. Level robustness — RAW
 
-- C13. All three algorithms pass the overflow criterion (rate < 1e-3) only at 1x and 2x reference level. At 0.25x and 0.5x all fail (weight saturation); at 4x all fail (input clipping, 2,323 overflows for NLMS and NLMS-Shift, 13,519 for LMS). At 0.25x LMS and NLMS-Shift are identical. At 4x the final-window NR in results/paper_numbers.csv (nr_final_mean) is 12.1 dB (NLMS-Shift), 11.3 dB (NLMS) and 6.1 dB (LMS). The overflow counts and the 2x / 4x settings quoted here were checked against the committed CSV rows.
+- C13. All three algorithms pass the overflow criterion (rate < 1e-3) only at 1x and 2x reference level. At 0.25x and 0.5x all fail (weight saturation); at 4x all fail (input clipping, 2,323 overflows for NLMS and NLMS-Shift, 13,519 for LMS). At 0.25x LMS and NLMS-Shift are identical. At 4x the final-window NR in results/paper_numbers.csv (nr_final_mean) is 12.1 dB (NLMS-Shift), 11.3 dB (NLMS) and 6.1 dB (LMS). The overflow counts and the 2x / 4x settings quoted here were checked against the committed CSV rows. Metric definitions (docs/results.md): nr_final is the final 25% of samples, nr_all is the whole run, nr_avg is a 256-sample smoothed dB average over the whole run. The level-sweep table in docs/results.md reports nr_avg, so its 4x figures (6.00 / 12.11 / 12.59 dB for LMS / NLMS / NLMS-Shift) differ from the nr_final figures above.
 - Claim NOT made: that normalisation gives level robustness.
 
 ## 7. Hybrid LMS/NLMS-Shift switch (Gate A) — RAW
@@ -109,6 +109,6 @@ Done (raw output seen): unit tests (23 OK), full regression (57/57), `run_pipeli
 
 Known limits:
 1. The explanation given for an earlier paper_numbers.csv diff (nr_avg vs nr_all) does not match the diff shown (its direction is reversed, and the cited change is not in the displayed reproduce.py diff). What is relied on is the end state: the regenerated CSV equals the committed CSV, and its level-sweep rows (including 4x) agree with the raw level-sweep output. An earlier committed version of the CSV held stale level-sweep rows from the old tuning.
-2. The number audit is a typo guard, not independent verification. Some documents (for example docs/phase1_eps_tuning.md) are part of its own ground-truth pool, and the row-by-row check was tuned against one planted sentence.
-3. Fmax and slack are checked against Quartus reports kept in an untracked scratch/ folder; results/metrics/quartus_summary.csv is the tracked source.
+2. The number audit is a typo guard, not independent verification. It matches numbers by value within metric-specific columns of the repo's own CSVs and Quartus reports (markdown files were removed from its ground-truth pool), so it cannot catch a wrong number that equals another valid number in the same column family. The row-by-row headline-table check was tuned against two planted errors. Coverage of confidence intervals, percentages (43%, 30%) and derived busy fractions is not confirmed.
+3. Quartus reports are tracked in results/quartus_reports/ and the audit reads them from there; results/metrics/quartus_summary.csv is the summary. Specification numbers (50 MHz clock, 20.0 ns period, +0.5 / +3.0 ns Gate B targets, the 2,531 LE estimate) are not measured values and are not matched by the audit.
 4. Not done: board test, push to a remote.

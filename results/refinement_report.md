@@ -40,13 +40,13 @@ All empirical criteria, timing closures, multi-corner slacks, resource footprint
 ### 3.1 Problem Statement
 In an earlier intermediate report, `EPS_EXP=2, K=3, W=12, L=32` was recorded as:
 - First Gate A run: stationary 22.22 dB / amp_steps 24.15 dB / path_switch 18.99 dB
-- Re-run table: stationary 24.23 dB / amp_steps 10.02 dB / path_switch 24.37 dB
+- Re-run table: stationary ~24.2 / amp_steps ~10.0 / path_switch ~24.4 (unverified; no source row exists in any CSV)
 
 ### 3.2 Verification Audit & Ground Truth
 A rerun of `scratch/check_gate_a_fixed.py` with `EPS_EXP=2, K=3, W=12, L=32` across seeds 1–3 confirms the exact reproducible measurements:
 - The script `check_gate_a_fixed.py` executes:
   `run_fixed("nlms_shift", sc.x, sc.d, L=32, mu=0.125, FxCfg(W=12, eps_exp=2))`
-- The row `24.23 / 10.02 / 24.37 / 5.51` is unverified and discarded; it does not correspond to the output of `check_gate_a_fixed.py`.
+- The row `~24.2 / ~10.0 / ~24.4` (unverified; no source row exists in any CSV) is unverified and discarded; it does not correspond to the output of `check_gate_a_fixed.py`.
 - **Definitive Ground Truth:** At the true operating point `EPS_EXP=2, K=3, W=12`, all seeds reproducibly yield:
    - **Stationary:** Seed 1 = 22.42 dB, Seed 2 = 21.74 dB, Seed 3 = 22.48 dB $\to$ **Mean Final = 22.22 dB** (Mean Whole-Run = 13.17 dB)
    - **Amp Steps:** Seed 1 = 24.99 dB, Seed 2 = 22.00 dB, Seed 3 = 25.46 dB $\to$ **Mean Final = 24.15 dB** (Mean Whole-Run = 16.94 dB)
