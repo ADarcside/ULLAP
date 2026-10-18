@@ -71,7 +71,7 @@ def load_wav_mono(path, fs_out=FS):
         a -= 128
     a = a[: len(a) // ch * ch].reshape(-1, ch).mean(1)
     if fr != fs_out:
-        a = resample_fft(a, int(round(len(a) * fs_out / fr)))
+        a = resample_fft(a, round(len(a) * fs_out / fr))
     return a
 
 
