@@ -200,97 +200,138 @@ def build_verification_database():
         add_db(val, src, desc)
         add_db(abs(val), src, desc)
 
-    # 6. Hardware Timing & Architecture (Questa logs & Quartus reports)
+    # 6. Hardware Timing & Architecture (Questa logs, Quartus reports & SDC)
     # Busy cycles
-    add_busy(72, "tb/tb_anc_core.v", "NLMS-Shift busy cycles (W=12)")
-    add_busy(73, "tb/tb_anc_core.v", "LMS busy cycles (W=11, 12)")
-    add_busy(124, "tb/tb_anc_core.v", "NLMS busy cycles (W=11)")
-    add_busy(127, "tb/tb_anc_core.v", "NLMS busy cycles (W=12)")
-    add_busy(70, "docs/results.md", "analytical pre-pipeline LMS busy cycles")
-    add_busy(91, "docs/results.md", "analytical pre-pipeline NLMS busy cycles")
+    add_busy(72, "tb/tb_anc_core.v", "line 157: NLMS-Shift busy cycles (W=12)")
+    add_busy(73, "tb/tb_anc_core.v", "line 157: LMS busy cycles (W=11, 12)")
+    add_busy(124, "tb/tb_anc_core.v", "line 157: NLMS busy cycles (W=11)")
+    add_busy(127, "tb/tb_anc_core.v", "line 157: NLMS busy cycles (W=12)")
+    add_busy(70, "UNSOURCED", "UNSOURCED: analytical pre-pipeline LMS busy cycles (70)")
+    add_busy(91, "UNSOURCED", "UNSOURCED: analytical pre-pipeline NLMS busy cycles (91)")
 
     # LEs
-    add_le(1885, "scratch/shift_w12/anc_de2_115.fit.rpt", "LMS W=12 LEs")
-    add_le(2697, "scratch/shift_w12/anc_de2_115.fit.rpt", "NLMS W=12 LEs")
-    add_le(2690, "scratch/shift_w12/anc_de2_115.fit.rpt", "NLMS-Shift W=12 LEs")
-    add_le(2531, "results/refinement_report.md", "baseline estimate W=11 LEs")
+    add_le(1885, "results/quartus_reports/lms_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: LMS W=12 LEs: 1885")
+    add_le(2697, "results/quartus_reports/nlms_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: NLMS W=12 LEs: 2697")
+    add_le(2690, "results/quartus_reports/shift_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: NLMS-Shift W=12 LEs: 2690")
+    add_le(2531, "UNSOURCED", "UNSOURCED: baseline estimate W=11 LEs (2531)")
 
     # Dedicated registers
-    add_le(1148, "scratch/shift_w12/anc_de2_115.fit.rpt", "LMS W=12 registers")
-    add_le(1425, "scratch/shift_w12/anc_de2_115.fit.rpt", "NLMS W=12 registers")
-    add_le(1213, "scratch/shift_w12/anc_de2_115.fit.rpt", "NLMS-Shift W=12 registers")
+    add_le(1148, "results/quartus_reports/lms_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: LMS W=12 registers: 1148")
+    add_le(1425, "results/quartus_reports/nlms_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: NLMS W=12 registers: 1425")
+    add_le(1213, "results/quartus_reports/shift_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: NLMS-Shift W=12 registers: 1213")
 
-    # W=11 Shipped Hardware Synthesis & Clock Specs (docs/verification.md)
-    add_le(1775, "docs/verification.md", "LMS W=11 synthesis LEs")
-    add_le(2542, "docs/verification.md", "NLMS W=11 synthesis LEs")
-    add_mhz(58.87, "docs/verification.md", "NLMS W=11 synthesis Fmax")
-    add_mhz(60.05, "docs/verification.md", "LMS W=11 synthesis Fmax")
-    add_ns(3.347, "docs/verification.md", "LMS W=11 setup slack")
-    add_ns(3.014, "docs/verification.md", "NLMS W=11 setup slack")
-    add_ns(20.0, "docs/verification.md", "50 MHz master clock period (1/50MHz)")
+    # W=11 Shipped Hardware Synthesis & Clock Specs (results/metrics/quartus_summary.csv and quartus/anc_de2_115.sdc)
+    add_le(1775, "results/metrics/quartus_summary.csv", "row 5 (exp_lms_w11_cyclone4), col=logic_elements: 1775")
+    add_le(2542, "results/metrics/quartus_summary.csv", "row 6 (exp_nlms_w11_cyclone4), col=logic_elements: 2542")
+    add_mhz(58.87, "results/metrics/quartus_summary.csv", "row 6 (exp_nlms_w11_cyclone4), col=fmax_mhz: 58.87")
+    add_mhz(60.05, "results/metrics/quartus_summary.csv", "row 5 (exp_lms_w11_cyclone4), col=fmax_mhz: 60.05")
+    add_ns(3.347, "results/metrics/quartus_summary.csv", "row 5 (exp_lms_w11_cyclone4), col=setup_slack_ns: 3.347")
+    add_ns(3.014, "results/metrics/quartus_summary.csv", "row 6 (exp_nlms_w11_cyclone4), col=setup_slack_ns: 3.014")
+    add_ns(20.0, "quartus/anc_de2_115.sdc", "line 5 (create_clock -period 20.000): 20.0 ns")
 
     # Fmax MHz
-    add_mhz(50, "quartus/anc_de2_115.sdc", "system clock frequency")
-    add_mhz(50.0, "quartus/anc_de2_115.sdc", "system clock frequency")
-    add_mhz(3.072, "quartus/anc_de2_115.sdc", "AUD_BCLK frequency")
-    add_mhz(59.90, "scratch/shift_w12/anc_de2_115.sta.rpt", "LMS Slow 85C Fmax")
-    add_mhz(61.72, "scratch/shift_w12/anc_de2_115.sta.rpt", "NLMS Slow 85C Fmax")
-    add_mhz(61.98, "scratch/shift_w12/anc_de2_115.sta.rpt", "NLMS-Shift Slow 85C Fmax")
+    add_mhz(50, "quartus/anc_de2_115.sdc", "line 5 (50 MHz master clock): 50 MHz")
+    add_mhz(50.0, "quartus/anc_de2_115.sdc", "line 5 (50 MHz master clock): 50.0 MHz")
+    add_mhz(3.072, "quartus/anc_de2_115.sdc", "line 12 (3.072 MHz AUD_BCLK): 3.072 MHz")
+    add_mhz(59.90, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Fmax Summary: LMS Slow 85C Fmax: 59.90 MHz")
+    add_mhz(61.72, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Fmax Summary: NLMS Slow 85C Fmax: 61.72 MHz")
+    add_mhz(61.98, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Fmax Summary: NLMS-Shift Slow 85C Fmax: 61.98 MHz")
 
-    # ns timing & latency
-    for ns_val, desc in [
-        (3.305, "LMS setup slack Slow 85C"), (3.798, "NLMS setup slack Slow 85C"), (3.867, "NLMS-Shift setup slack Slow 85C"),
-        (4.819, "LMS setup slack Slow 0C"), (5.115, "NLMS setup slack Slow 0C"), (5.177, "NLMS-Shift setup slack Slow 0C"),
-        (11.654, "LMS setup slack Fast 0C"), (11.707, "NLMS setup slack Fast 0C"), (11.688, "NLMS-Shift setup slack Fast 0C"),
-        (0.182, "LMS hold slack Fast 0C"), (0.181, "NLMS/Shift hold slack Fast 0C"),
-        (740, "NLMS-Shift 37 cycles @ 50 MHz core latency"), (596.9, "NLMS-Shift 37 cycles @ 61.98 MHz"),
-        (700, "LMS 35 cycles @ 50 MHz core latency"), (0.74, "NLMS-Shift core latency in us"),
-        (0.70, "LMS core latency in us"), (1.44, "NLMS-Shift 72 cycles busy time in us"),
-        (1.46, "LMS 73 cycles busy time in us"), (2.54, "NLMS 127 cycles busy time in us"),
-        (2.48, "NLMS 124 cycles busy time in us"),
-        (0.5, "Gate B minimum slack target"), (3.0, "Gate B verified margin"),
-        (3.367, "NLMS-Shift margin over 0.5 ns target"), (-7.655, "Baseline setup slack unpipelined"),
-        (20.83, "48 kHz audio sample period in us"), (20.833, "48 kHz audio sample period in us"),
-        (250.0, "ADC decimation filter delay in us"), (229.2, "DAC interpolation filter delay in us"),
-        (375.0, "DAC interpolation filter alternative delay in us"), (41.7, "I2S framing delay in us"),
-        (521.6, "Total acoustic loop delay in us"), (0.52, "Total acoustic loop delay in ms"),
-        (290.0, "Acoustic propagation delay for 10 cm in us")
+    # ns timing & latency (verified from sta.rpt files and hardware testbench)
+    for ns_val, src_file, desc in [
+        (3.305, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Setup Summary: LMS setup slack: 3.305 ns"),
+        (3.798, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Setup Summary: NLMS setup slack: 3.798 ns"),
+        (3.867, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Setup Summary: NLMS-Shift setup slack: 3.867 ns"),
+        (4.819, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 0C Model Setup Summary: LMS setup slack: 4.819 ns"),
+        (5.115, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 0C Model Setup Summary: NLMS setup slack: 5.115 ns"),
+        (5.177, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Slow 1200mV 0C Model Setup Summary: NLMS-Shift setup slack: 5.177 ns"),
+        (11.654, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Setup Summary: LMS setup slack: 11.654 ns"),
+        (11.707, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Setup Summary: NLMS setup slack: 11.707 ns"),
+        (11.688, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Setup Summary: NLMS-Shift setup slack: 11.688 ns"),
+        (0.182, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Hold Summary: LMS hold slack: 0.182 ns"),
+        (0.181, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Hold Summary: NLMS hold slack: 0.181 ns"),
+        (740, "tb/tb_anc_core.v", "line 157: NLMS-Shift 37 cycles @ 50 MHz core latency: 740 ns"),
+        (596.9, "UNSOURCED", "UNSOURCED: NLMS-Shift 37 cycles @ 61.98 MHz (596.9 ns)"),
+        (700, "tb/tb_anc_core.v", "line 157: LMS 35 cycles @ 50 MHz core latency: 700 ns"),
+        (0.74, "tb/tb_anc_core.v", "line 157: NLMS-Shift core latency in us (0.74 us)"),
+        (0.70, "tb/tb_anc_core.v", "line 157: LMS core latency in us (0.70 us)"),
+        (1.44, "tb/tb_anc_core.v", "line 157: NLMS-Shift 72 cycles busy time in us (1.44 us)"),
+        (1.46, "tb/tb_anc_core.v", "line 157: LMS 73 cycles busy time in us (1.46 us)"),
+        (2.54, "tb/tb_anc_core.v", "line 157: NLMS 127 cycles busy time in us (2.54 us)"),
+        (2.48, "tb/tb_anc_core.v", "line 157: NLMS 124 cycles busy time in us (2.48 us)"),
+        (0.5, "UNSOURCED", "UNSOURCED: Gate B minimum slack target (0.5 ns)"),
+        (3.0, "UNSOURCED", "UNSOURCED: Gate B verified margin (3.0 ns)"),
+        (3.367, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Slow 85C slack margin over 0.5 ns target: 3.367 ns"),
+        (-7.655, "UNSOURCED", "UNSOURCED: Baseline setup slack unpipelined (-7.655 ns)"),
+        (20.83, "UNSOURCED", "UNSOURCED: 48 kHz audio sample period in us (20.83 us)"),
+        (20.833, "UNSOURCED", "UNSOURCED: 48 kHz audio sample period in us (20.833 us)"),
+        (250.0, "UNSOURCED", "UNSOURCED: ADC decimation filter delay in us (250.0 us)"),
+        (229.2, "UNSOURCED", "UNSOURCED: DAC interpolation filter delay in us (229.2 us)"),
+        (375.0, "UNSOURCED", "UNSOURCED: DAC interpolation filter alternative delay in us (375.0 us)"),
+        (41.7, "UNSOURCED", "UNSOURCED: I2S framing delay in us (41.7 us)"),
+        (521.6, "UNSOURCED", "UNSOURCED: Total acoustic loop delay in us (521.6 us)"),
+        (0.52, "UNSOURCED", "UNSOURCED: Total acoustic loop delay in ms (0.52 ms)"),
+        (290.0, "UNSOURCED", "UNSOURCED: Acoustic propagation delay for 10 cm in us (290.0 us)")
     ]:
-        add_ns(ns_val, "scratch/shift_w12/anc_de2_115.sta.rpt", desc)
+        add_ns(ns_val, src_file, desc)
 
-    # 7. Additional task-specific verified numbers
-    # Phase 1 EPS tuning table values:
-    for v in [20.76, 9.44, 20.57, -11.29, 11.29, 22.22, 24.15, 18.99, 5.51, 8.87,
-              22.42, 21.74, 22.48, 13.17, 24.99, 22.00, 25.46, 16.94, 19.52, 18.88, 18.57, 9.54,
-              5.43, 5.60, 5.51, 18.23, 14.80, 6.20, 14.38, 4.37, 2.69, 4.73,
-              24.55, 20.29, 8.68, 4.84, 6.78, 22.24, 24.12, 19.06, 5.72, 9.91,
-              23.18, 4.20, 6.12, 20.35, 17.74, 20.67, 3.27, 10.30, 18.07, 20.28,
-              14.79, 8.09, 7.19, 18.37, 16.14, 19.86, 6.30, 10.45, 21.20, 17.95,
-              20.55, 9.47, 21.48, 22.39, 18.11, 5.19, 7.84, 17.47, -0.65, 0.65,
-              10.23, 20.19, 16.15, 20.71, 6.24, 9.49, 22.33, 17.64, 19.24, 3.17,
-              7.98, -3.99, 3.99, -0.35, 0.35, -4.19, 4.19, 3.19, -3.19, 8.71,
-              4.88, -0.63, 0.63, 11.75, -10.47, 10.47, -10.31, 10.31, 21.90, -2.25, 2.25,
-              18.33, 23.80, 14.82, 8.70, -4.04, -0.53, -4.09, 3.24,
-              18.29, 23.81, 14.80, 8.71, -4.08, -0.52, -4.11, 3.25,
-              16.17, 24.18, 9.95, 20.40, 17.75, 17.12, 18.60, 17.55, 19.11, 17.85,
-              19.76, 18.07, 20.49, 18.88, 20.92, 19.50, 21.38, 20.20, 21.83, 21.18,
-              21.84, 22.70, 22.26, 22.07, 24.07, 22.39, 24.33, 22.37, 22.28, 24.16,
-              22.0, 24.0, 10.0, 11.0, 12.0, 20.0, 25.0, 30.0, 6.02, 0.0, 1.0, 2.0, 3.0,
-              0.17, 0.23, 0.27, 4.25, 4.08, 4.29, 10.05, 4.2, 4.3, 4.35,
-              11.22, 13.15, 7.99, 16.80, 0.06, 1.0, 4.5, 4.4, 4.53, 4.37, 4.78, 4.20, 4.51, 4.33,
-              17.86, 23.42, 14.58, 8.72, 17.50, 24.02, 14.33, 8.58, 23.87, 8.70,
-              # Fixed-point precision sweep table (Section 3 of docs/results.md and research_summary.md)
-              14.1, 14.0, 14.2, 14.3, 14.4, 14.5, 14.6, 13.5, 13.6, 13.7, 12.9, 11.8, 11.0, 10.8, 6.9, 6.7, 5.9,
-              # Table 4 and Task 2 sweeps & discussion
-              8.77, 8.85, 8.57, 8.11, 17.15, 24.4, 4.11, 12.4, 2.97, 4.11, -3.0, 0.03]:
-        add_db(v, "py/exp_sweep_task2.py & phase1_eps_tuning.md", f"verified parameter sweep / gate A / pareto: {v} dB")
+    # 7. Additional metrics from real CSV ground truth files in results/metrics/
+    for fname in ["eps_sweep_W12.csv", "eps_confirm.csv", "pareto_evaluation_seeds1_20.csv", "float_results.csv", "fixed_sweep.csv", "tuning.csv", "candidates.csv"]:
+        fpath = os.path.join(ROOT, "results", "metrics", fname)
+        if os.path.exists(fpath):
+            rel_src = f"results/metrics/{fname}"
+            with open(fpath, "r", encoding="utf-8") as f:
+                reader = csv.reader(f)
+                try:
+                    hdr = next(reader)
+                except StopIteration:
+                    continue
+                for r_idx, row in enumerate(reader, 1):
+                    for c_idx, cell in enumerate(row):
+                        try:
+                            fval = float(cell)
+                            col_name = hdr[c_idx] if c_idx < len(hdr) else str(c_idx)
+                            row_desc = f"row {r_idx}, col={col_name}"
+                            add_db(fval, rel_src, row_desc)
+                        except ValueError:
+                            pass
 
-    # 3.072 MHz AUD_BCLK
-    add_mhz(3.072, "quartus/anc_de2_115.sdc", "AUD_BCLK clock frequency (3.072 MHz)")
+    # Full task sweep, trade-off, and delta values
+    full_v_list = [
+        20.76, 9.44, 20.57, -11.29, 11.29, 22.22, 24.15, 18.99, 5.51, 8.87,
+        22.42, 21.74, 22.48, 13.17, 24.99, 22.00, 25.46, 16.94, 19.52, 18.88, 18.57, 9.54,
+        5.43, 5.60, 5.51, 18.23, 14.80, 6.20, 14.38, 4.37, 2.69, 4.73,
+        24.55, 20.29, 8.68, 4.84, 6.78, 22.24, 24.12, 19.06, 5.72, 9.91,
+        23.18, 4.20, 6.12, 20.35, 17.74, 20.67, 3.27, 10.30, 18.07, 20.28,
+        14.79, 8.09, 7.19, 18.37, 16.14, 19.86, 6.30, 10.45, 21.20, 17.95,
+        20.55, 9.47, 21.48, 22.39, 18.11, 5.19, 7.84, 17.47, -0.65, 0.65,
+        10.23, 20.19, 16.15, 20.71, 6.24, 9.49, 22.33, 17.64, 19.24, 3.17,
+        7.98, -3.99, 3.99, -0.35, 0.35, -4.19, 4.19, 3.19, -3.19, 8.71,
+        4.88, -0.63, 0.63, 11.75, -10.47, 10.47, -10.31, 10.31, 21.90, -2.25, 2.25,
+        18.33, 23.80, 14.82, 8.70, -4.04, -0.53, -4.09, 3.24,
+        18.29, 23.81, 14.80, 8.71, -4.08, -0.52, -4.11, 3.25,
+        16.17, 24.18, 9.95, 20.40, 17.75, 17.12, 18.60, 17.55, 19.11, 17.85,
+        19.76, 18.07, 20.49, 18.88, 20.92, 19.50, 21.38, 20.20, 21.83, 21.18,
+        21.84, 22.70, 22.26, 22.07, 24.07, 22.39, 24.33, 22.37, 22.28, 24.16,
+        22.0, 24.0, 10.0, 11.0, 12.0, 20.0, 25.0, 30.0, 6.02, 0.0, 1.0, 2.0, 3.0,
+        0.17, 0.23, 0.27, 4.25, 4.08, 4.29, 10.05, 4.2, 4.3, 4.35,
+        11.22, 13.15, 7.99, 16.80, 0.06, 1.0, 4.5, 4.4, 4.53, 4.37, 4.78, 4.20, 4.51, 4.33,
+        17.86, 23.42, 14.58, 8.72, 17.50, 24.02, 14.33, 8.58, 23.87, 8.70,
+        # Fixed-point precision sweep table
+        14.1, 14.0, 14.2, 14.3, 14.4, 14.5, 14.6, 13.5, 13.6, 13.7, 12.9, 11.8, 11.0, 10.8, 6.9, 6.7, 5.9,
+        # Table 4 and Task 2 sweeps & discussion
+        8.77, 8.85, 8.57, 8.11, 17.15, 24.4, 4.11, 12.4, 2.97, 4.11, -3.0, 0.03
+    ]
+    for v in full_v_list:
+        r2 = round(float(v), 2)
+        if r2 not in db_sources:
+            add_db(v, "UNSOURCED", f"UNSOURCED: {v} dB")
+
 
     # Add overflow counts from acc_ablation:
     for ov in [0, 9, 12, 10058, 13064, 10580, 14277, 10935, 16839, 19]:
         add_ovf(ov, "results/metrics/acc_ablation.csv", f"accumulator ablation overflow count: {ov}")
+
 
     return {
         "db": db_sources,

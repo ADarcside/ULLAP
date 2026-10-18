@@ -103,6 +103,25 @@ Eval seeds [1, 2, 3]; tuning seed 100.
 
 Based on the 20-seed Monte Carlo evaluation in `results/paper_numbers.csv` with each architecture evaluated at its fair-tuned operating point ($W=12, L=32$):
 
+### Performance Across Test Scenarios (W=12, L=32, 20-Seed Monte Carlo from `paper_numbers.csv`)
+| Scenario | Algorithm | Final NR (dB, Mean ± 95% CI) | Whole-Run NR (dB) | Overflows | Overflow Rate |
+|---|---|---|---|---|---|
+| **Stationary Noise** | LMS | 22.39 ± 0.27 | 13.23 | 0 | 0.00e+00 |
+| Stationary Noise | NLMS | 22.28 ± 0.27 | 13.15 | 0 | 0.00e+00 |
+| Stationary Noise | NLMS-Shift | 22.37 ± 0.26 | 13.17 | 0 | 0.00e+00 |
+| **Amplitude Steps** | LMS | 22.36 ± 0.64 | 16.94 | 0 | 0.00e+00 |
+| Amplitude Steps | NLMS | 24.16 ± 0.98 | 19.38 | 0 | 0.00e+00 |
+| Amplitude Steps | NLMS-Shift | 24.33 ± 0.96 | 19.46 | 0 | 0.00e+00 |
+| **Acoustic Path Switch** | LMS | 18.95 ± 0.14 | 10.51 | 0 | 0.00e+00 |
+| Acoustic Path Switch | NLMS | 18.53 ± 0.14 | 9.94 | 0 | 0.00e+00 |
+| Acoustic Path Switch | NLMS-Shift | 18.91 ± 0.15 | 9.56 | 0 | 0.00e+00 |
+| **Real WAV Audio** | LMS | 5.69 ± 0.04 | 10.51 | 0 | 0.00e+00 |
+| Real WAV Audio | NLMS | 5.73 ± 0.04 | 9.94 | 0 | 0.00e+00 |
+| Real WAV Audio | NLMS-Shift | 5.46 ± 0.04 | 8.87 | 0 | 0.00e+00 |
+| **Acoustic Feedback** | LMS | 4.35 ± 0.04 | 4.00 | 0 | 0.00e+00 |
+| Acoustic Feedback | NLMS | 4.35 ± 0.04 | 4.10 | 0 | 0.00e+00 |
+| Acoustic Feedback | NLMS-Shift | 4.35 ± 0.04 | 3.99 | 0 | 0.00e+00 |
+
 - **Stationary Noise:** NLMS-Shift achieves a mean final NR of $22.37\text{ dB}$ ($95\%\text{ CI: } [22.11, 22.63]\text{ dB}$), which ties fair-tuned LMS at $22.39\text{ dB}$ ($[22.12, 22.66]\text{ dB}$) and fair-tuned NLMS at $22.28\text{ dB}$ ($[22.01, 22.54]\text{ dB}$) within overlapping confidence intervals.
 - **Amplitude Steps:** NLMS-Shift achieves $24.33\text{ dB}$ ($[23.88, 24.78]\text{ dB}$), tying fair-tuned NLMS at $24.16\text{ dB}$ ($[23.58, 24.73]\text{ dB}$) as their 95% confidence intervals overlap, while both outperform LMS at $22.36\text{ dB}$ ($[21.72, 23.00]\text{ dB}$) by $\sim 2.0\text{ dB}$. Crucially, an exhaustive Pareto frontier evaluation across all settings in the hyperparameter grids (evaluated across seeds 1–20, Figure 12) confirms that normalised algorithms (NLMS and NLMS-Shift) reach $\ge 22.0\text{ dB}$ stationary and $\ge 24.0\text{ dB}$ amp_steps at a single setting, whereas LMS cannot: aggressive tracking ($\mu=0.10$) degrades stationary cancellation to $16.17\text{ dB}$ due to high steady-state excess MSE, while conservative tracking ($\mu=0.25$) limits amp_steps cancellation to $22.36\text{ dB}$. Note that the $22/24\text{ dB}$ thresholds were chosen post hoc and refer to the frontier figure (Figure 12). While both normalised algorithms satisfy this joint frontier at a single operating point, NLMS-Shift's distinct advantage over NLMS is the divider-free 72 vs 127 busy cycles per sample (a 43.3% reduction in execution cycles, eliminating the multi-cycle restoring hardware divider).
 - **Acoustic Path Switch:** NLMS-Shift reaches $18.91\text{ dB}$ ($[18.76, 19.06]\text{ dB}$), tying fair-tuned LMS at $18.95\text{ dB}$ ($[18.81, 19.09]\text{ dB}$) and fair-tuned NLMS at $18.53\text{ dB}$ ($[18.39, 18.67]\text{ dB}$) within overlapping confidence intervals.
