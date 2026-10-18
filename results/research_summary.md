@@ -1,7 +1,7 @@
 # Research Results: Adaptive Noise Cancellation (ANC)
 **Target Hardware:** Terasic DE2-115 (Altera Cyclone IV E EP4CE115F29C7) | **Pipeline:** Python Software Simulation & Verification
 N=16000 samples @ 8000 Hz, Filter Length L=32, Scenarios: stationary, amp_steps, path_switch, wav, feedback; WAV: `acoustic_chord.wav`
-Eval seeds [1, 2, 3]; tuning seed 100.
+Eval seeds [1, 2, 3] (floating-point baseline), seed 1 (fixed-point sweep); tuning seed 100.
 
 ## 1. Tuned Step Sizes (Optimal shared parameter per algorithm)
 
