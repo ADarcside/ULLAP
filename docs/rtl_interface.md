@@ -22,10 +22,20 @@ No vendor IP, primitives, PLLs, memories-by-macro or constraints: infer multipli
 |---|---|---|
 | `clk`, `rst_n` | in | single clock, synchronous active-low reset (clears delay line and coefficients to 0) |
 | `in_valid` | in | 1-cycle strobe: `x_in`, `d_in` hold a new sample pair |
+| `freeze` | in | adaptation freeze: sampled when in_valid is accepted; blocks coefficient writes and w saturation flag; no effect on latency or busy; tie to 0 for bit-identical behavior to old core |
 | `x_in[W-1:0]`, `d_in[W-1:0]` | in | reference / primary sample, two's complement Q1.(W-1) |
 | `out_valid` | out | 1-cycle strobe when `y_out`, `e_out` correspond to the sample accepted `LAT` cycles earlier |
 | `y_out[W-1:0]`, `e_out[W-1:0]` | out | filter output and error `e = d - y` (error is the cancelled signal) |
 | `sat_flags[5:0]` | out | sticky saturation flags `{w, g, e, y, acc, in}`; cleared by `rst_n` |
+| `busy` | out | high while processing an accepted sample; new `in_valid` pulses while `busy=1` are ignored |
+
+### Freeze semantics
+When `freeze` is asserted (1'b1) at the clock edge where `in_valid` is accepted (`S_IDLE` state), it is registered into `freeze_r`. While `freeze_r` is active for that sample frame:
+- Filtering continues normally (`y_out`, `e_out` are computed with current weights).
+- Output latency (`LAT`) and `busy` cycles are completely unchanged.
+- Coefficient write-back (`w[i3] <= ...`) is suppressed; weights remain held at their current values.
+- The coefficient saturation flag (`sat_flags[5]`, `w` bit) is suppressed.
+- Tying `freeze` to `1'b0` gives bit-identical operation to the original core.
 
 Throughput target: one sample pair per `in_valid`; the sample period (>= L cycles at 8 kHz is trivially available on
 any board clock) allows a serial, one-MAC implementation (`LAT` ~ 2L+c cycles) or a parallel one. Architecture is

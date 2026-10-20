@@ -27,7 +27,15 @@
 //   busy stays high until the weight update is finished; in_valid pulses that
 //   arrive while busy=1 are IGNORED (the caller must wait for busy=0).
 //
-// Extra ports vs. the minimum spec: `busy`.
+// Adaptation freeze semantics (`freeze`):
+//   `freeze` is sampled into `freeze_r` on the clock edge where `in_valid` is accepted
+//   (S_IDLE state). When `freeze_r` is active, filtering continues normally (y_out,
+//   e_out, output latency, and busy cycle count are completely unaffected), but
+//   coefficient writes (w[i3] updates) and the coefficient saturation flag (sat_flags[5],
+//   w bit) are suppressed for that sample. Tying `freeze` to 1'b0 gives bit-identical
+//   behavior to a core without freeze.
+//
+// Extra ports vs. the minimum spec: `busy`, `freeze`.
 // sat_flags bit0 ("in") is tied to 0: inputs are already W bits wide, so there
 // is nothing to saturate in RTL (the Python 'in_x/in_d' counters count float ->
 // fixed clipping outside the core).
@@ -47,7 +55,7 @@ module anc_core #(
     input  wire                 clk,
     input  wire                 rst_n,      // synchronous, active low
     input  wire                 in_valid,   // 1-cycle strobe
-    input  wire                 freeze,     // adaptation freeze (sampled on in_valid)
+    input  wire                 freeze,     // adaptation freeze (sampled when in_valid is accepted; blocks w write & w sat flag; no effect on lat/busy; tie to 0 = identical to old core)
     input  wire signed [W-1:0]  x_in,
     input  wire signed [W-1:0]  d_in,
     output reg                  out_valid,
