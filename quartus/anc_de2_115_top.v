@@ -49,8 +49,22 @@ module anc_de2_115_top #(
         end
     end
     wire rst_n = rst_sync_2;
-    wire bypass_active = SW[0];      // 1: Direct audio passthrough (zero latency)
-    wire freeze_active = SW[1];      // 1: Freeze filter adaptation
+    // -------------------------------------------------------------------------
+    // 2-Stage CDC Synchronizers for Switches SW[0] (Bypass) and SW[1] (Freeze)
+    // -------------------------------------------------------------------------
+    reg [1:0] sw0_sync;
+    reg [1:0] sw1_sync;
+    always @(posedge CLOCK_50 or negedge rst_n) begin
+        if (!rst_n) begin
+            sw0_sync <= 2'b00;
+            sw1_sync <= 2'b00;
+        end else begin
+            sw0_sync <= {sw0_sync[0], SW[0]};
+            sw1_sync <= {sw1_sync[0], SW[1]};
+        end
+    end
+    wire sw_bypass_sync = sw0_sync[1];
+    wire sw_freeze_sync = sw1_sync[1];
 
     // -------------------------------------------------------------------------
     // 1. WM8731 Master Clock (AUD_XCK): 50 MHz / 4 = 12.5 MHz
@@ -106,6 +120,17 @@ module anc_de2_115_top #(
         .dac_right    (dac_right_data)
     );
 
+    // Bypass sampled once per frame at sample strobe to prevent mid-word mux switching
+    reg bypass_latched;
+    always @(posedge CLOCK_50 or negedge rst_n) begin
+        if (!rst_n) begin
+            bypass_latched <= 1'b0;
+        end else if (sample_strobe) begin
+            bypass_latched <= sw_bypass_sync;
+        end
+    end
+    wire bypass_active = bypass_latched;
+
     // -------------------------------------------------------------------------
     // 4. Sample Formatting & ANC Core Handshake
     // -------------------------------------------------------------------------
@@ -132,7 +157,7 @@ module anc_de2_115_top #(
         end else begin
             core_in_valid <= 1'b0; // default 1-cycle strobe
 
-            if (sample_strobe && codec_init_done && !freeze_active) begin
+            if (sample_strobe && codec_init_done) begin
                 if (anc_busy) begin
                     overrun_flag <= 1'b1; // Sample arrived while core was busy
                 end else begin
@@ -158,7 +183,7 @@ module anc_de2_115_top #(
         .clk       (CLOCK_50),
         .rst_n     (rst_n),
         .in_valid  (core_in_valid),
-        .freeze    (1'b0),
+        .freeze    (sw_freeze_sync),
         .x_in      (x_reg),
         .d_in      (d_reg),
         .out_valid (anc_out_valid),
