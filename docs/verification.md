@@ -38,7 +38,7 @@ Simulators: Questa Intel FPGA Starter Edition 2025.2 (win64) & ModelSim / Verila
 
 * `rtl/anc_core.v` vs `tb/tb_anc_core.v`, 53 manifest configurations + 4 protocol testbenches: **57 / 57 PASS** (`results/metrics/questa_regression_summary.txt`).
   Every sample's `y_out`/`e_out` equals the Python value, final coefficients equal the `.w` file, sticky flags equal the Python counters, latency is constant (`LAT = L+3 = 35` cycles for LMS, `LAT = L+5 = 37` cycles for NLMS and NLMS-shift).
-* Full DE2-115 Top Wrapper Testbench (`quartus/tb_anc_de2_115_top.v`): **PASS**.
+* Full DE2-115 Top Wrapper Testbench (`tb/tb_top.v`, superseding legacy `quartus/tb_anc_de2_115_top.v`): **PASS**.
   Autonomous WM8731 I2C initialization (11 register writes + ACK), I2S stereo serialization/deserialization, ANC core sample exchange, and hardware bypass passthrough verified bit-exact.
 * Synthesis & Static Timing Analysis (Quartus Prime Lite 25.1std, Cyclone IV E `EP4CE115F29C7`, Speed Grade 7):
   - **LMS (W=11):** 1,775 LEs (1.55%), 1,069 registers, Fmax = 60.05 MHz, Setup Slack = +3.347 ns (PASS)
