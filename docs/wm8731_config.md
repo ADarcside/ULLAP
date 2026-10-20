@@ -19,24 +19,24 @@
   2. **Byte 2:** `{reg_addr[6:0], data[8]}` (7-bit register address + MSB of 9-bit data).
   3. **Byte 3:** `data[7:0]` (Lower 8 bits of 9-bit data).
 
-## 3. Register Configuration Table
+## 3. Register Configuration Table (Auto-Generated from config_rom)
 
 > [!NOTE]
 > The official Wolfson WM8731 datasheet is inaccessible in this environment. As required by engineering governance, all register settings, bitfields, and post-reset settling delay requirements are classified as **UNVERIFIED**.
 
 | Register | Address | Value (9-bit Hex) | Field Meanings as Coded | Status | Datasheet Page | Notes & Top-Level Context |
 | :--- | :---: | :---: | :--- | :---: | :---: | :--- |
-| **R15** | `0x0F` | `0x000` | Codec Software Reset | **UNVERIFIED** | UNVERIFIED | Resets all registers to defaults. Settling delay requirement unverified. |
-| **R6**  | `0x06` | `0x000` | Power Down Control | **UNVERIFIED** | UNVERIFIED | Powers up all internal blocks (Line In, Mic, ADC, DAC, Oscillator, Output). |
-| **R0**  | `0x00` | `0x017` | Left Line In Control | **UNVERIFIED** | UNVERIFIED | Unmute Left Line In; 0 dB default volume gain (`0b00010111`). |
-| **R1**  | `0x01` | `0x017` | Right Line In Control | **UNVERIFIED** | UNVERIFIED | Unmute Right Line In; 0 dB default volume gain (`0b00010111`). |
-| **R2**  | `0x02` | `0x079` | Left Headphone Out | **UNVERIFIED** | UNVERIFIED | 0 dB volume; zero-cross detect disabled (bit 7 = 0). |
-| **R3**  | `0x03` | `0x079` | Right Headphone Out | **UNVERIFIED** | UNVERIFIED | 0 dB volume; zero-cross detect disabled (bit 7 = 0). |
-| **R4**  | `0x04` | `0x012` | Analogue Audio Path | **UNVERIFIED** | UNVERIFIED | DAC select active, mic mute enabled, analogue bypass disabled. |
-| **R5**  | `0x05` | `0x000` | Digital Audio Path | **UNVERIFIED** | UNVERIFIED | De-emphasis filter off, ADC high-pass filter enabled. |
-| **R7**  | `0x07` | `0x042` | Digital Audio Format | **UNVERIFIED** | UNVERIFIED | I2S standard format, 16-bit word length, Master mode (codec drives BCLK/LRCK). |
-| **R8**  | `0x08` | `0x000` | Sampling Rate Control | **UNVERIFIED** | UNVERIFIED | Normal mode, base oversampling 256 $f_s$ ($XCK / f_s = 256$, $f_s \approx 48.828\ \text{kHz}$). |
-| **R9**  | `0x09` | `0x001` | Active Control | **UNVERIFIED** | UNVERIFIED | Activate digital core audio interface (`bit 0 = 1`). |
+| **R15** | `0x0F` | `0x000` | Reset Register | **UNVERIFIED** | UNVERIFIED | Resets all registers to defaults. Settling delay requirement unverified |
+| **R6** | `0x06` | `0x000` | Power Down Control | **UNVERIFIED** | UNVERIFIED | Powers up all internal blocks (Line In, Mic, ADC, DAC, Oscillator, Output) |
+| **R0** | `0x00` | `0x017` | Left Line In Control | **UNVERIFIED** | UNVERIFIED | Unmute Left Line In; 0 dB default volume gain |
+| **R1** | `0x01` | `0x017` | Right Line In Control | **UNVERIFIED** | UNVERIFIED | Unmute Right Line In; 0 dB default volume gain |
+| **R2** | `0x02` | `0x079` | Left Headphone Out | **UNVERIFIED** | UNVERIFIED | 0 dB volume; zero-cross detect disabled (bit 7 = 0) |
+| **R3** | `0x03` | `0x079` | Right Headphone Out | **UNVERIFIED** | UNVERIFIED | 0 dB volume; zero-cross detect disabled (bit 7 = 0) |
+| **R4** | `0x04` | `0x012` | Analogue Audio Path | **UNVERIFIED** | UNVERIFIED | DAC select active, mic mute enabled, analogue bypass disabled |
+| **R5** | `0x05` | `0x000` | Digital Audio Path | **UNVERIFIED** | UNVERIFIED | De-emphasis filter off, ADC high-pass filter enabled |
+| **R7** | `0x07` | `0x042` | Digital Audio Format | **UNVERIFIED** | UNVERIFIED | I2S standard format, 16-bit word length, Master mode (codec drives BCLK/LRCK) |
+| **R8** | `0x08` | `0x000` | Sampling Rate Control | **UNVERIFIED** | UNVERIFIED | Normal mode, base oversampling 256 fs (XCK / fs = 256, fs = 48.828 kHz) |
+| **R9** | `0x09` | `0x001` | Active Control | **UNVERIFIED** | UNVERIFIED | Activate digital core audio interface (bit 0 = 1) |
 
 ---
 
