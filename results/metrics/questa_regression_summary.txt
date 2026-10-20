@@ -1,7 +1,7 @@
-Questa Verification Regression Summary (2026-10-19 02:57:04)
+Questa Verification Regression Summary (2026-10-20 21:32:20)
 ================================================================================
-Total Tests : 66
-Passed      : 66
+Total Tests : 72
+Passed      : 72
 Failed      : 0
 Simulator   : Questa Altera Starter FPGA Edition-64 2025.2
 ================================================================================
@@ -63,12 +63,18 @@ shift_e2_k3_W12_lowlevel            | PASS | # TB_RESULT PASS vec=vectors/rtl/sh
 lms_W12_freeze_block                | PASS | # TB_RESULT PASS vec=vectors/rtl/lms_W12_freeze_block ALGO=0 W=12 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=73
 lms_W12_freeze_toggle               | PASS | # TB_RESULT PASS vec=vectors/rtl/lms_W12_freeze_toggle ALGO=0 W=12 L=32 samples=200 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=73
 lms_W12_freeze_first                | PASS | # TB_RESULT PASS vec=vectors/rtl/lms_W12_freeze_first ALGO=0 W=12 L=32 samples=1000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=73
+lms_W12_freeze_early                | PASS | # TB_RESULT PASS vec=vectors/rtl/lms_W12_freeze_early ALGO=0 W=12 L=32 samples=1000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=73
 nlms_W12_freeze_block               | PASS | # TB_RESULT PASS vec=vectors/rtl/nlms_W12_freeze_block ALGO=1 W=12 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=127
 nlms_W12_freeze_toggle              | PASS | # TB_RESULT PASS vec=vectors/rtl/nlms_W12_freeze_toggle ALGO=1 W=12 L=32 samples=200 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=127
 nlms_W12_freeze_first               | PASS | # TB_RESULT PASS vec=vectors/rtl/nlms_W12_freeze_first ALGO=1 W=12 L=32 samples=1000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=127
+nlms_W12_freeze_early               | PASS | # TB_RESULT PASS vec=vectors/rtl/nlms_W12_freeze_early ALGO=1 W=12 L=32 samples=1000 y_bad=0 e_bad=0 w_bad=0 flags=100000 lat=37 busy_cycles=127
 shift_W12_freeze_block              | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_W12_freeze_block ALGO=2 W=12 L=32 samples=3000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
 shift_W12_freeze_toggle             | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_W12_freeze_toggle ALGO=2 W=12 L=32 samples=200 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
 shift_W12_freeze_first              | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_W12_freeze_first ALGO=2 W=12 L=32 samples=1000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+shift_W12_freeze_early              | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_W12_freeze_early ALGO=2 W=12 L=32 samples=1000 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+lms_W12_freeze_satall               | PASS | # TB_RESULT PASS vec=vectors/rtl/lms_W12_freeze_satall ALGO=0 W=12 L=32 samples=5959 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=73
+nlms_W12_freeze_satall              | PASS | # TB_RESULT PASS vec=vectors/rtl/nlms_W12_freeze_satall ALGO=1 W=12 L=32 samples=1377 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=127
+shift_W12_freeze_satall             | PASS | # TB_RESULT PASS vec=vectors/rtl/shift_W12_freeze_satall ALGO=2 W=12 L=32 samples=7154 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
 
 PROTOCOL TESTS:
 proto_algo0_L8                      | PASS | # TB_PROTO PASS ALGO=0 W=11 L=8
