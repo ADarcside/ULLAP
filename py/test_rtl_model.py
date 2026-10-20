@@ -143,12 +143,17 @@ class T(unittest.TestCase):
     def test_manifest_vectors(self):
         with open(os.path.join(ROOT, "tb", "manifest.txt")) as f:
             lines = [l.split() for l in f if l.strip() and l[0] != "#"]
-        self.assertEqual(len(lines), 53)
+        self.assertEqual(len(lines), 62)
         for name, algo, W, L, mi, K, accw, prefix, n, eps in lines:
             algo, W, L, mi, K, accw, n, eps = map(int, (algo, W, L, mi, K, accw, n, eps))
             rows, w = fp.read_vec(os.path.join(ROOT, prefix), W)
             self.assertEqual(len(rows), n, name)
-            m = run_rtl_model(algo, rows[:, 0].tolist(), rows[:, 1].tolist(), W, L, mi, K, accw, EPS_EXP=eps)
+            fp_frz = os.path.join(ROOT, prefix + ".frz")
+            frz = None
+            if os.path.exists(fp_frz):
+                with open(fp_frz) as fh:
+                    frz = [int(line.strip()) for line in fh if line.strip()]
+            m = run_rtl_model(algo, rows[:, 0].tolist(), rows[:, 1].tolist(), W, L, mi, K, accw, EPS_EXP=eps, freeze=frz)
             self.assertEqual(m["y"], rows[:, 2].tolist(), name)
             self.assertEqual(m["e"], rows[:, 3].tolist(), name)
             self.assertEqual(m["w"], w.tolist(), name)
