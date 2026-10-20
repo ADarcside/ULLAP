@@ -54,6 +54,7 @@ module i2s_transceiver #(
 
     wire adclrck_val = adclrck_sync[1]; // 0: Left, 1: Right
     wire daclrck_val = daclrck_sync[1];
+    wire daclrck_edge = (daclrck_sync[2] != daclrck_sync[1]);
 
     // -------------------------------------------------------------------------
     // I2S Receiver Logic (Standard I2S: 1-BCLK delay after LRCK transition)
@@ -102,27 +103,50 @@ module i2s_transceiver #(
 
     // -------------------------------------------------------------------------
     // I2S Transmitter Logic (Transmits MSB on falling BCLK with 1-cycle delay)
+    // Contract: DACDAT carries MSB 1 BCLK period after LRCK transition for skew >= +/-40ns
     // -------------------------------------------------------------------------
     reg [4:0]  tx_bit_cnt;
     reg [15:0] tx_shift;
     reg        tx_channel;
+    reg        tx_channel_pending;
+    reg        daclrck_edge_seen;
+    reg        tx_lrck_pending;
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            tx_bit_cnt <= 5'd0;
-            tx_shift   <= 16'd0;
-            tx_channel <= 1'b0;
-            aud_dacdat <= 1'b0;
+            tx_bit_cnt         <= 5'd0;
+            tx_shift           <= 16'd0;
+            tx_channel         <= 1'b0;
+            tx_channel_pending <= 1'b0;
+            daclrck_edge_seen  <= 1'b0;
+            tx_lrck_pending    <= 1'b0;
+            aud_dacdat         <= 1'b0;
         end else begin
+            // Track DACLRCK edge in 50 MHz domain
+            if (daclrck_edge) begin
+                daclrck_edge_seen  <= 1'b1;
+                tx_channel_pending <= daclrck_sync[1];
+            end
+
+            // Arm tx_lrck_pending on BCLK rise (ensures 1-BCLK delay slot completes)
+            if (bclk_rise) begin
+                if (daclrck_edge_seen || daclrck_edge) begin
+                    tx_lrck_pending   <= 1'b1;
+                    daclrck_edge_seen <= 1'b0;
+                end
+            end
+
+            // Transmit data on BCLK fall
             if (bclk_fall) begin
-                if (daclrck_val != tx_channel) begin
-                    // New channel start: load parallel sample
-                    tx_bit_cnt <= 5'd0;
-                    tx_channel <= daclrck_val;
-                    aud_dacdat <= 1'b0; // 1-cycle I2S initial delay bit
-                    tx_shift   <= (daclrck_val == 1'b0) ? dac_left : dac_right;
+                if (tx_lrck_pending) begin
+                    // 1 BCLK after LRCK edge: start word transmission with MSB
+                    tx_lrck_pending <= 1'b0;
+                    tx_channel      <= tx_channel_pending;
+                    aud_dacdat      <= (tx_channel_pending == 1'b0) ? dac_left[15] : dac_right[15];
+                    tx_shift        <= (tx_channel_pending == 1'b0) ? {dac_left[14:0], 1'b0} : {dac_right[14:0], 1'b0};
+                    tx_bit_cnt      <= 5'd1;
                 end else if (tx_bit_cnt < 5'd16) begin
-                    // Shift out MSB first
+                    // Shift out remaining bits MSB first
                     aud_dacdat <= tx_shift[15];
                     tx_shift   <= {tx_shift[14:0], 1'b0};
                     tx_bit_cnt <= tx_bit_cnt + 1'b1;
