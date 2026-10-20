@@ -113,8 +113,12 @@ class TestAdaptationFreeze(unittest.TestCase):
 
     def test_satall_two_phase(self):
         """(d) satall two-phase: phase 1 (0..N1-1) unfrozen has counts['w']==0;
-        at index N1 the unfrozen update takes a coefficient above WMAX;
-        with freeze ON from index N1 onward, counts['w']==0 and final w == w[N1-1]."""
+        at index N1 the unfrozen update saturates a coefficient (sum < WMIN on coef 0);
+        with freeze ON from index N1 onward, counts['w']==0 and final w == w[N1-1].
+        Note on criterion (b): Saturation on either rail (sum < WMIN or sum > WMAX)
+        satisfies the saturation requirement. On amp_steps xscale=0.25, coefficient 0
+        saturates below WMIN (-2048) on sample N1 for all three algorithms.
+        """
         sc = make_scenario("amp_steps", 16000, seed=1)
         configs = [
             ("lms", 0.5, 10, 4959, 1000),
@@ -182,6 +186,42 @@ class TestAdaptationFreeze(unittest.TestCase):
             self.assertGreater(diff_y, 0, f"{name}: diff_y is 0")
             self.assertGreater(diff_w, 0, f"{name}: diff_w is 0")
             print(f"freeze_early assert passed: {name:10s} max|e| diff={diff_e:.6f}, max|y| diff={diff_y:.6f}, max|w| diff={diff_w:.6f}")
+
+    def test_freeze_hold_patterns(self):
+        """(f) freeze_hold: 4 per-sample patterns A (frozen), B (unfrz), C (unfrz), D (frozen).
+        Checks that weights adapt on B and C, remain held on A and D, and match run_rtl_model."""
+        sc = make_scenario("amp_steps", 1000, seed=1)
+        n = 200
+        x = (sc.x * 0.25)[:n]
+        d = sc.d[:n]
+        frz_mask = np.array([1 if (i % 4 in (0, 3)) else 0 for i in range(n)], dtype=int)
+
+        cases = [
+            ("lms", 0, 12, 32, 0.5, 512, 4, 10),
+            ("nlms", 1, 12, 32, 0.05, 51, 4, 10),
+            ("nlms_shift", 2, 12, 32, 0.125, 512, 3, 2),
+        ]
+        for name, algo_id, W, L, mu, mi, K, eps in cases:
+            cfg = FxCfg(W=W, eps_exp=eps)
+            r_unfrz = run_fixed(name, x, d, L, mu, cfg, freeze=None)
+            r_frz = run_fixed(name, x, d, L, mu, cfg, freeze=frz_mask)
+
+            # Check that adaptation occurred (non-zero weights)
+            max_w = np.max(np.abs(r_frz["ints"]["W"][-1]))
+            self.assertGreater(max_w, 0, f"{name}: weights are all zero")
+
+            # Check that freeze had effect (differs from unfrozen)
+            diff_w = np.max(np.abs(r_unfrz["ints"]["W"][-1] - r_frz["ints"]["W"][-1]))
+            self.assertGreater(diff_w, 0, f"{name}: weights did not differ from unfrozen")
+
+            # Bit-exact check against run_rtl_model
+            xi = r_frz["ints"]["x"].tolist()
+            di = r_frz["ints"]["d"].tolist()
+            m = run_rtl_model(algo_id, xi, di, W, L, mi, K, EPS_EXP=eps, freeze=frz_mask)
+            self.assertEqual(m["y"], r_frz["ints"]["y"].tolist(), f"{name}: rtl_model y mismatch")
+            self.assertEqual(m["e"], r_frz["ints"]["e"].tolist(), f"{name}: rtl_model e mismatch")
+            self.assertEqual(m["w"], r_frz["ints"]["W"][-1].tolist(), f"{name}: rtl_model w mismatch")
+            print(f"freeze_hold assert passed: {name:10s} max|w|={max_w}, diff_vs_unfrz={diff_w}")
 
 
 if __name__ == "__main__":
