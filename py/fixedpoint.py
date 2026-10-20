@@ -52,7 +52,7 @@ def quantize(a, W, F):
     return sat(np.floor(np.asarray(a) * (1 << F) + 0.5).astype(np.int64), W)
 
 
-def run_fixed(algo, x, d, L, mu, cfg):
+def run_fixed(algo, x, d, L, mu, cfg, freeze=None):
     W = cfg.W
     F = W - 1 if cfg.F is None else cfg.F
     accb = cfg.acc_bits or 2 * W + (L - 1).bit_length()
@@ -88,8 +88,10 @@ def run_fixed(algo, x, d, L, mu, cfg):
                 upd = rs(g * xv.astype(object), F, rn).astype(np.int64)
             else:
                 upd = rs(e * xv.astype(object), Q.bit_length() - F + k, rn).astype(np.int64)
-        w, a = sat(w + upd, W)
-        c["w"] += a
+        frz = bool(freeze[i]) if (freeze is not None and i < len(freeze)) else False
+        if not frz:
+            w, a = sat(w + upd, W)
+            c["w"] += a
         Wh[i], ye[i], ee[i] = w, y, e
     s = float(1 << F)
     return dict(e=ee / s, y=ye / s, W=Wh / s, counts=c, acc_bits=accb,
@@ -99,6 +101,12 @@ def run_fixed(algo, x, d, L, mu, cfg):
 # ---- test-vector files (shared with the future RTL testbench) --------------------------------
 def hexw(v, W):
     return f"{int(v) & ((1 << W) - 1):0{(W + 3) // 4}X}"
+
+
+def write_frz(prefix, freeze_mask, nsamp):
+    with open(prefix + ".frz", "w") as f:
+        for i in range(nsamp):
+            f.write(f"{1 if freeze_mask[i] else 0}\n")
 
 
 def write_vec(prefix, r, nsamp):
