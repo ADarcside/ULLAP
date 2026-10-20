@@ -15,7 +15,8 @@ set_clock_groups -asynchronous -group [get_clocks {CLOCK_50}] -group [get_clocks
 # Automatically derive PLL and clock uncertainties
 derive_clock_uncertainty
 
-# Cut timing paths for asynchronous inputs (synchronizers present in RTL)
+# Cut timing paths for asynchronous inputs (2-stage synchronizers present in RTL:
+# reset synchronizer on KEY[0], CDC synchronizers on SW[*] and AUD_*)
 set_false_path -from [get_ports {KEY[*]}]
 set_false_path -from [get_ports {SW[*]}]
 set_false_path -from [get_ports {AUD_ADCLRCK}]
