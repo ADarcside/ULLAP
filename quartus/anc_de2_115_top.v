@@ -35,7 +35,20 @@ module anc_de2_115_top #(
     output wire [9:0]  LEDR          // Red LEDs for status/diagnostics
 );
 
-    wire rst_n = KEY[0];
+    // -------------------------------------------------------------------------
+    // Reset Synchronizer: Async assert on !KEY[0], sync deassert on CLOCK_50
+    // -------------------------------------------------------------------------
+    reg rst_sync_1, rst_sync_2;
+    always @(posedge CLOCK_50 or negedge KEY[0]) begin
+        if (!KEY[0]) begin
+            rst_sync_1 <= 1'b0;
+            rst_sync_2 <= 1'b0;
+        end else begin
+            rst_sync_1 <= 1'b1;
+            rst_sync_2 <= rst_sync_1;
+        end
+    end
+    wire rst_n = rst_sync_2;
     wire bypass_active = SW[0];      // 1: Direct audio passthrough (zero latency)
     wire freeze_active = SW[1];      // 1: Freeze filter adaptation
 
