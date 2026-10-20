@@ -58,6 +58,8 @@ module i2s_transceiver #(
 
     // -------------------------------------------------------------------------
     // I2S Receiver Logic (Standard I2S: 1-BCLK delay after LRCK transition)
+    // Evaluated on bclk_rise; +/-40 ns LRCK skew is well within the 160 ns half-period
+    // window so framing and data capture remain aligned without RTL changes.
     // -------------------------------------------------------------------------
     reg [4:0]  rx_bit_cnt;
     reg [15:0] rx_shift;
