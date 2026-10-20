@@ -111,6 +111,78 @@ class TestAdaptationFreeze(unittest.TestCase):
             self.assertEqual(m["e"], r["ints"]["e"].tolist(), f"{name} rtl_model e mismatch")
             self.assertEqual(m["w"], r["ints"]["W"][-1].tolist(), f"{name} rtl_model w mismatch")
 
+    def test_satall_two_phase(self):
+        """(d) satall two-phase: phase 1 (0..N1-1) unfrozen has counts['w']==0;
+        at index N1 the unfrozen update takes a coefficient above WMAX;
+        with freeze ON from index N1 onward, counts['w']==0 and final w == w[N1-1]."""
+        sc = make_scenario("amp_steps", 16000, seed=1)
+        configs = [
+            ("lms", 0.5, 10, 4959, 1000),
+            ("nlms", 0.05, 10, 377, 1000),
+            ("nlms_shift", 0.125, 2, 6154, 1000),
+        ]
+        for name, mu, eps, N1, n_frz in configs:
+            n_total = N1 + n_frz
+            x = (sc.x * 0.25)[:n_total]
+            d = sc.d[:n_total]
+            cfg = FxCfg(W=12, eps_exp=eps)
+
+            # Phase 1: samples 0..N1-1 (length N1)
+            r_p1 = run_fixed(name, x[:N1], d[:N1], 32, mu, cfg, freeze=None)
+            self.assertEqual(r_p1["counts"]["w"], 0, f"{name}: phase 1 counts['w'] != 0")
+
+            # Unfrozen update at index N1 must take some coefficient above WMAX
+            r_next = run_fixed(name, x[:N1+1], d[:N1+1], 32, mu, cfg, freeze=None)
+            self.assertGreater(r_next["counts"]["w"], 0, f"{name}: unfrozen update at index N1 did not saturate w")
+
+            # Frozen run: samples N1..n_total-1 frozen
+            frz_mask = np.zeros(n_total, dtype=int)
+            frz_mask[N1:] = 1
+            r_frz = run_fixed(name, x, d, 32, mu, cfg, freeze=frz_mask)
+            self.assertEqual(r_frz["counts"]["w"], 0, f"{name}: frozen run counts['w'] != 0")
+
+            # Unfrozen full run must give counts['w'] > 0
+            r_unfrz_full = run_fixed(name, x, d, 32, mu, cfg, freeze=None)
+            self.assertGreater(r_unfrz_full["counts"]["w"], 0, f"{name}: unfrozen full run counts['w'] == 0")
+
+            # Final w must match w at end of phase 1
+            w_p1 = r_p1["ints"]["W"][-1]
+            w_frz = r_frz["ints"]["W"][-1]
+            self.assertTrue(np.array_equal(w_frz, w_p1), f"{name}: frozen final w != w at N1")
+            self.assertFalse(np.all(w_p1 == 0), f"{name}: w at N1 is all zero")
+
+            max_w_N1 = np.max(np.abs(r_p1["W"][-1]))
+            print(f"satall assert passed: {name:10s} N1={N1:4d}, first-sat sample={N1+1:4d}, max|w|={max_w_N1:.6f}")
+
+    def test_freeze_early_discrimination(self):
+        """(e) freeze_early: freezing samples 15..18 on amp_steps xscale=0.25
+        causes measurable difference in e, y, and final w for all three algorithms."""
+        sc = make_scenario("amp_steps", 16000, seed=1)
+        n = 1000
+        x = (sc.x * 0.25)[:n]
+        d = sc.d[:n]
+        frz_early = np.zeros(n, dtype=int)
+        frz_early[15:19] = 1
+
+        configs = [
+            ("lms", 0.5, 10),
+            ("nlms", 0.05, 10),
+            ("nlms_shift", 0.125, 2),
+        ]
+        for name, mu, eps in configs:
+            cfg = FxCfg(W=12, eps_exp=eps)
+            r_unfrz = run_fixed(name, x, d, 32, mu, cfg, freeze=None)
+            r_frz = run_fixed(name, x, d, 32, mu, cfg, freeze=frz_early)
+
+            diff_e = np.max(np.abs(r_unfrz["e"] - r_frz["e"]))
+            diff_y = np.max(np.abs(r_unfrz["y"] - r_frz["y"]))
+            diff_w = np.max(np.abs(r_unfrz["W"][-1] - r_frz["W"][-1]))
+
+            self.assertGreater(diff_e, 0, f"{name}: diff_e is 0")
+            self.assertGreater(diff_y, 0, f"{name}: diff_y is 0")
+            self.assertGreater(diff_w, 0, f"{name}: diff_w is 0")
+            print(f"freeze_early assert passed: {name:10s} max|e| diff={diff_e:.6f}, max|y| diff={diff_y:.6f}, max|w| diff={diff_w:.6f}")
+
 
 if __name__ == "__main__":
     unittest.main()

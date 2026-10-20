@@ -25,7 +25,7 @@ module tb_anc_core;
     parameter integer K       = 4;
     parameter integer ACC_W   = 2*W + $clog2(L);
     parameter integer EPS_EXP = 10;
-    parameter integer NMAX    = 4096;
+    parameter integer NMAX    = 16384;
 
     localparam integer LAT_EXP = (ALGO == 0) ? (L + 3) : (L + 5);   // pipelined core (was L+1 / L+3)
 
