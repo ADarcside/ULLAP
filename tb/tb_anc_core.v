@@ -32,6 +32,7 @@ module tb_anc_core;
     reg                  clk;
     reg                  rst_n;
     reg                  in_valid;
+    reg                  freeze;
     reg  signed [W-1:0]  x_in, d_in;
     wire                 out_valid;
     wire signed [W-1:0]  y_out, e_out;
@@ -40,7 +41,7 @@ module tb_anc_core;
 
     anc_core #(.W(W), .L(L), .ALGO(ALGO), .MU_INT(MU_INT), .K(K),
                .ACC_W(ACC_W), .EPS_EXP(EPS_EXP)) dut (
-        .clk(clk), .rst_n(rst_n), .in_valid(in_valid), .x_in(x_in), .d_in(d_in),
+        .clk(clk), .rst_n(rst_n), .in_valid(in_valid), .freeze(freeze), .x_in(x_in), .d_in(d_in),
         .out_valid(out_valid), .y_out(y_out), .e_out(e_out),
         .sat_flags(sat_flags), .busy(busy));
 
@@ -50,6 +51,8 @@ module tb_anc_core;
     reg [W-1:0] vy [0:NMAX-1];
     reg [W-1:0] ve [0:NMAX-1];
     reg [W-1:0] vw [0:L-1];
+    reg [0:0]          vfrz [0:NMAX-1];
+    reg                have_frz;
 
     reg [8*256-1:0] prefix;
     reg [8*264-1:0] fname;
@@ -153,6 +156,18 @@ module tb_anc_core;
             $fclose(fd);
         end
 
+        have_frz = 1'b0;
+        fname = {prefix, ".frz"};
+        fd = $fopen(fname, "r");
+        if (fd != 0) begin
+            have_frz = 1'b1;
+            for (k = 0; k < nsamp; k = k + 1) begin
+                rc = $fscanf(fd, "%b\n", t0);
+                vfrz[k] = t0[0];
+            end
+            $fclose(fd);
+        end
+
         if (nsamp == 0 || nw != L) begin
             $display("TB_RESULT FAIL bad vector files nsamp=%0d nw=%0d (L=%0d)", nsamp, nw, L);
             $finish(1);
@@ -164,14 +179,18 @@ module tb_anc_core;
         #1 rst_n = 1'b1;
         repeat (2) @(posedge clk);
 
+        freeze = 1'b0;
         for (n = 0; n < nsamp; n = n + 1) begin
             @(negedge clk);
             while (busy) @(negedge clk);
-            x_in = vx[n]; d_in = vd[n]; in_valid = 1'b1;
+            x_in = vx[n]; d_in = vd[n];
+            freeze = have_frz ? vfrz[n] : 1'b0;
+            in_valid = 1'b1;
             accept_edge[n] = cyc + 1;                     // the next posedge samples in_valid
             n_in = n_in + 1;
             @(negedge clk);
             in_valid = 1'b0;
+            freeze = 1'b0;
             x_in = {W{1'bx}}; d_in = {W{1'bx}};            // data only meaningful during the strobe
         end
         // drain: wait until the core is idle and the last output was seen

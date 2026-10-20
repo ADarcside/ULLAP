@@ -145,6 +145,7 @@ module anc_de2_115_top #(
         .clk       (CLOCK_50),
         .rst_n     (rst_n),
         .in_valid  (core_in_valid),
+        .freeze    (1'b0),
         .x_in      (x_reg),
         .d_in      (d_reg),
         .out_valid (anc_out_valid),

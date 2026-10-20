@@ -47,6 +47,7 @@ module anc_core #(
     input  wire                 clk,
     input  wire                 rst_n,      // synchronous, active low
     input  wire                 in_valid,   // 1-cycle strobe
+    input  wire                 freeze,     // adaptation freeze (sampled on in_valid)
     input  wire signed [W-1:0]  x_in,
     input  wire signed [W-1:0]  d_in,
     output reg                  out_valid,
@@ -102,6 +103,7 @@ module anc_core #(
     // ------------------------------------------------------------ state
     reg [3:0]                    state;
     reg [IW-1:0]                 i;
+    reg                          freeze_r;
     reg signed [W-1:0]           xv [0:L-1];     // xv[0] = newest sample
     reg signed [W-1:0]           w  [0:L-1];     // coefficients
     reg signed [W-1:0]           xold;           // sample dropped from the window
@@ -213,6 +215,7 @@ module anc_core #(
             p_q  <= {PRW{1'b0}}; k2 <= K_NONE; i2 <= {IW{1'b0}}; pm <= {PRW{1'b0}};
             upd_q <= {(PRW+1){1'b0}}; k3_upd <= 1'b0; i3 <= {IW{1'b0}};
             wc <= 2'd0; nxt <= S_IDLE;
+            freeze_r <= 1'b0;
             for (k = 0; k < L; k = k + 1) begin
                 xv[k] <= {W{1'b0}};
                 w[k]  <= {W{1'b0}};
@@ -251,7 +254,7 @@ module anc_core #(
                 end
                 default: begin end
             endcase
-            if (k3_upd) begin
+            if (k3_upd && !freeze_r) begin
                 t_wn = w[i3] + upd_q;
                 if (t_wn > WMAX) begin
                     t_wsat = WMAX[W-1:0];
@@ -273,6 +276,7 @@ module anc_core #(
                     for (k = L-1; k > 0; k = k - 1)
                         xv[k] <= xv[k-1];
                     xv[0] <= x_in;
+                    freeze_r <= freeze;
                     d_r   <= d_in;
                     accx  <= {AXW{1'b0}};
                     i     <= {IW{1'b0}};

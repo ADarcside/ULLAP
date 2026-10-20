@@ -25,13 +25,13 @@ module tb_anc_protocol;
     wire [5:0] fA, fB, fC;
 
     anc_core #(.W(W), .L(L), .ALGO(ALGO), .MU_INT(MU_INT), .K(K), .ACC_W(ACC_W)) dutA (
-        .clk(clk), .rst_n(rstA), .in_valid(vA), .x_in(xA), .d_in(dA),
+        .clk(clk), .rst_n(rstA), .in_valid(vA), .freeze(1'b0), .x_in(xA), .d_in(dA),
         .out_valid(ovA), .y_out(yA), .e_out(eA), .sat_flags(fA), .busy(bA));
     anc_core #(.W(W), .L(L), .ALGO(ALGO), .MU_INT(MU_INT), .K(K), .ACC_W(ACC_W)) dutB (
-        .clk(clk), .rst_n(rstB), .in_valid(vB), .x_in(xB), .d_in(dB),
+        .clk(clk), .rst_n(rstB), .in_valid(vB), .freeze(1'b0), .x_in(xB), .d_in(dB),
         .out_valid(ovB), .y_out(yB), .e_out(eB), .sat_flags(fB), .busy(bB));
     anc_core #(.W(W), .L(L), .ALGO(ALGO), .MU_INT(MU_INT), .K(K), .ACC_W(ACC_W)) dutC (
-        .clk(clk), .rst_n(rstC), .in_valid(vC), .x_in(xC), .d_in(dC),
+        .clk(clk), .rst_n(rstC), .in_valid(vC), .freeze(1'b0), .x_in(xC), .d_in(dC),
         .out_valid(ovC), .y_out(yC), .e_out(eC), .sat_flags(fC), .busy(bC));
 
     initial clk = 1'b0;
