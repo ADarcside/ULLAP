@@ -33,7 +33,7 @@ class TestPassCriteria(unittest.TestCase):
 
     def test_runner_counts_pass_only_when_rc0_and_marker(self):
         m, p, h, t = self._run(0, "TB_RESULT PASS ok\nTB_PROTO PASS ok\nTB_TOP PASS ok\n")
-        self.assertTrue(all(r["passed"] for r in m + p + h + t) and len(m) == 1 and len(p) == 4 and len(h) == 3 and len(t) == 9)
+        self.assertTrue(all(r["passed"] for r in m + p + h + t) and len(m) == 1 and len(p) == 4 and len(h) == 3 and len(t) == 11)
         m, p, h, t = self._run(2, "TB_RESULT PASS ok\nTB_PROTO PASS ok\nTB_TOP PASS ok\n")
         self.assertFalse(any(r["passed"] for r in m + p + h + t))
         m, p, h, t = self._run(0, "")

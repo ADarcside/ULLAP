@@ -1,0 +1,310 @@
+% ULLAP journal manuscript draft (elsarticle; target: Microprocessors and Microsystems).
+% Numbers come from the committed CSVs named in each table caption. Red \TBD{} items are
+% board measurements (docs/board_test.md) or author actions that must be completed before submission.
+\documentclass[preprint,12pt]{elsarticle}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\graphicspath{{../results/plots/}}
+\newcommand{\TBD}[1]{\textcolor{red}{[TBD: #1]}}
+
+\journal{Microprocessors and Microsystems}
+
+\begin{document}
+\begin{frontmatter}
+\title{A Bit-Exact, Processor-Free FPGA Adaptive Noise Canceller: \\
+Fair Comparison of LMS, NLMS and Divider-Free NLMS-Shift on Cyclone IV E}
+
+\author[vit]{Satvik Garg}
+\author[vit]{Aditya Gupta}
+\author[vit]{Jaffino G\corref{cor}}
+\cortext[cor]{Corresponding author. \TBD{e-mail and author order to be confirmed by the authors}}
+\address[vit]{School of Electronics Engineering (SENSE), Vellore Institute of Technology, Vellore, India}
+
+\begin{abstract}
+Adaptive noise cancellation with a reference input is a classic application of the least-mean-square
+(LMS) family, and small FPGAs can run it at audio rates without a processor. Published FPGA
+implementations, however, rarely compare algorithm variants under equal tuning effort, and few show
+that the hardware reproduces the reference model. This paper presents ULLAP, a parameterisable
+12-bit, 32-tap noise canceller for the Terasic DE2-115 (Cyclone IV E) with a WM8731 codec,
+supporting LMS, NLMS with a restoring divider, and NLMS-Shift, in which the normalisation is a
+leading-one detection and a barrel shift. All three share one time-multiplexed multiplier and are
+verified bit-exact against an integer model in 86 regression tests, including the complete
+codec interface. With step sizes tuned on held-out seeds, NLMS-Shift matches NLMS within the 95\%
+confidence interval on stationary and amplitude-step noise (22.37 and 24.33~dB final noise
+reduction over 20 seeds) and is about 2~dB better than LMS on amplitude steps, while needing 72
+instead of 127 busy cycles per sample and 16\% fewer register-transfer-level bit toggles than NLMS.
+On real recorded noise and speech at 0~dB input SNR, the three algorithms remove 11.7--14.9~dB of noise and raise STOI from 0.69--0.78 to 0.95--0.98 and narrow-band PESQ from 1.4--1.5 to 2.3--2.8, with NLMS 0.4--0.6~dB ahead of LMS and NLMS-Shift between them.
+A word-length study at the tuned settings shows 11 bits is the shortest word within 3~dB of floating
+point and 12 bits keeps the loss below 0.4~dB on broadband noise. All variants close timing at
+50~MHz. \TBD{One sentence with the measured on-board noise reduction and the bit-exact capture result.}
+\end{abstract}
+
+\begin{keyword}
+adaptive noise cancellation \sep NLMS \sep divider-free normalisation \sep FPGA \sep fixed-point arithmetic \sep bit-exact verification
+\end{keyword}
+\end{frontmatter}
+
+%--------------------------------------------------------------------------------------------
+\section{Introduction}
+Adaptive noise cancellation (ANC) estimates the noise that reaches a primary sensor from a
+separate reference sensor and subtracts it~\cite{widrow1975}. The LMS algorithm and its normalised
+form (NLMS) remain the standard choice for this task because of their low cost and robustness.
+NLMS makes the adaptation speed independent of the input level, but it needs a division per
+sample, which is expensive in hardware. Replacing that division by a power-of-two approximation
+of the input power is an old idea~\cite{garrett2002}, and quantised-normaliser and lookup-table
+reciprocals have been proposed since~\cite{zhao2018,lee2024}.
+
+Two questions are left open by the FPGA literature on these filters. First, variants are usually
+compared with different tuning effort, so a reported advantage can come from an under-tuned
+baseline; this happened in an earlier version of this work, where a 5.7~dB advantage of the
+divider-free variant over NLMS disappeared after NLMS was regularised fairly. Second, hardware
+results are rarely tied to the reference model: resource and timing reports show that a design
+fits, not that it computes what the simulation claims.
+
+This paper addresses both on a low-cost platform and makes the following contributions:
+\begin{enumerate}
+\item A single serial core that implements LMS, NLMS (restoring divider) and NLMS-Shift with one
+shared multiplier, so the three are compared on identical datapath, word length and filter length.
+\item A fair comparison: every algorithm's step size and regulariser are chosen on held-out seeds
+with the same criterion, and results are reported with 20-seed 95\% confidence intervals,
+on synthetic scenarios and on real recorded noise and speech.
+\item A bit-exact verification chain from a Python integer model to the RTL and the board wrapper
+(86 regression tests including codec, freeze and reset behaviour), \TBD{and an on-board capture showing the silicon reproduces the model sample for sample}.
+\item A reproducible word-length study and a complete processor-free audio system that closes
+timing at 50~MHz on Cyclone IV E, released with all scripts and data.
+\end{enumerate}
+The algorithmic idea behind NLMS-Shift is not claimed as new; Section~\ref{sec:related} positions it.
+
+%--------------------------------------------------------------------------------------------
+\section{Related work}\label{sec:related}
+\TBD{Authors: read each cited paper in full and check the numbers; docs/related\_work.md lists what was verified.}
+Garrett et al.~\cite{garrett2002} replaced the NLMS division in a decision-feedback equaliser by
+power-of-two operations obtained from leading-zero counts of the error and the filter energy, and
+cite earlier real-valued power-of-two NLMS designs; NLMS-Shift is the real-valued, error-exact
+special case of that approach. Zhao et al.~\cite{zhao2018} quantised the normaliser of a
+variable-regularised LMS beamformer to a few levels implemented with canonical signed digits and
+report at least 21\% fewer resources than a divider on Virtex-7. Lee~\cite{lee2024} used a
+6-bit-input, 4-bit-output reciprocal table and reports about 45\% higher throughput than an SRT
+divider. Jagadeeswari et al.~\cite{jagadeeswari2025} retimed an NLMS audio filter on Spartan-6 to
+74.67~MHz. Fohl et al.~\cite{fohl2009} built an LMS noise canceller on Spartan-3 with an audio codec
+and measured it with a dummy head. The base work of this project~\cite{rodrigo2024} simulated an LMS
+feedback suppressor in MATLAB and Vivado without numeric results.
+\TBD{Add Pathi et al. 2026 (ICICV), Oba et al. 2006 (ISPACS), Yao and Huang 2024 (TCAS-II) after reading them.}
+Compared with these, ULLAP's contribution is the equal-effort three-way comparison on one core,
+the bit-exact chain to hardware, and the evaluation on real recordings.
+
+%--------------------------------------------------------------------------------------------
+\section{Algorithms and fixed-point model}
+With reference vector $\mathbf{x}[n]=[x[n],\dots,x[n-L+1]]^T$, weights $\mathbf{w}[n]$ and primary
+input $d[n]$, all three algorithms compute
+\begin{equation}
+y[n]=\mathbf{w}^T[n]\mathbf{x}[n],\qquad e[n]=d[n]-y[n],\qquad
+\mathbf{w}[n+1]=\mathbf{w}[n]+\mu[n]\,e[n]\,\mathbf{x}[n],
+\end{equation}
+with $\mu[n]=\mu$ for LMS and $\mu[n]=\mu/(P[n]+\epsilon)$, $P[n]=\|\mathbf{x}[n]\|^2$, for NLMS.
+NLMS-Shift replaces the division by a shift:
+\begin{equation}
+\mu[n]=2^{-(\lfloor\log_2(P[n]+\epsilon)\rfloor+1+K)},
+\end{equation}
+so that $\mu/(2(P+\epsilon))<\mu[n]\le\mu/(P+\epsilon)$ with $\mu=2^{-K}$: the effective step lies
+within a factor of two below the NLMS step, which keeps the NLMS stability bound. In hardware the
+exponent is the position of the leading one of $P[n]+\epsilon$, found by a priority encoder, and the
+update is a barrel shift of $e[n]x[n-i]$.
+
+All signals and weights are signed $Q1.(W-1)$ with $W=12$; the accumulator has $2W+\lceil\log_2L\rceil$
+bits; every narrowing point saturates and raises a sticky flag; rounding is to nearest. The power
+$P[n]$ is updated incrementally by adding $x^2[n]$ and subtracting $x^2[n-L]$. The integer model
+(\texttt{py/fixedpoint.py}, \texttt{py/rtl\_model.py}) mirrors these widths exactly and generates the
+golden vectors.
+
+%--------------------------------------------------------------------------------------------
+\section{Hardware architecture}
+\subsection{Core}
+The core (\texttt{rtl/anc\_core.v}, vendor-neutral Verilog) processes one sample per \texttt{in\_valid}
+strobe with a single multiplier pipelined in three stages: $L$ cycles for the filter sum, then the
+error, then $L$ cycles of weight updates. NLMS adds a sequential restoring divider for the gain;
+NLMS-Shift replaces it by a leading-one detector and a shift-amount register. A \texttt{freeze} input
+holds the weights while filtering continues. The input-to-output latency is $L+3$ cycles for LMS and
+$L+5$ for NLMS and NLMS-Shift (35 and 37 cycles at $L=32$), and the core is busy for 73, 127 and 72
+cycles per sample respectively.
+
+\subsection{Board wrapper}
+The DE2-115 wrapper contains an I$^2$C engine that configures the WM8731 at reset (11 registers,
+acknowledge-checked), an I$^2$S receiver and transmitter clocked by the 50~MHz system clock with the
+codec's bit and word clocks sampled as data, two-flop synchronisers on the reset and switches, a
+frame-latched bypass multiplexer, an overrun flag, and four registered test points on the GPIO header.
+The codec runs as master from a 12.5~MHz clock with the sample-rate register set to 1536~fs, giving
+8.138~kHz, the rate of the simulation study. No processor or vendor IP is used.
+
+%--------------------------------------------------------------------------------------------
+\section{Verification}
+Table~\ref{tab:verif} summarises the verification. The core testbench compares every $y[n]$ and $e[n]$,
+the final weights, the sticky flags and the latency with golden vectors for 68 configurations
+($W$ from 8 to 31, $L$ from 2 to 32, saturation corner cases, freeze patterns). The top-level testbench
+uses a behavioural WM8731 model that checks every I$^2$C write and follows the programmed sample rate,
+and runs tests T1--T10: configuration, NACK handling, bypass, end-to-end cancellation against golden
+vectors, freeze, reset, flags, clocks, a 45-point skew sweep, the 8~kHz rate and the GPIO timing.
+Mutation tests confirm the testbenches fail on injected faults. Verilator \texttt{-Wall} lint
+leaves no unwaived warning.
+
+\begin{table}[t]\centering\small
+\caption{Verification summary (\texttt{results/metrics/iverilog\_regression\_summary.txt}).}\label{tab:verif}
+\begin{tabular}{lrl}\toprule
+Suite & Tests & Result\\\midrule
+Core golden vectors (\texttt{tb\_anc\_core}) & 68 & all pass, bit-exact\\
+Protocol corner cases & 4 & pass\\
+Freeze hold/toggle variants & 3 & pass\\
+Top level with codec model (T1--T10) & 11 & pass\\
+Python unit tests & 46 & pass\\
+Verilator lint (\texttt{-Wall}) & -- & 0 unwaived\\
+On-board Signal Tap capture (T9) & -- & \TBD{board}\\\bottomrule
+\end{tabular}
+\end{table}
+
+%--------------------------------------------------------------------------------------------
+\section{Experimental set-up}
+Synthetic scenarios follow the reference model $x=v$, $d=s+h*v+n_s$ at 8~kHz with 16,000 samples:
+stationary coloured noise, amplitude steps ($\times3$ then $\times0.25$), an abrupt path switch at
+the midpoint, and a recorded chord as the noise source. Step sizes and regularisers were selected on
+seeds 101--103 by maximising the mean final noise reduction over stationary, amplitude-step and
+path-switch scenarios with zero overflow: LMS $\mu=0.25$; NLMS $\mu=0.25$, $\epsilon=1$; NLMS-Shift
+$K=3$, $\epsilon=0.25$. Results are reported on seeds 1--20. The final noise reduction is
+$\mathrm{NR}=10\log_{10}\sum(d-s)^2/\sum(e-s)^2$ over the last 25\% of samples.
+
+For real recordings, four noise files (air conditioner, vacuum cleaner, copy machine, babble) and
+ten utterances from MS-SNSD~\cite{reddy2019} were resampled to 8~kHz; each seed draws a noise
+segment, an utterance and a random 16-tap acoustic path, at 0~dB input SNR, with and without
+speech leakage into the reference at $-20$~dB. Noise reduction, STOI~\cite{taal2011} and narrow-band
+PESQ~\cite{pesq} are computed after a 2~s convergence window.
+
+%--------------------------------------------------------------------------------------------
+\section{Results}
+\subsection{Synthetic scenarios}
+\begin{table}[t]\centering\small
+\caption{Final noise reduction, dB, mean [95\% CI] over seeds 1--20, $W=12$, $L=32$ (\texttt{results/paper\_numbers.csv}).}\label{tab:nr}
+\begin{tabular}{lccc}\toprule
+Scenario & LMS & NLMS & NLMS-Shift\\\midrule
+Stationary   & 22.39 [22.12, 22.66] & 22.28 [22.01, 22.54] & 22.37 [22.11, 22.63]\\
+Amplitude steps & 22.36 [21.72, 23.00] & 24.16 [23.58, 24.73] & 24.33 [23.88, 24.78]\\
+Path switch  & 18.95 [18.81, 19.09] & 18.53 [18.39, 18.67] & 18.91 [18.76, 19.06]\\
+Recorded chord & 5.69 [5.66, 5.73] & 5.73 [5.69, 5.76] & 5.46 [5.42, 5.50]\\\bottomrule
+\end{tabular}
+\end{table}
+Table~\ref{tab:nr} shows that NLMS-Shift ties NLMS on stationary noise and amplitude steps and ties
+LMS on stationary noise and the path switch. Both normalised algorithms are about 2~dB better than LMS
+on amplitude steps, where LMS's fixed step is either too slow after the drop or too noisy before it:
+no LMS step size reaches 22~dB on stationary noise and 24~dB on amplitude steps at once, while both
+NLMS variants do (Fig.~\ref{fig:pareto}). On the recorded chord NLMS-Shift is 0.2--0.3~dB worse.
+Paired per-seed tests (Table~\ref{tab:paired}) make ``tie'' precise: every NLMS-Shift versus NLMS
+difference is inside a $\pm0.5$~dB equivalence margin (TOST, $p<0.05$), although some are statistically
+non-zero, for example $+0.38$~dB on the path switch; the 1.8--2.0~dB advantage of the normalised
+algorithms over LMS on amplitude steps is significant ($p<10^{-7}$).
+
+\begin{table}[t]\centering\scriptsize
+\caption{Paired differences in final NR over seeds 1--20 (\texttt{results/metrics/paired\_stats.csv}).}\label{tab:paired}
+\resizebox{\linewidth}{!}{\input{tab_paired.tex}}
+\end{table}
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.75\linewidth]{fig12_pareto_stationary_amp_steps.pdf}
+\caption{Stationary versus amplitude-step noise reduction across step sizes (seeds 1--20).}\label{fig:pareto}
+\end{figure}
+
+\subsection{Real noise and speech}
+\begin{table}[t]\centering\small
+\caption{Real recorded noise and speech (MS-SNSD), fixed point $W=12$, mean $\pm$ 95\% CI over 20 seeds, no
+speech leakage into the reference; STOI and PESQ of $e$ against $s$, with the unprocessed input in brackets
+(\texttt{results/metrics/real\_audio\_summary.csv}).}\label{tab:real}
+\resizebox{\linewidth}{!}{\input{tab_real_audio.tex}}
+\end{table}
+Table~\ref{tab:real} shows that on all four real noises the filter roughly doubles PESQ and brings STOI
+close to 1, and that the order of the algorithms is the same everywhere: NLMS 0.4--0.6~dB ahead of LMS,
+NLMS-Shift 0.15--0.35~dB behind NLMS. Real noise is less predictable than the coloured synthetic noise,
+so the noise reduction is 8--11~dB lower than in Table~\ref{tab:nr}. When $-20$~dB of the speech leaks into
+the reference, the filter also partly cancels speech: noise reduction drops by 2.3--4.6~dB, PESQ by
+0.25--0.6, and saturation events appear (18,500 over 19.2 million processed samples, most for the air
+conditioner), so reference-microphone placement matters more than the choice of algorithm
+(\texttt{paper/tab\_real\_audio\_xt.tex}).
+
+\subsection{Word length}
+At the tuned settings, the worst-scenario loss relative to the floating-point run of the same
+algorithm is 4.1--5.9~dB at $W=10$, 0.9--1.2~dB at $W=11$ and 0.3--0.4~dB at $W=12$
+(Fig.~\ref{fig:wl}); 11 bits is the shortest word within the 3~dB criterion and 12 bits was kept for
+margin. On the tonal chord recording the fixed-point filter outperforms floating point by up to
+3.4~dB at $W=11$ and loses 1.3~dB at $W=13$: on this narrow-band signal quantisation changes the
+effective adaptation, so the chord result is sensitive to the word length and should not decide it.
+
+\begin{figure}[t]\centering
+\includegraphics[width=\linewidth]{fig13_wordlength_fair.pdf}
+\caption{Noise reduction and worst-scenario quantisation loss versus word length (20 seeds).}\label{fig:wl}
+\end{figure}
+
+\subsection{Hardware cost}
+\begin{table}[t]\centering\small
+\caption{Cyclone IV E EP4CE115F29C7, $W=12$, $L=32$, Quartus Prime Lite 25.1
+(\texttt{results/quartus\_reports/}, \texttt{results/metrics/power\_activity.csv}).}\label{tab:hw}
+\begin{tabular}{lccc}\toprule
+ & LMS & NLMS & NLMS-Shift\\\midrule
+Logic elements & 1,885 & 2,697 & 2,690\\
+Registers & 1,148 & 1,425 & 1,213\\
+9-bit multipliers & 4 & 4 & 4\\
+$F_{\max}$, slow 85\,$^\circ$C (MHz) & 59.90 & 61.72 & 61.98\\
+Latency (cycles) & 35 & 37 & 37\\
+Busy cycles per sample & 73 & 127 & 72\\
+RTL bit toggles per sample & 5,668 & 7,146 & 6,012\\
+Dynamic power (mW) & \TBD{} & \TBD{} & \TBD{}\\\bottomrule
+\end{tabular}
+\end{table}
+LMS is about 30\% smaller than either normalised variant. NLMS-Shift and NLMS use about the same logic,
+because the divider's area is replaced by the leading-one detector, shifter and wider update path, but
+NLMS-Shift needs 43\% fewer busy cycles per sample and toggles 16\% fewer bits per sample, a proxy for
+dynamic energy. At 8.138~kHz the busiest variant uses 2\% of the 6,144-cycle sample period, so a single
+core could serve many channels or much longer filters. The complete board design with synchronisers
+(NLMS-Shift) uses 2,627 logic elements and closes at 60.36~MHz with +3.432~ns setup slack.
+\TBD{Rebuild all three variants on the final commit and replace this table with that build; add Power Analyzer results (docs/power\_flow.md).}
+
+\subsection{On-board results}
+\TBD{Board tests T1--T11 (docs/board\_test.md): bit-exact capture result, measured latency on the GPIO
+pins (expected 760~ns between in\_valid and out\_valid), measured noise reduction per scenario and algorithm
+next to the simulated value, and the 10-minute soak.}
+
+%--------------------------------------------------------------------------------------------
+\section{Discussion and limitations}
+The comparison supports a narrow conclusion: the divider-free normalisation keeps NLMS's
+level-independence at about LMS's cycle count, so it is the better choice when the noise level
+changes and throughput or energy per sample matters, while LMS remains the smallest when the level is
+steady. It does not show that NLMS-Shift is better than NLMS in cancellation.
+The acoustic paths are simulated, also for the real recordings; the evaluation does not cover
+acoustic feedback (the closed-loop howling scenario of the base work), for which reference-based ANC
+is not the right structure. Power is a switching-activity proxy until gate-level analysis is done.
+\TBD{Update after the board test.}
+
+\section{Conclusion}
+\TBD{Write after the board results: three to four sentences restating the measured outcome.}
+
+\section*{Data and code availability}
+All RTL, testbenches, scripts and result files are in the project repository
+\TBD{public URL and Zenodo DOI of the tagged release}. The real-audio study fetches its MS-SNSD files
+from a pinned commit and checks them by SHA-256.
+
+\section*{Declaration of generative AI use}
+\TBD{Authors: describe the AI tools used for code, analysis, literature search and writing, as required
+by the journal, and state that the authors reviewed and take responsibility for the content.}
+
+\begin{thebibliography}{99}
+\bibitem{widrow1975} B. Widrow et al., Adaptive noise cancelling: principles and applications, Proc. IEEE 63 (12) (1975) 1692--1716.
+\bibitem{garrett2002} D. Garrett, C. Nicol, A. Blanksby, C. Howland, A low power normalized-LMS decision feedback equalizer for a wireless packet modem, in: Proc. ISLPED, 2002.
+\bibitem{zhao2018} \TBD{authors}, A division-free and variable-regularized LMS-based generalized sidelobe canceller for adaptive beamforming and its efficient hardware realization, IEEE Access (2018).
+\bibitem{lee2024} P.-Y. Lee, A dividerless NLMS adaptive filter design with the lookup-table method, M.Sc. thesis, National Taiwan University, 2024.
+\bibitem{jagadeeswari2025} M. Jagadeeswari, P. Rishabavarthani, S. Kumarganesh, S. Kannadhasan, Enhanced adaptive filtering in audio systems: normalized least mean square with cut-set retiming, Analog Integr. Circuits Signal Process. 126 (2026) 12.
+\bibitem{fohl2009} W. Fohl, J. Matthies, B. Schwarz, A FPGA-based adaptive noise cancelling system, in: Proc. DAFx, Como, 2009.
+\bibitem{rodrigo2024} W.S.C. Rodrigo, R.A.P. Buddhika, Real-time FPGA-based audio processing for enhanced acoustic feedback suppression, in: Proc. TIDAC Research Symposium, Colombo, 2024.
+\bibitem{reddy2019} C.K.A. Reddy et al., A scalable noisy speech dataset and online subjective test framework, in: Proc. Interspeech, 2019, pp. 1816--1820.
+\bibitem{taal2011} C.H. Taal, R.C. Hendriks, R. Heusdens, J. Jensen, An algorithm for intelligibility prediction of time-frequency weighted noisy speech, IEEE Trans. Audio Speech Lang. Process. 19 (7) (2011) 2125--2136.
+\bibitem{pesq} ITU-T Recommendation P.862, Perceptual evaluation of speech quality (PESQ), 2001.
+\end{thebibliography}
+\end{document}

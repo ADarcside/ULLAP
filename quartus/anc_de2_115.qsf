@@ -75,6 +75,11 @@ set_location_assignment PIN_J19 -to LEDR[6]
 set_location_assignment PIN_H19 -to LEDR[7]
 set_location_assignment PIN_J17 -to LEDR[8]
 set_location_assignment PIN_G17 -to LEDR[9]
+set_location_assignment PIN_AB22 -to GPIO[0]
+set_location_assignment PIN_AC15 -to GPIO[1]
+set_location_assignment PIN_AB21 -to GPIO[2]
+set_location_assignment PIN_Y17 -to GPIO[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[*]
 #change
 set_location_assignment PIN_C2 -to AUD_ADCLRCK
 set_location_assignment PIN_D2 -to AUD_ADCDAT

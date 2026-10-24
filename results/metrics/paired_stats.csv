@@ -1,0 +1,13 @@
+scenario,a,b,mean_a,mean_b,mean_diff,ci95_low,ci95_high,p_ttest,p_wilcoxon,p_tost,equivalent
+stationary,nlms_shift,nlms,22.37,22.28,0.095,0.012,0.178,0.0276,0.0266,1.88e-09,True
+stationary,nlms_shift,lms,22.37,22.39,-0.016,-0.075,0.043,0.578,0.177,2.58e-13,True
+stationary,nlms,lms,22.28,22.39,-0.111,-0.181,-0.04,0.00377,0.00233,2.26e-10,True
+amp_steps,nlms_shift,nlms,24.33,24.16,0.175,-0.122,0.472,0.233,0.245,0.0167,True
+amp_steps,nlms_shift,lms,24.33,22.36,1.97,1.512,2.428,2.78e-08,1.91e-06,1.0,False
+amp_steps,nlms,lms,24.16,22.36,1.795,1.38,2.21,2.52e-08,1.91e-06,1.0,False
+path_switch,nlms_shift,nlms,18.91,18.53,0.382,0.296,0.469,1.86e-08,3.81e-06,0.00514,True
+path_switch,nlms_shift,lms,18.91,18.95,-0.04,-0.072,-0.007,0.0184,0.0172,4.98e-19,True
+path_switch,nlms,lms,18.53,18.95,-0.422,-0.502,-0.342,1.1e-09,1.91e-06,0.0279,True
+wav,nlms_shift,nlms,5.46,5.73,-0.27,-0.3,-0.241,7.74e-14,1.91e-06,7.27e-13,True
+wav,nlms_shift,lms,5.46,5.69,-0.237,-0.257,-0.218,2.55e-16,1.91e-06,7.09e-26,True
+wav,nlms,lms,5.73,5.69,0.033,0.002,0.063,0.0358,0.0484,2.66e-18,True

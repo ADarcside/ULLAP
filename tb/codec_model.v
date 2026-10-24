@@ -25,8 +25,8 @@ module codec_model #(
     // Clock and Audio Lines from/to DUT
     input  wire        aud_xck,      // 12.5 MHz MCLK from FPGA top
     output wire        aud_bclk,     // 3.125 MHz BCLK to FPGA top
-    output wire        aud_adclrck,  // 48.8 kHz ADC sample clock to FPGA
-    output wire        aud_daclrck,  // 48.8 kHz DAC sample clock to FPGA
+    output wire        aud_adclrck,  // ADC sample clock: XCK/256 (R8 SR=0000) or XCK/1536 (SR=0011)
+    output wire        aud_daclrck,  // DAC sample clock (same as ADC)
     output wire        aud_adcdat,   // ADC serial audio data to FPGA
     input  wire        aud_dacdat,   // DAC serial audio data from FPGA
 
@@ -47,7 +47,10 @@ module codec_model #(
     // DAC Capture Outputs (Observed by TB)
     output reg  signed [15:0] dac_left_out,
     output reg  signed [15:0] dac_right_out,
-    output reg                dac_valid
+    output reg                dac_valid,
+
+    // Sample-rate register as last written over I2C (power-on default 0 = 256 fs)
+    output reg  [8:0]         r8_value
 );
 
     // =========================================================================
@@ -65,7 +68,7 @@ module codec_model #(
         expected_rom[6]  = {7'h04, 9'b0_0001_0010}; // R4: Analogue Path
         expected_rom[7]  = {7'h05, 9'b0_0000_0000}; // R5: Digital Path
         expected_rom[8]  = {7'h07, 9'b0_0100_0010}; // R7: Digital Audio Format
-        expected_rom[9]  = {7'h08, 9'b0_0000_0000}; // R8: Sampling Rate
+        expected_rom[9]  = {7'h08, 9'b0_0000_1100}; // R8: Sampling Rate (SR=0011, 8 kHz)
         expected_rom[10] = {7'h09, 9'b0_0000_0001}; // R9: Active
     end
 
@@ -85,6 +88,7 @@ module codec_model #(
         i2c_bit_count      = 4'd0;
         i2c_byte_index     = 2'd0;
         i2c_bus_busy       = 1'b0;
+        r8_value           = 9'd0;
     end
 
     // START condition detection: SDAT falling while SCLK is high
@@ -112,8 +116,11 @@ module codec_model #(
                         $display("[CODEC_MODEL] ERROR: Reg %0d mismatch: exp 0x%04h, got 0x%02h%02h",
                             i2c_writes_acked, expected_rom[i2c_writes_acked], rx_byte2, rx_byte3);
                     end else begin
-                        if (!nack_inject)
+                        if (!nack_inject) begin
                             i2c_writes_acked <= i2c_writes_acked + 1'b1;
+                            if (rx_byte2[7:1] == 7'h08)
+                                r8_value <= {rx_byte2[0], rx_byte3};
+                        end
                     end
                 end
             end
@@ -166,14 +173,14 @@ module codec_model #(
 
     reg [1:0] xck_div;
     reg       int_bclk;
-    reg [5:0] bclk_frame_cnt;
+    reg [8:0] bclk_frame_cnt;
     reg       int_lrck;
     reg       int_adcdat;
 
     initial begin
         xck_div        = 2'b00;
         int_bclk       = 1'b0;
-        bclk_frame_cnt = 6'd0;
+        bclk_frame_cnt = 9'd0;
         int_lrck       = 1'b0;
         int_adcdat     = 1'b0;
     end
@@ -190,13 +197,15 @@ module codec_model #(
         end
     end
 
-    // Frame counter: 64 BCLK cycles (32 Left, 32 Right)
+    // Frame length in master mode (BCLK = XCK/4): SR=0011 (8 kHz, 1536 fs) -> 384 BCLK per
+    // frame (192 per channel); otherwise 256 fs -> 64 BCLK per frame (32 per channel).
+    wire [8:0] half_frame = (r8_value[5:2] == 4'b0011) ? 9'd192 : 9'd32;
     reg [4:0]  adc_bit_cnt;
     reg [15:0] adc_shift;
 
     always @(negedge int_bclk or negedge rst_n) begin
         if (!rst_n) begin
-            bclk_frame_cnt <= 6'd0;
+            bclk_frame_cnt <= 9'd0;
             int_lrck       <= 1'b0;
             adc_bit_cnt    <= 5'd0;
             adc_shift      <= 16'd0;
@@ -204,14 +213,14 @@ module codec_model #(
         end else begin
             bclk_frame_cnt <= bclk_frame_cnt + 1'b1;
 
-            if (bclk_frame_cnt == 6'd31) begin
+            if (bclk_frame_cnt == half_frame - 9'd1) begin
                 int_lrck    <= 1'b1; // Switch to Right Channel
                 adc_bit_cnt <= 5'd0;
                 int_adcdat  <= 1'b0; // 1-cycle delay bit
                 adc_shift   <= adc_right_in;
-            end else if (bclk_frame_cnt == 6'd63) begin
+            end else if (bclk_frame_cnt >= 2 * half_frame - 9'd1) begin
                 int_lrck       <= 1'b0; // Switch to Left Channel
-                bclk_frame_cnt <= 6'd0;
+                bclk_frame_cnt <= 9'd0;
                 adc_bit_cnt    <= 5'd0;
                 int_adcdat     <= 1'b0; // 1-cycle delay bit
                 adc_shift      <= adc_left_in;
@@ -232,7 +241,7 @@ module codec_model #(
         if (!rst_n) begin
             sample_start <= 1'b0;
         end else begin
-            if (bclk_frame_cnt == 6'd61) begin
+            if (bclk_frame_cnt == 2 * half_frame - 9'd3) begin
                 sample_start <= 1'b1;
             end else begin
                 sample_start <= 1'b0;
