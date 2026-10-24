@@ -65,7 +65,23 @@ Settings with the best wav result (selected on seeds 101-103, evaluated on seeds
 
 - C10. All three compile and meet 50 MHz. NLMS-Shift: setup slack +3.867 ns (slow 85C), hold +0.402 ns (slow 85C; fast 0C hold is +0.181 ns). The pre-pipelining design failed at -7.655 ns / 36.16 MHz.
 - C11. LMS is about 30% smaller than NLMS-Shift in logic elements. NLMS-Shift and NLMS are about equal in logic elements.
-- Power: not measured (vectorless analysis unavailable).
+- Power: see 4a (vectorless estimate on the board build).
+
+### 4a. Board build on commit da0b6f4 (8.138 kHz codec, GPIO test points) — RAW
+
+Complete board design built by `quartus/build_quartus.tcl` on the authors' PC, 24 Oct 2026
+(`results/quartus_reports/board_da0b6f4/`, run log in `results/local_run_da0b6f4/REPORT.md`).
+
+| | LMS | NLMS | NLMS-Shift |
+|---|---|---|---|
+| Logic elements | 1,792 | 2,626 | 2,610 |
+| Registers | 1,123 | 1,404 | 1,186 |
+| Fmax, slow 85C (MHz) | 70.08 | 59.75 | 58.66 |
+| Setup slack, slow 85C (ns) | 5.731 | 3.263 | 2.953 |
+| Core dynamic power, vectorless (mW) | 20.79 | 24.36 | 23.77 |
+
+- C27. All three board builds meet 50 MHz (hold slack +0.401 ns each, no critical warnings), and the GPIO pins land on PIN_AB22, PIN_AC15, PIN_AB21, PIN_Y17. Questa runs the full 86-test regression on this commit with 86 passes, including T9 and T10.
+- C28. Vectorless power (12.5% default toggle rate, Quartus confidence "low"): total 169.46 / 173.15 / 172.50 mW, core static about 98.7 mW. Dynamic values are upper bounds, not energy per sample; a gate-level VCD estimate failed because the post-fit netlist flattens the hierarchy that tb_top probes.
 
 ## 5. Timing and throughput (simulation) — REPORTED
 
@@ -121,7 +137,7 @@ Settings with the best wav result (selected on seeds 101-103, evaluated on seeds
 
 - No board measurement exists. All performance and timing claims are from simulation and Quartus reports. OPEN: programme the NLMS-Shift .sof, observe flags, bypass and freeze, measure latency with a scope.
 - Real recorded noise and speech are now evaluated (C23-C24) but with simulated acoustic paths; no real two-microphone recording. OPEN.
-- Novelty is not claimed. REPORTED related work, from an AI deep-research tool (not read by the author): Pathi et al. 2026, IEEE ICICV (NLMS with leading-one detector, priority encoder and barrel shifter, claims about 50% fewer LUTs and 30% lower latency; abstract only seen), Huang & Yao 2026, Circuits Systems and Signal Processing (binary reciprocal approximation for adaptive IIR NLMS; opened by the tool, different algorithm), Yao & Huang 2024, IEEE TCAS-II (CSD fast-division NLMS; abstract), Zhao et al. 2018, IEEE Access (division-free variable-regularized LMS; opened by the tool), Huang, Yao & Lee 2024, ICCE-Taiwan (LUT reciprocal NLMS; abstract), Oba, Kim & Arai 2006, ISPACS (FPGA LMS/NLMS with bit-shift division; abstract, secondary description only), and a 1996 patent by Ding on eliminating division in NLMS. A "Lee 2024 thesis" could not be found. OPEN: read Pathi 2026 and Oba 2006 in full and position the work. Found in this session (abstract level, docs/related_work.md): Garrett et al., ISLPED 2002, already replace the NLMS division by power-of-two operations from leading-zero counts, so the NLMS-Shift step itself is prior art.
+- Novelty is not claimed. REPORTED related work, from an AI deep-research tool (not read by the author): Pathi et al. 2026, IEEE ICICV (NLMS with leading-one detector, priority encoder and barrel shifter, claims about 50% fewer LUTs and 30% lower latency; abstract only seen), Huang & Yao 2026, Circuits Systems and Signal Processing (binary reciprocal approximation for adaptive IIR NLMS; opened by the tool, different algorithm), Yao & Huang 2024, IEEE TCAS-II (CSD fast-division NLMS; abstract), Zhao et al. 2018, IEEE Access (division-free variable-regularized LMS; opened by the tool), Huang, Yao & Lee 2024, ICCE-Taiwan (LUT reciprocal NLMS; abstract), Oba, Kim & Arai 2006, ISPACS (FPGA LMS/NLMS with bit-shift division; secondary description in Huang & Yao 2026), and a 1996 patent by Ding on eliminating division in NLMS. A "Lee 2024 thesis" could not be found. Full texts of Zhao 2018, Huang, Yao & Lee 2024 and Huang & Yao 2026 were supplied and are summarised in docs/related_work.md (the last two use the same DE2-115 board). Pathi et al. 2026 was located (ICICV 2026, pp. 564-569, doi:10.1109/ICICV68925.2026.11554859) and is cited at abstract level. OPEN: read its full text to confirm device, word length and taps. Found in this session (abstract level, docs/related_work.md): Garrett et al., ISLPED 2002, already replace the NLMS division by power-of-two operations from leading-zero counts, so the NLMS-Shift step itself is prior art.
 - No comparison with the base paper's numbers is possible: it reports no numeric results.
 - No measured or Quartus-estimated power (only the toggle proxy C26; flow in docs/power_flow.md). Objective intelligibility/quality (STOI, PESQ) only; no listening test.
 

@@ -58,16 +58,17 @@ SPEC_ALLOWLIST = {
     ("claims.md", 66, "50"): ("spec", "Master clock frequency specification (50 MHz)"),
     ("claims.md", 66, "36.16"): ("historical", "Pre-pipelining unpipelined design baseline Fmax (36.16 MHz); no tracked report in results/quartus_reports"),
     ("claims.md", 66, "-7.655"): ("historical", "Pre-pipelining unpipelined design setup slack violation (-7.655 ns); no tracked report in results/quartus_reports"),
-    ("claims.md", 77, "50"): ("spec", "Master clock frequency conversion (50 MHz)"),
-    ("claims.md", 82, "11.3"): ("derived", "1-decimal rounding of 11.26 dB (paper_numbers.csv row 14, nlms 4x nr_final_mean)"),
-    ("claims.md", 87, "1.0"): ("threshold", "Gate A hybrid adoption threshold rule (>= 1.0 dB in >= 2 scenarios)"),
-    ("claims.md", 94, "50"): ("spec", "CDC master clock sampling specification (50 MHz)"),
-    ("claims.md", 135, "2,531"): ("historical", "W=11 architectural baseline estimate (2,531 LEs); pre-pipelining estimate"),
-    ("claims.md", 135, "50"): ("spec", "Master clock frequency specification (50 MHz)"),
-    ("claims.md", 135, "20.0"): ("spec", "Master clock period specification for 50 MHz clock (20.0 ns)"),
-    ("claims.md", 135, "+3.0"): ("threshold", "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)"),
-    ("claims.md", 138, "2.97"): ("historical", "W=11 degradation figure from the 2026-10-11 log in docs/verification.md; no reproducible source"),
-    ("claims.md", 139, "24"): ("threshold", "Pareto acceptance boundary threshold for amp_steps (24 dB; post hoc threshold)"),
+    ("claims.md", 83, "50"): ("spec", "Board build timing constraint (50 MHz)"),
+    ("claims.md", 93, "50"): ("spec", "Master clock frequency conversion (50 MHz)"),
+    ("claims.md", 98, "11.3"): ("derived", "1-decimal rounding of 11.26 dB (paper_numbers.csv row 14, nlms 4x nr_final_mean)"),
+    ("claims.md", 103, "1.0"): ("threshold", "Gate A hybrid adoption threshold rule (>= 1.0 dB in >= 2 scenarios)"),
+    ("claims.md", 110, "50"): ("spec", "CDC master clock sampling specification (50 MHz)"),
+    ("claims.md", 151, "2,531"): ("historical", "W=11 architectural baseline estimate (2,531 LEs); pre-pipelining estimate"),
+    ("claims.md", 151, "50"): ("spec", "Master clock frequency specification (50 MHz)"),
+    ("claims.md", 151, "20.0"): ("spec", "Master clock period specification for 50 MHz clock (20.0 ns)"),
+    ("claims.md", 151, "+3.0"): ("threshold", "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)"),
+    ("claims.md", 154, "2.97"): ("historical", "W=11 degradation figure from the 2026-10-11 log in docs/verification.md; no reproducible source"),
+    ("claims.md", 155, "24"): ("threshold", "Pareto acceptance boundary threshold for amp_steps (24 dB; post hoc threshold)"),
     ("docs/verification.md", 135, "760"): ("spec", "GPIO in_valid->out_valid pin spacing: (LAT 37 + 1 accept edge) x 20 ns, checked by tb_top T10"),
     ("docs/board_test.md", 56, "760"): ("spec", "GPIO in_valid->out_valid pin spacing: (LAT 37 + 1 accept edge) x 20 ns, checked by tb_top T10"),
 
@@ -288,10 +289,16 @@ def build_verification_database():
     add_le(1885, "results/quartus_reports/lms_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: Total logic elements: 1885")
     add_le(2697, "results/quartus_reports/nlms_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: Total logic elements: 2697")
     add_le(2690, "results/quartus_reports/shift_w12/anc_de2_115.fit.rpt", "Fitter Resource Usage Summary: Total logic elements: 2690")
+    add_le(1792, "results/quartus_reports/board_da0b6f4/lms/anc_de2_115.fit.summary", "Total logic elements : 1,792")
+    add_le(2626, "results/quartus_reports/board_da0b6f4/nlms/anc_de2_115.fit.summary", "Total logic elements : 2,626")
+    add_le(2610, "results/quartus_reports/board_da0b6f4/nlms_shift/anc_de2_115.fit.summary", "Total logic elements : 2,610")
     add_le(1775, "results/metrics/quartus_summary.csv", "row 5 (exp_lms_w11_cyclone4), col=logic_elements: 1775")
     add_le(2542, "results/metrics/quartus_summary.csv", "row 6 (exp_nlms_w11_cyclone4), col=logic_elements: 2542")
 
     # Fmax MHz: only Fmax columns / reports (no clock constraints)
+    add_mhz(70.08, "results/quartus_reports/board_da0b6f4/lms/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Fmax Summary: 70.08 MHz")
+    add_mhz(59.75, "results/quartus_reports/board_da0b6f4/nlms/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Fmax Summary: 59.75 MHz")
+    add_mhz(58.66, "results/quartus_reports/board_da0b6f4/nlms_shift/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Fmax Summary: 58.66 MHz")
     add_mhz(58.87, "results/metrics/quartus_summary.csv", "row 6 (exp_nlms_w11_cyclone4), col=fmax_mhz: 58.87")
     add_mhz(60.05, "results/metrics/quartus_summary.csv", "row 5 (exp_lms_w11_cyclone4), col=fmax_mhz: 60.05")
     add_mhz(59.90, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Fmax Summary: LMS Slow 85C Fmax: 59.90 MHz")
@@ -307,6 +314,9 @@ def build_verification_database():
         ("results/quartus_reports/lms_w12/anc_de2_115.sta.rpt",   "LMS"),
         ("results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt",  "NLMS"),
         ("results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "NLMS-Shift"),
+        ("results/quartus_reports/board_da0b6f4/lms/anc_de2_115.sta.rpt",        "LMS (board da0b6f4)"),
+        ("results/quartus_reports/board_da0b6f4/nlms/anc_de2_115.sta.rpt",       "NLMS (board da0b6f4)"),
+        ("results/quartus_reports/board_da0b6f4/nlms_shift/anc_de2_115.sta.rpt", "NLMS-Shift (board da0b6f4)"),
     ]
     for _rpt_rel, _algo_name in _rpt_algo:
         _rpt_abs = os.path.join(ROOT, _rpt_rel)
