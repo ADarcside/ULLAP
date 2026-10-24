@@ -24,7 +24,7 @@ def parse_config_rom(init_v_path):
         0x05: ("R5", "Digital Audio Path", "De-emphasis filter off, ADC high-pass filter enabled"),
         0x06: ("R6", "Power Down Control", "Powers up all internal blocks (Line In, Mic, ADC, DAC, Oscillator, Output)"),
         0x07: ("R7", "Digital Audio Format", "I2S standard format, 16-bit word length, Master mode (codec drives BCLK/LRCK)"),
-        0x08: ("R8", "Sampling Rate Control", "Normal mode, base oversampling 256 fs (XCK / fs = 256, fs = 48.828 kHz)"),
+        0x08: ("R8", "Sampling Rate Control", "Normal mode, BOSR = 0, SR = 0011: 8 kHz ADC/DAC at 12.288 MHz MCLK; with XCK = 12.5 MHz, XCK / fs = 1536 and fs = 8.138 kHz"),
         0x09: ("R9", "Active Control", "Activate digital core audio interface (bit 0 = 1)"),
         0x0F: ("R15", "Reset Register", "Resets all registers to defaults. Settling delay requirement unverified")
     }
@@ -67,8 +67,8 @@ def generate_markdown(rom_entries, xck_signal, output_md_path):
         "  - Nominal Frequency: **12.500 MHz** (Period = 80.0 ns).",
         "- **Audio Clocks (WM8731 Master Mode):**",
         r"  - **BCLK (Bit Clock):** Derived as $\text{AUD\_XCK} / 4 = \mathbf{3.125\ \text{MHz}}$ (Period = 320.0 ns, 16 `CLOCK_50` cycles).",
-        r"  - **LRCK (Left/Right Sample Clock / $f_s$):** Derived as $\text{BCLK} / 64 = \mathbf{48.828125\ \text{kHz}}$ (Period = 20.480 $\mu$s, 1024 `CLOCK_50` cycles).",
-        r"  - **Oversampling Ratio:** $XCK / f_s = 12.5\ \text{MHz} / 48.828125\ \text{kHz} = \mathbf{256\ f_s}$.",
+        r"  - **LRCK (Left/Right Sample Clock / $f_s$):** R8 SR = 0011 selects $\text{AUD\_XCK} / 1536 = \text{BCLK} / 384 = \mathbf{8.138\ \text{kHz}}$ (Period = 122.88 $\mu$s, 6144 `CLOCK_50` cycles), matching the 8 kHz Python study. Checked in simulation by `tb_top` T7/T9 against the codec model; to be confirmed on the board with a scope on `AUD_ADCLRCK`.",
+        r"  - **Oversampling Ratio:** $XCK / f_s = 12.5\ \text{MHz} / 8.138\ \text{kHz} = \mathbf{1536\ f_s}$. The earlier setting (R8 = 0x000, 256 fs) gave 48.828 kHz.",
         "",
         "## 2. I2C Control Protocol",
         "",

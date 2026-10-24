@@ -25,6 +25,7 @@ set_false_path -from [get_ports {AUD_ADCDAT}]
 
 # Cut timing paths for status outputs, audio DAC serial line, and I2C low-speed lines
 set_false_path -to [get_ports {LEDR[*]}]
+set_false_path -to [get_ports {GPIO[*]}]
 set_false_path -to [get_ports {I2C_SCLK}]
 set_false_path -to [get_ports {I2C_SDAT}]
 set_false_path -from [get_ports {I2C_SDAT}]
