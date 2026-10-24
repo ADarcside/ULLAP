@@ -124,6 +124,25 @@ Recent simulation and extended verification runs (`results/research_summary.md`)
 
 ---
 
+## 5a. Journal Work Added on `board-readiness` (Simulation Only)
+
+| Item | Command | Output |
+|---|---|---|
+| Open-source RTL regression (Icarus, 86 tests incl. top-level T1-T10) | `python py/run_iverilog_regression.py` | `results/metrics/iverilog_regression_summary.txt` |
+| Verilator `-Wall` lint with reviewed waivers | `python py/run_verilator_lint.py` | `results/metrics/verilator_lint.txt` |
+| Word-length sweep W = 8..16 at fair settings, 20 seeds | `python py/exp_wordlength_fair.py` | `results/metrics/wordlength_fair_*.csv`, fig13 |
+| Real recorded noise + speech (MS-SNSD), NR / STOI / PESQ | `python py/exp_real_audio.py` | `results/metrics/real_audio_*.csv` |
+| Paired per-seed statistics (t, Wilcoxon, TOST) | `python py/exp_paired_stats.py` | `results/metrics/paired_*.csv` |
+| RTL switching-activity energy proxy | `python py/power_activity.py` | `results/metrics/power_activity.csv` |
+| Board stimulus WAVs and LINE OUT NR analysis | `python py/board_stimulus.py make` / `analyze` | `board_evidence/` |
+| Signal Tap capture vs integer model (board T9) | `python py/check_board_capture.py --csv ... --algo 2` | PASS/FAIL |
+| Journal manuscript draft | `cd paper && python make_tables.py && pdflatex ullap_manuscript.tex` | `paper/ullap_manuscript.pdf` |
+
+The board now runs the codec at 8.138 kHz (R8 = 0x00C) to match the simulation study, and brings
+in_valid, out_valid, busy and the sample strobe out on GPIO JP5 pins 1-4. Bench procedure:
+`docs/board_test.md`; power flow: `docs/power_flow.md`; prior art: `docs/related_work.md`.
+Extra Python packages for the real-audio study: `pip install pesq pystoi`.
+
 ## 6. Measurement Classification & Integrity
 
 To preserve scientific rigor, all data is categorized by source:

@@ -122,7 +122,8 @@ For physical hardware laboratory verification of the synthesized design on the T
 | `CLOCK_50` | `PIN_Y2` | Dedicated oscillator | Ch 1 (Ref) | 50.0 MHz master clock (20.0 ns period) |
 | `AUD_ADCLRCK`| `PIN_C2` | Codec Word Clock | Ch 2 (Trig) | 48 kHz / 8 kHz audio frame sync |
 | `AUD_DACDAT` | `PIN_D1` | Codec Serial Output | Ch 3 | Serialized residual error audio $e[n]$ |
-| `u_anc_core.out_valid` | Internal / JP5 Pin 1 | GPIO Header | Ch 4 | 1-cycle active-high processing done pulse |
+| `GPIO[0]` in_valid | `PIN_AB22` | JP5 pin 1 | Ch 3 | Registered copy of the core's in_valid |
+| `GPIO[1]` out_valid | `PIN_AC15` | JP5 pin 2 | Ch 4 | Registered copy of the core's out_valid (GPIO[2] busy = JP5 pin 3, GPIO[3] sample strobe = JP5 pin 4) |
 
 ### 8.3 In-Circuit Handshake & Latency Measurement
 1. **Power-On Reset & Autonomous I2C Initialization:**
@@ -131,7 +132,7 @@ For physical hardware laboratory verification of the synthesized design on the T
 2. **Impulse Response & Cycle-Accurate Latency ($\Delta t$):**
    - Inject a full-scale digital impulse $\delta[n] = 16\text{'h7FFF}$ on the reference channel $x[n]$.
    - Trigger the oscilloscope on the rising edge of `AUD_ADCLRCK` or `in_valid`.
-   - Measure time delay to `out_valid`: **Exactly $740.0\text{ ns}$ (37 cycles @ 50 MHz)** for NLMS-Shift ($W=12, L=32$).
+   - Measure GPIO[0] (in_valid) rising to GPIO[1] (out_valid) rising: **38 cycles = 760 ns** for NLMS-Shift ($W=12, L=32$). The core latency is 37 cycles from the accept edge, which is one cycle after in_valid rises (checked by `tb_top` T10). Full procedure: `docs/board_test.md`.
    - The 37-cycle core latency ($740.0\text{ ns}$) is $0.59\%$ of the 8 kHz frame period ($125\ \mu\text{s}$). Busy time (all pipeline stages active) is 72 cycles $= 1.44\ \mu\text{s} = 1.15\%$ of the frame period; both are well below the 10% audio latency budget.
 3. **Acoustic Noise Reduction (NR) Validation:**
    - Inject stationary band-limited noise into $x[n]$ and secondary-filtered noise into $d[n]$.
