@@ -238,6 +238,40 @@ algorithms over LMS on amplitude steps is significant ($p<10^{-7}$).
 \caption{Stationary versus amplitude-step noise reduction across step sizes (seeds 1--20).}\label{fig:pareto}
 \end{figure}
 
+Figures~\ref{fig:conv}--\ref{fig:coef} show single runs (seed~1) at the fair-tuned settings.
+Fig.~\ref{fig:conv} gives the running noise reduction in every scenario, including a closed-loop
+feedback case in which all three algorithms settle near 4~dB; Fig.~\ref{fig:wave} and
+Fig.~\ref{fig:resid} show the signals and the residual error power for stationary noise;
+Fig.~\ref{fig:track} shows the response to the amplitude steps, where LMS loses about 3~dB after the
+drop while both normalised algorithms recover; Fig.~\ref{fig:nrbar} compares final and whole-run noise
+reduction; and Fig.~\ref{fig:coef} shows that the coefficient trajectories of the three algorithms
+follow the same path.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=0.9\linewidth]{fig1_convergence.pdf}
+\caption{Running noise reduction for all scenarios (seed 1, $W=12$, $L=32$, fair-tuned settings). Dotted lines mark the amplitude steps and the path switch.}\label{fig:conv}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=\linewidth]{fig2_waveforms.pdf}
+\caption{Primary $d[n]$, reference $x[n]$, clean signal $s[n]$ and residual $e[n]$ of each algorithm, stationary scenario (seed 1).}\label{fig:wave}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=\linewidth]{fig3_residual_error.pdf}
+\caption{Residual error power over time against the input noise power, stationary scenario (seed 1).}\label{fig:resid}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=\linewidth]{fig4_tracking_response.pdf}
+\caption{Tracking of the amplitude-step disturbance (seed 1): noise reduction and coefficient misalignment.}\label{fig:track}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=\linewidth]{fig5_noise_reduction_comparison.pdf}
+\caption{Final (last 25\%) and whole-run noise reduction per scenario (seed 1). The 20-seed means are in Table~\ref{tab:nr}.}\label{fig:nrbar}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=\linewidth]{fig7_coef_trajectories.pdf}
+\caption{Trajectories of representative taps $w_0, w_1, w_4, w_8, w_{15}$ (stationary scenario, seed 1).}\label{fig:coef}
+\end{figure}
+
 \subsection{Real noise and speech}
 \begin{table}[t]\centering\small
 \caption{Real recorded noise and speech (MS-SNSD), fixed point $W=12$, mean $\pm$ 95\% CI over 20 seeds, no
@@ -293,6 +327,29 @@ For comparison with~\cite{huang2024,huang2026}, which use the same board, energy
 reported as dynamic power divided by the sample rate, from the Quartus Power Analyzer. Their designs
 are fully parallel and run at megasamples per second, while ULLAP shares one multiplier and runs at
 8.138~kHz, so area and energy are compared per tap and per sample, not as raw totals.
+
+Figures~\ref{fig:res}--\ref{fig:lat} show the same build data graphically: logic and register use
+(Fig.~\ref{fig:res}), $F_{\max}$ and setup slack at the slow 85\,$^\circ$C corner (Fig.~\ref{fig:timing}),
+noise reduction against logic cost (Fig.~\ref{fig:tradeoff}), and latency and busy time against the
+122.88~$\mu$s sample period (Fig.~\ref{fig:lat}).
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=\linewidth]{fig8_resource_utilization.pdf}
+\caption{Logic elements and dedicated registers of the three cores on Cyclone IV E EP4CE115 (Quartus Prime Lite 25.1).}\label{fig:res}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=\linewidth]{fig9_timing_comparison.pdf}
+\caption{$F_{\max}$ and worst-case setup slack, slow 1200~mV 85\,$^\circ$C model, 50~MHz constraint.}\label{fig:timing}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=\linewidth]{fig10_performance_cost_tradeoff.pdf}
+\caption{Final noise reduction of the floating-point and $W=12$ fixed-point NLMS-Shift (seed 1) next to the synthesis results of the three cores.}\label{fig:tradeoff}
+\end{figure}
+\begin{figure}[htbp]\centering
+\includegraphics[width=\linewidth]{fig11_latency_comparison.pdf}
+\caption{Output latency and busy cycles per sample, and the corresponding time at 50~MHz as a share of the 8.138~kHz sample period.}\label{fig:lat}
+\end{figure}
+
 \TBD{Rebuild all three variants on the final commit and replace this table with that build; add Power Analyzer results (docs/power\_flow.md).}
 
 \subsection{On-board results}
