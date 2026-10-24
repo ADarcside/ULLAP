@@ -20,6 +20,7 @@ Usage:
 """
 import argparse
 import os
+import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -45,32 +46,75 @@ from signals import make_scenario
 from fixedpoint import FxCfg, run_fixed
 from metrics import evaluate
 
-HW_DATA = {
-    "lms": {
-        "setting": "W=12, mu=0.25",
-        "les": 1885, "registers": 1148, "multipliers": 4,
-        "fmax_slow_85c": 59.90, "slack_setup_slow_85c": 3.305, "slack_hold_slow_85c": 0.182,
-        "slack_setup_slow_0c": 4.819, "slack_setup_fast_0c": 11.654,
-        "latency_cycles": 35, "busy_cycles": 73
-    },
-    "nlms": {
-        "setting": "W=12, mu=0.25, eps_exp=0",
-        "les": 2697, "registers": 1425, "multipliers": 4,
-        "fmax_slow_85c": 61.72, "slack_setup_slow_85c": 3.798, "slack_hold_slow_85c": 0.181,
-        "slack_setup_slow_0c": 5.115, "slack_setup_fast_0c": 11.707,
-        "latency_cycles": 37, "busy_cycles": 127
-    },
-    "nlms_shift": {
-        "setting": "W=12, K=3, EPS_EXP=2",
-        "les": 2690, "registers": 1213, "multipliers": 4,
-        "fmax_slow_85c": 61.98, "slack_setup_slow_85c": 3.867, "slack_hold_slow_85c": 0.181,
-        "slack_setup_slow_0c": 5.177, "slack_setup_fast_0c": 11.688,
-        "latency_cycles": 37, "busy_cycles": 72
+from sta_parser import parse_sta_slacks, parse_sta_slacks_with_provenance
+
+
+def _load_hw_data():
+    """Build HW_DATA, parsing all slack values live from the committed sta.rpt files."""
+    rpt_dir = os.path.join(ROOT, "results", "quartus_reports")
+    algo_rpt = {
+        "lms":       os.path.join(rpt_dir, "lms_w12",   "anc_de2_115.sta.rpt"),
+        "nlms":      os.path.join(rpt_dir, "nlms_w12",  "anc_de2_115.sta.rpt"),
+        "nlms_shift": os.path.join(rpt_dir, "shift_w12", "anc_de2_115.sta.rpt"),
     }
-}
+    static = {
+        "lms": {
+            "setting": "W=12, mu=0.25",
+            "les": 1885, "registers": 1148, "multipliers": 4,
+            "fmax_slow_85c": 59.90,
+            "latency_cycles": 35, "busy_cycles": 73,
+        },
+        "nlms": {
+            "setting": "W=12, mu=0.25, eps_exp=0",
+            "les": 2697, "registers": 1425, "multipliers": 4,
+            "fmax_slow_85c": 61.72,
+            "latency_cycles": 37, "busy_cycles": 127,
+        },
+        "nlms_shift": {
+            "setting": "W=12, K=3, EPS_EXP=2",
+            "les": 2690, "registers": 1213, "multipliers": 4,
+            "fmax_slow_85c": 61.98,
+            "latency_cycles": 37, "busy_cycles": 72,
+        },
+    }
+    hw = {}
+    for al, rpt in algo_rpt.items():
+        slacks = parse_sta_slacks(rpt)
+        hw[al] = {**static[al], **slacks}
+    return hw
 
 
-def generate_paper_numbers():
+HW_DATA = _load_hw_data()
+
+
+def generate_paper_numbers(from_existing=True):
+    out_csv = os.path.join(ROOT, "results", "paper_numbers.csv")
+    if from_existing and os.path.exists(out_csv):
+        print("[reproduce] Updating results/paper_numbers.csv hardware columns from verified HW_DATA...")
+        with open(out_csv, "r", encoding="utf-8") as f:
+            reader = list(csv.DictReader(f))
+        new_rows = []
+        for r in reader:
+            al = r["algorithm"]
+            hw = HW_DATA[al]
+            row = {}
+            for k, v in r.items():
+                if k == "slack_hold_slow_85c":
+                    row["slack_hold_slow_85c"] = hw["slack_hold_slow_85c"]
+                    row["slack_hold_fast_0c"] = hw["slack_hold_fast_0c"]
+                elif k in hw and k != "setting":
+                    row[k] = hw[k]
+                else:
+                    row[k] = v
+            new_rows.append(row)
+        fieldnames = list(new_rows[0].keys())
+        with open(out_csv, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(new_rows)
+        print(f"[reproduce] Successfully updated {len(new_rows)} verified benchmark rows in: {out_csv}")
+        return
+
     print("[reproduce] Generating results/paper_numbers.csv with fair-tuned settings across 20 seeds...")
     import scipy.stats as st
     wav_path = os.path.join(ROOT, "vectors", "audio", "acoustic_chord.wav")
@@ -126,6 +170,7 @@ def generate_paper_numbers():
                 "fmax_slow_85c": hw["fmax_slow_85c"],
                 "slack_setup_slow_85c": hw["slack_setup_slow_85c"],
                 "slack_hold_slow_85c": hw["slack_hold_slow_85c"],
+                "slack_hold_fast_0c": hw["slack_hold_fast_0c"],
                 "slack_setup_slow_0c": hw["slack_setup_slow_0c"],
                 "slack_setup_fast_0c": hw["slack_setup_fast_0c"],
                 "latency_cycles": hw["latency_cycles"],
@@ -181,6 +226,7 @@ def generate_paper_numbers():
                 "fmax_slow_85c": hw["fmax_slow_85c"],
                 "slack_setup_slow_85c": hw["slack_setup_slow_85c"],
                 "slack_hold_slow_85c": hw["slack_hold_slow_85c"],
+                "slack_hold_fast_0c": hw["slack_hold_fast_0c"],
                 "slack_setup_slow_0c": hw["slack_setup_slow_0c"],
                 "slack_setup_fast_0c": hw["slack_setup_fast_0c"],
                 "latency_cycles": hw["latency_cycles"],

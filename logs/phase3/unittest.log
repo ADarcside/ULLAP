@@ -1,0 +1,32 @@
+.............................
+----------------------------------------------------------------------
+Ran 29 tests in 14.150s
+
+OK
+================================================================================
+Executing Extended RTL Reference Model Verification Suite
+================================================================================
+  [PASS] test_reset_clean_initial_state: All internal states, outputs, and taps initialized to 0
+  [PASS] test_algorithm_selection_lms: Bit-exact match against fixed-point specification for lms
+  [PASS] test_algorithm_selection_nlms: Bit-exact match against fixed-point specification for nlms
+  [PASS] test_algorithm_selection_nlms_shift: Bit-exact match against fixed-point specification for nlms_shift
+  [PASS] test_weight_freezing_zero_mu: Adaptation suppressed when step size is 0; weights remain unchanged
+  [PASS] test_boundary_rails_and_saturation: Signals saturate cleanly to [-1024, +1023] without arithmetic wrap
+  [PASS] test_accumulator_saturation_flag: Sticky overflow counter captures accumulator overflow on narrow ACC_W
+  [PASS] test_sustained_operation_6k_samples: Sustained operation over 6000 samples without numerical divergence or drift
+  [PASS] test_real_audio_wav_scenario: Verified on real audio file: acoustic_chord.wav
+--------------------------------------------------------------------------------
+Verification Complete: 9/9 Tests Passed in 1.01s
+Results exported to:
+  - C:\work\ULLAP\results\metrics\verification_summary.json
+  - C:\work\ULLAP\results\metrics\verification_summary.csv
+================================================================================
+freeze_early assert passed: lms        max|e| diff=0.000488, max|y| diff=0.000488, max|w| diff=0.004395
+freeze_early assert passed: nlms       max|e| diff=0.003906, max|y| diff=0.003906, max|w| diff=0.025879
+freeze_early assert passed: nlms_shift max|e| diff=0.000488, max|y| diff=0.000488, max|w| diff=0.001953
+freeze_hold assert passed: lms        max|w|=36, diff_vs_unfrz=43
+freeze_hold assert passed: nlms       max|w|=731, diff_vs_unfrz=724
+freeze_hold assert passed: nlms_shift max|w|=18, diff_vs_unfrz=15
+satall assert passed: lms        N1=4959, first-sat sample=4960, max|w|=1.000000
+satall assert passed: nlms       N1= 377, first-sat sample= 378, max|w|=0.999023
+satall assert passed: nlms_shift N1=6154, first-sat sample=6155, max|w|=1.000000

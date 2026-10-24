@@ -6,7 +6,7 @@ Date of checks: 2026-10-11. Everything below was run in this session; items not 
 
 | Check | Result |
 |---|---|
-| `python -m unittest discover -s py` | 9/9 tests pass |
+| `python -m unittest discover -s py` | 9/9 tests pass (W=11 baseline) |
 | Regenerate the 6 shipped golden vector sets (`vectors/<algo>_W11_{stationary,path_switch}`) with `run_fixed` + tuned mu from `summary.json` | **bit-identical** (also re-asserted by `py/gen_rtl_vectors.py`) |
 | `docs/results.md` fixed-point table vs. `docs/data/fixed_sweep.csv` (recomputed means) | consistent (e.g. NLMS-shift W=11: NR 19.04, mean degradation +0.914, worst scenario +2.97 dB) |
 | Full study rerun (`run_all.py --jobs 4`, ~50 s) **without** the WAV file | tuned mu identical (0.5009 / 0.04642 / 0.0625); float rows of the 3 synthetic scenarios identical to the shipped table; WAV rows, fixed-point sweep, candidates and ablation differ (next section) |
@@ -36,9 +36,9 @@ Date of checks: 2026-10-11. Everything below was run in this session; items not 
 
 Simulators: Questa Intel FPGA Starter Edition 2025.2 (win64) & ModelSim / Verilator.
 
-* `rtl/anc_core.v` vs `tb/tb_anc_core.v`, 51 manifest configurations + 4 protocol testbenches: **55 / 55 PASS** (`results/metrics/questa_regression_summary.txt`).
+* `rtl/anc_core.v` vs `tb/tb_anc_core.v`, 53 manifest configurations + 4 protocol testbenches: **57 / 57 PASS** (`results/metrics/questa_regression_summary.txt`).
   Every sample's `y_out`/`e_out` equals the Python value, final coefficients equal the `.w` file, sticky flags equal the Python counters, latency is constant (`LAT = L+3 = 35` cycles for LMS, `LAT = L+5 = 37` cycles for NLMS and NLMS-shift).
-* Full DE2-115 Top Wrapper Testbench (`quartus/tb_anc_de2_115_top.v`): **PASS**.
+* Full DE2-115 Top Wrapper Testbench (`tb/tb_top.v`, superseding legacy `quartus/tb_anc_de2_115_top.v`): **PASS**.
   Autonomous WM8731 I2C initialization (11 register writes + ACK), I2S stereo serialization/deserialization, ANC core sample exchange, and hardware bypass passthrough verified bit-exact.
 * Synthesis & Static Timing Analysis (Quartus Prime Lite 25.1std, Cyclone IV E `EP4CE115F29C7`, Speed Grade 7):
   - **LMS (W=11):** 1,775 LEs (1.55%), 1,069 registers, Fmax = 60.05 MHz, Setup Slack = +3.347 ns (PASS)
@@ -102,7 +102,7 @@ New, **unsimulated** (written without a compiler): `tb/tb_anc_protocol.v` + `tb/
 ## 7. Reproduce locally
 
     python -m unittest discover -s py -v            # 23 tests across all modules
-    python py/run_questa_regression.py              # 55 vector and protocol configs in Questa
+    python py/run_questa_regression.py              # 57 vector and protocol configs in Questa
     python scratch/run_tb_top.py                    # DE2-115 top-level wrapper with WM8731 I2C/I2S
     python py/run_pipeline.py --wav vectors/audio/acoustic_chord.wav --jobs 4  # Full research pipeline
 
@@ -132,7 +132,7 @@ For physical hardware laboratory verification of the synthesized design on the T
    - Inject a full-scale digital impulse $\delta[n] = 16\text{'h7FFF}$ on the reference channel $x[n]$.
    - Trigger the oscilloscope on the rising edge of `AUD_ADCLRCK` or `in_valid`.
    - Measure time delay to `out_valid`: **Exactly $740.0\text{ ns}$ (37 cycles @ 50 MHz)** for NLMS-Shift ($W=12, L=32$).
-   - This consumes only $0.59\%$ of the 8 kHz frame budget ($125\ \mu\text{s}$), well below the 10% audio latency budget.
+   - The 37-cycle core latency ($740.0\text{ ns}$) is $0.59\%$ of the 8 kHz frame period ($125\ \mu\text{s}$). Busy time (all pipeline stages active) is 72 cycles $= 1.44\ \mu\text{s} = 1.15\%$ of the frame period; both are well below the 10% audio latency budget.
 3. **Acoustic Noise Reduction (NR) Validation:**
    - Inject stationary band-limited noise into $x[n]$ and secondary-filtered noise into $d[n]$.
    - Toggle `SW[0]` between 1 (Bypass passthrough) and 0 (Normal ANC).

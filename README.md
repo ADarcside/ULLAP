@@ -119,7 +119,7 @@ Recent simulation and extended verification runs (`results/research_summary.md`)
 - **NLMS-Shift (W=12):** 2,690 LEs (2.35%), 1,213 registers, 4 DSP mults, $F_{\max} = \mathbf{61.98\text{ MHz}}$, Setup Slack = $\mathbf{+3.867\text{ ns}}$ **(PASS)**.
 - **Timing Closure (Gate B):** Full timing closure across all corners (Slow 85°C, Slow 0°C, Fast 0°C) with 0 unconstrained paths.
 - **Latency & Audio Budget:** Output latency $LAT = 37$ cycles ($740\text{ ns}$ @ 50 MHz), 72 busy cycles per sample (**$1.15\%$ of 8 kHz audio budget**).
-- **Verification Suite:** 18/18 Python unit tests PASSED, 55/55 Questa RTL simulation regression tests PASSED, top wrapper verified. Physical board test is marked **PENDING (manual)**.
+- **Verification Suite:** 23/23 Python unit tests PASSED, 57/57 Questa RTL simulation regression tests PASSED, top wrapper verified. Physical board test is marked **PENDING (manual)**.
 
 
 ---

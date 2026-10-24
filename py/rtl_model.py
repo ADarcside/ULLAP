@@ -32,7 +32,7 @@ def upd_rtl(prod, s, PRW, rtl_fix=True):
     return wrap(prod + half, PRW + 1) >> s      # t_sum  : reg signed [PRW:0]
 
 
-def run_rtl_model(algo, xi, di, W, L, MU_INT=512, K=4, ACC_W=None, EPS_EXP=2, rtl_fix=True):
+def run_rtl_model(algo, xi, di, W, L, MU_INT=512, K=4, ACC_W=None, EPS_EXP=2, rtl_fix=True, freeze=None):
     F, CL = W - 1, clog2(L)
     ACC_W = ACC_W or 2 * W + CL
     MUW = clog2(MU_INT + 1) + 1
@@ -43,7 +43,8 @@ def run_rtl_model(algo, xi, di, W, L, MU_INT=512, K=4, ACC_W=None, EPS_EXP=2, rt
     xv, w, pw = [0] * L, [0] * L, 0
     flags = dict(acc=0, y=0, e=0, g=0, w=0)
     ys, es = [], []
-    for x, d in zip(xi, di):
+    for idx, (x, d) in enumerate(zip(xi, di)):
+        frz = bool(freeze[idx]) if freeze is not None else False
         xold = xv[L - 1]
         xv = [x] + xv[:-1]
         if algo != 0:
@@ -69,7 +70,10 @@ def run_rtl_model(algo, xi, di, W, L, MU_INT=512, K=4, ACC_W=None, EPS_EXP=2, rt
         for i in range(L):
             prod = m * xv[i]
             upd = upd_rtl(prod, s, PRW, rtl_fix)
-            v, a = sat(w[i] + upd, W); flags["w"] |= a
-            nw.append(v)
+            if frz:
+                nw.append(w[i])
+            else:
+                v, a = sat(w[i] + upd, W); flags["w"] |= a
+                nw.append(v)
         w = nw
     return dict(y=ys, e=es, w=w, flags=flags)

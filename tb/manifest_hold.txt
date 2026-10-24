@@ -1,0 +1,4 @@
+# name algo W L MU_INT K ACC_W prefix nsamples EPS_EXP   (freeze hold/toggle variants)
+lms_W12_freeze_hold 0 12 32 512 4 29 vectors/rtl/lms_W12_freeze_hold 200 10
+nlms_W12_freeze_hold 1 12 32 51 4 29 vectors/rtl/nlms_W12_freeze_hold 200 10
+shift_W12_freeze_hold 2 12 32 512 3 29 vectors/rtl/shift_W12_freeze_hold 200 2

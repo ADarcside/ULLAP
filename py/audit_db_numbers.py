@@ -55,6 +55,7 @@ SPEC_ALLOWLIST = {
     ("claims.md", 113, "20.0"): ("spec", "Master clock period specification for 50 MHz clock (20.0 ns)"),
     ("claims.md", 113, "+3.0"): ("threshold", "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)"),
     ("claims.md", 116, "2.97"): ("historical", "W=11 degradation figure from the 2026-10-11 log in docs/verification.md; no reproducible source"),
+    ("claims.md", 117, "24"): ("threshold", "Pareto acceptance boundary threshold for amp_steps (24 dB; post hoc threshold)"),
 
     # Design targets, thresholds, and historical verification logs in docs/ and results/
     ("docs/phase1_eps_tuning.md", 27, "10"): ("threshold", "Project noise cancellation design target on tonal chord (10 dB)"),
@@ -165,7 +166,7 @@ def build_verification_database():
                 if row.get("fmax_slow_85c"):
                     add_mhz(row["fmax_slow_85c"], "results/paper_numbers.csv", f"{desc}, col=fmax_slow_85c")
                 # ns slacks
-                for col in ["slack_setup_slow_85c", "slack_hold_slow_85c", "slack_setup_slow_0c", "slack_setup_fast_0c"]:
+                for col in ["slack_setup_slow_85c", "slack_hold_slow_85c", "slack_hold_fast_0c", "slack_setup_slow_0c", "slack_setup_fast_0c"]:
                     if row.get(col):
                         add_ns(row[col], "results/paper_numbers.csv", f"{desc}, col={col}")
 
@@ -286,21 +287,24 @@ def build_verification_database():
     # ns slack: only slack columns / reports (no clock period, no target thresholds, no latencies)
     add_ns(3.347, "results/metrics/quartus_summary.csv", "row 5 (exp_lms_w11_cyclone4), col=setup_slack_ns: 3.347")
     add_ns(3.014, "results/metrics/quartus_summary.csv", "row 6 (exp_nlms_w11_cyclone4), col=setup_slack_ns: 3.014")
-    for ns_val, src_file, desc in [
-        (3.305, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Setup Summary: LMS setup slack: 3.305 ns"),
-        (3.798, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Setup Summary: NLMS setup slack: 3.798 ns"),
-        (3.867, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Setup Summary: NLMS-Shift setup slack: 3.867 ns"),
-        (4.819, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 0C Model Setup Summary: LMS setup slack: 4.819 ns"),
-        (5.115, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Slow 1200mV 0C Model Setup Summary: NLMS setup slack: 5.115 ns"),
-        (5.177, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Slow 1200mV 0C Model Setup Summary: NLMS-Shift setup slack: 5.177 ns"),
-        (11.654, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Setup Summary: LMS setup slack: 11.654 ns"),
-        (11.707, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Setup Summary: NLMS setup slack: 11.707 ns"),
-        (11.688, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Setup Summary: NLMS-Shift setup slack: 11.688 ns"),
-        (0.182, "results/quartus_reports/lms_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Hold Summary: LMS hold slack: 0.182 ns"),
-        (0.181, "results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt", "Fast 1200mV 0C Model Hold Summary: NLMS hold slack: 0.181 ns"),
-        (0.402, "results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "Slow 1200mV 85C Model Hold Summary: NLMS-Shift hold slack: 0.402 ns"),
-    ]:
-        add_ns(ns_val, src_file, desc)
+    # Dynamic timing slacks parsed live from the committed sta.rpt files using sta_parser
+    from sta_parser import parse_sta_slacks_with_provenance
+    _rpt_algo = [
+        ("results/quartus_reports/lms_w12/anc_de2_115.sta.rpt",   "LMS"),
+        ("results/quartus_reports/nlms_w12/anc_de2_115.sta.rpt",  "NLMS"),
+        ("results/quartus_reports/shift_w12/anc_de2_115.sta.rpt", "NLMS-Shift"),
+    ]
+    for _rpt_rel, _algo_name in _rpt_algo:
+        _rpt_abs = os.path.join(ROOT, _rpt_rel)
+        if not os.path.exists(_rpt_abs):
+            continue
+        _slacks, _prov = parse_sta_slacks_with_provenance(_rpt_abs)
+        for _k, _info in _prov.items():
+            _val = _info["value"]
+            _corner = _info["corner_label"]
+            _kind = _info["kind"]
+            _desc = f"{_corner} Model {_kind.capitalize()}: {_algo_name} {_kind} slack: {_val} ns"
+            add_ns(_val, _rpt_rel, _desc)
 
     # 7. Additional metrics from real CSV ground truth files in results/metrics/
     # All values are anchored directly to committed experiment CSVs

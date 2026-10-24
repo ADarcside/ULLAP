@@ -1,0 +1,34 @@
+# ** Note: (vsim-220) 'C:/altera_lite/25.1std/questa_fse/win64/../modelsim.ini' is used as the ini file.
+# vsim -c -do "run -all; quit -f" -L build/questa_work build/questa_work.tb_anc_de2_115_top -l logs/phase0/top_tb.log 
+# Start time: 02:35:11 on Oct 19,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# ** Note: (vopt-220) 'C:/altera_lite/25.1std/questa_fse/win64/../modelsim.ini' is used as the ini file.
+# //  Questa Altera Starter FPGA Edition-64
+# //  Version 2025.2 win64 May 31 2025
+# //
+# // Unpublished work. Copyright 2025 Siemens
+# //
+# // This material contains trade secrets or otherwise confidential information
+# // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+# // "SISW"), or its licensors. Access to and use of this information is strictly
+# // limited as set forth in the Customer's applicable agreements with SISW.
+# //
+# // This material may not be copied, distributed, or otherwise disclosed outside
+# // of the Customer's facilities without the express written permission of SISW,
+# // and may not be used in any way not expressly authorized by SISW.
+# //
+# Loading work.tb_anc_de2_115_top(fast)
+# run -all
+# ================================================================================
+# Starting DE2-115 Top Wrapper Audio Interface Verification in Questa
+# ================================================================================
+# [200000 ns] Reset released. Waiting for I2C codec initialization...
+# [8105970000 ns] I2C Codec initialization SUCCESS! (LEDR[6]=1)
+# [8105970000 ns] Streaming 10 audio frames through ANC core...
+# [8316560000 ns] Enabling Bypass Mode (SW[0]=1)...
+# [8356520000 ns] [PASS] Zero-latency bypass passthrough verified! DAC received primary input exactly.
+# ================================================================================
+# DE2-115 TOP WRAPPER VERIFICATION PASSED ALL CHECKS!
+# ================================================================================
+# End time: 02:35:15 on Oct 19,2026, Elapsed time: 0:00:04
+# Errors: 0, Warnings: 0

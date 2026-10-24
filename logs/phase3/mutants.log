@@ -1,0 +1,189 @@
+================================================================================
+PHASE 3 TOP-LEVEL MUTATION VERIFICATION LOG
+Date: Tue Oct 20 23:48:14 2026
+Simulator: Questa Altera Starter FPGA Edition-64 2025.2
+================================================================================
+
+MUTANT M1: Original i2s_transceiver.v (git show 78f06c2:quartus/i2s_transceiver.v)
+Target: Proves testbench catches original I2S TX skew alignment flaw
+Files: tb/mutants/i2s_transceiver_m1.v
+Command:
+  vlib build/work_m1
+  C:\altera_lite\25.1std\questa_fse\win64\vlog.exe -work build/work_m1 -sv rtl/anc_core.v quartus/wm8731_i2c_init.v tb/mutants/i2s_transceiver_m1.v quartus/anc_de2_115_top.v tb/codec_model.v tb/tb_top.v
+  C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_m1 tb_top +test=T8 -do run -all; quit -f
+Raw Output:
+  Reading pref.tcl
+  
+  # 2025.2
+  
+  # ** Note: (vsim-220) 'C:/altera_lite/25.1std/questa_fse/win64/../modelsim.ini' is used as the ini file.
+  # vsim -c -work build/work_m1 tb_top "+test=T8" -do "run -all; quit -f" 
+  # Start time: 23:48:16 on Oct 20,2026
+  # ** Note: (vsim-3812) Design is being optimized...
+  # ** Note: (vopt-220) 'C:/altera_lite/25.1std/questa_fse/win64/../modelsim.ini' is used as the ini file.
+  # //  Questa Altera Starter FPGA Edition-64
+  # //  Version 2025.2 win64 May 31 2025
+  # //
+  # // Unpublished work. Copyright 2025 Siemens
+  # //
+  # // This material contains trade secrets or otherwise confidential information
+  # // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+  # // "SISW"), or its licensors. Access to and use of this information is strictly
+  # // limited as set forth in the Customer's applicable agreements with SISW.
+  # //
+  # // This material may not be copied, distributed, or otherwise disclosed outside
+  # // of the Customer's facilities without the express written permission of SISW,
+  # // and may not be used in any way not expressly authorized by SISW.
+  # //
+  # Loading sv_std.std
+  # Loading work.tb_top(fast)
+  # run -all
+  # ================================================================================
+  # [TB_TOP] Starting DE2-115 Top-Level Verification: test=T8
+  # ================================================================================
+  # [TB_TOP] Running T8: Skew Sweep across 45 parameter combinations...
+  # TB_TOP FAIL T8 skew=5 clk2out=0 bypass mismatch Frame A: exp 5678, got left=2b3c right=2b3c
+  # ** Note: $finish    : tb/tb_top.v(564)
+  #    Time: 10706570 ns  Iteration: 2  Instance: /tb_top
+  # End time: 23:48:21 on Oct 20,2026, Elapsed time: 0:00:05
+  # Errors: 0, Warnings: 0
+Result: FAIL (Caught: # TB_TOP FAIL T8 skew=5 clk2out=0 bypass mismatch Frame A: exp 5678, got left=2b3c right=2b3c)
+
+MUTANT M2: Core Freeze Ignored (.freeze tied to 1'b0 in wrapper)
+Target: Proves top testbench catches unconnected/ignored freeze switch SW[1]
+Files: tb/mutants/anc_de2_115_top_m2.v
+Command:
+  vlib build/work_m2
+  C:\altera_lite\25.1std\questa_fse\win64\vlog.exe -work build/work_m2 -sv rtl/anc_core.v quartus/wm8731_i2c_init.v quartus/i2s_transceiver.v tb/mutants/anc_de2_115_top_m2.v tb/codec_model.v tb/tb_top.v
+  C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_m2 tb_top +test=T4 -do run -all; quit -f
+Raw Output:
+  Reading pref.tcl
+  
+  # 2025.2
+  
+  # ** Note: (vsim-220) 'C:/altera_lite/25.1std/questa_fse/win64/../modelsim.ini' is used as the ini file.
+  # vsim -c -work build/work_m2 tb_top "+test=T4" -do "run -all; quit -f" 
+  # Start time: 23:48:24 on Oct 20,2026
+  # ** Note: (vsim-3812) Design is being optimized...
+  # ** Note: (vopt-220) 'C:/altera_lite/25.1std/questa_fse/win64/../modelsim.ini' is used as the ini file.
+  # //  Questa Altera Starter FPGA Edition-64
+  # //  Version 2025.2 win64 May 31 2025
+  # //
+  # // Unpublished work. Copyright 2025 Siemens
+  # //
+  # // This material contains trade secrets or otherwise confidential information
+  # // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+  # // "SISW"), or its licensors. Access to and use of this information is strictly
+  # // limited as set forth in the Customer's applicable agreements with SISW.
+  # //
+  # // This material may not be copied, distributed, or otherwise disclosed outside
+  # // of the Customer's facilities without the express written permission of SISW,
+  # // and may not be used in any way not expressly authorized by SISW.
+  # //
+  # Loading sv_std.std
+  # Loading work.tb_top(fast)
+  # run -all
+  # ================================================================================
+  # [TB_TOP] Starting DE2-115 Top-Level Verification: test=T4
+  # ================================================================================
+  # [TB_TOP] Running T4: Filter Adaptation Freeze Mode...
+  # TB_TOP FAIL T4 sample 13 mismatch: exp f630, got left=f640 right=f640
+  # ** Note: $finish    : tb/tb_top.v(408)
+  #    Time: 8412810 ns  Iteration: 2  Instance: /tb_top
+  # End time: 23:48:28 on Oct 20,2026, Elapsed time: 0:00:04
+  # Errors: 0, Warnings: 0
+Result: FAIL (Caught: # TB_TOP FAIL T4 sample 13 mismatch: exp f630, got left=f640 right=f640)
+
+MUTANT M3: Bypass Mux Inverted (SW[0]=1 ANC, SW[0]=0 Bypass)
+Target: Proves testbench catches inverted or swapped audio bypass switch logic
+Files: tb/mutants/anc_de2_115_top_m3.v
+Command:
+  vlib build/work_m3
+  C:\altera_lite\25.1std\questa_fse\win64\vlog.exe -work build/work_m3 -sv rtl/anc_core.v quartus/wm8731_i2c_init.v quartus/i2s_transceiver.v tb/mutants/anc_de2_115_top_m3.v tb/codec_model.v tb/tb_top.v
+  C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_m3 tb_top +test=T2 -do run -all; quit -f
+Raw Output:
+  Reading pref.tcl
+  
+  # 2025.2
+  
+  # ** Note: (vsim-220) 'C:/altera_lite/25.1std/questa_fse/win64/../modelsim.ini' is used as the ini file.
+  # vsim -c -work build/work_m3 tb_top "+test=T2" -do "run -all; quit -f" 
+  # Start time: 23:48:31 on Oct 20,2026
+  # ** Note: (vsim-3812) Design is being optimized...
+  # ** Note: (vopt-220) 'C:/altera_lite/25.1std/questa_fse/win64/../modelsim.ini' is used as the ini file.
+  # //  Questa Altera Starter FPGA Edition-64
+  # //  Version 2025.2 win64 May 31 2025
+  # //
+  # // Unpublished work. Copyright 2025 Siemens
+  # //
+  # // This material contains trade secrets or otherwise confidential information
+  # // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+  # // "SISW"), or its licensors. Access to and use of this information is strictly
+  # // limited as set forth in the Customer's applicable agreements with SISW.
+  # //
+  # // This material may not be copied, distributed, or otherwise disclosed outside
+  # // of the Customer's facilities without the express written permission of SISW,
+  # // and may not be used in any way not expressly authorized by SISW.
+  # //
+  # Loading sv_std.std
+  # Loading work.tb_top(fast)
+  # run -all
+  # ================================================================================
+  # [TB_TOP] Starting DE2-115 Top-Level Verification: test=T2
+  # ================================================================================
+  # [TB_TOP] Running T2: Audio Bypass Mode Passthrough...
+  # TB_TOP FAIL T2 frame 1 mismatch: exp 2345, got left=2310 right=2310
+  # ** Note: $finish    : tb/tb_top.v(289)
+  #    Time: 8167050 ns  Iteration: 2  Instance: /tb_top
+  # End time: 23:48:35 on Oct 20,2026, Elapsed time: 0:00:04
+  # Errors: 0, Warnings: 0
+Result: FAIL (Caught: # TB_TOP FAIL T2 frame 1 mismatch: exp 2345, got left=2310 right=2310)
+
+MUTANT M4: I2S TX Offset by One Extra BCLK
+Target: Proves testbench detects framing bit shifts on serial DACDAT stream
+Files: tb/mutants/i2s_transceiver_m4.v
+Command:
+  vlib build/work_m4
+  C:\altera_lite\25.1std\questa_fse\win64\vlog.exe -work build/work_m4 -sv rtl/anc_core.v quartus/wm8731_i2c_init.v tb/mutants/i2s_transceiver_m4.v quartus/anc_de2_115_top.v tb/codec_model.v tb/tb_top.v
+  C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_m4 tb_top +test=T2 -do run -all; quit -f
+Raw Output:
+  Reading pref.tcl
+  
+  # 2025.2
+  
+  # ** Note: (vsim-220) 'C:/altera_lite/25.1std/questa_fse/win64/../modelsim.ini' is used as the ini file.
+  # vsim -c -work build/work_m4 tb_top "+test=T2" -do "run -all; quit -f" 
+  # Start time: 23:48:37 on Oct 20,2026
+  # ** Note: (vsim-3812) Design is being optimized...
+  # ** Note: (vopt-220) 'C:/altera_lite/25.1std/questa_fse/win64/../modelsim.ini' is used as the ini file.
+  # //  Questa Altera Starter FPGA Edition-64
+  # //  Version 2025.2 win64 May 31 2025
+  # //
+  # // Unpublished work. Copyright 2025 Siemens
+  # //
+  # // This material contains trade secrets or otherwise confidential information
+  # // owned by Siemens Industry Software Inc. or its affiliates (collectively,
+  # // "SISW"), or its licensors. Access to and use of this information is strictly
+  # // limited as set forth in the Customer's applicable agreements with SISW.
+  # //
+  # // This material may not be copied, distributed, or otherwise disclosed outside
+  # // of the Customer's facilities without the express written permission of SISW,
+  # // and may not be used in any way not expressly authorized by SISW.
+  # //
+  # Loading sv_std.std
+  # Loading work.tb_top(fast)
+  # run -all
+  # ================================================================================
+  # [TB_TOP] Starting DE2-115 Top-Level Verification: test=T2
+  # ================================================================================
+  # [TB_TOP] Running T2: Audio Bypass Mode Passthrough...
+  # TB_TOP FAIL T2 frame 0 mismatch: exp 2000, got left=1000 right=1000
+  # ** Note: $finish    : tb/tb_top.v(289)
+  #    Time: 8146570 ns  Iteration: 2  Instance: /tb_top
+  # End time: 23:48:41 on Oct 20,2026, Elapsed time: 0:00:04
+  # Errors: 0, Warnings: 0
+Result: FAIL (Caught: # TB_TOP FAIL T2 frame 0 mismatch: exp 2000, got left=1000 right=1000)
+
+================================================================================
+SUMMARY: 4/4 MUTANTS FAILED AS EXPECTED
+================================================================================

@@ -1,0 +1,70 @@
+============================================================
+Mutant: real_core
+============================================================
+COMPILE CMD: C:\altera_lite\25.1std\questa_fse\win64\vlog.exe -work build/work_hold_real_core -sv rtl/anc_core.v tb/tb_anc_core_freeze_hold.v
+COMPILE RC: 0
+RUN CMD: C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_hold_real_core tb_anc_core_freeze_hold -gW=12 -gL=32 -gALGO=2 -gMU_INT=512 -gK=3 -gACC_W=29 -gEPS_EXP=2 +vec=vectors/rtl/shift_W12_freeze_hold -do run -all; quit -f
+TB_RESULT: # TB_RESULT PASS vec=vectors/rtl/shift_W12_freeze_hold ALGO=2 W=12 L=32 samples=200 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+
+RUN CMD: C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_hold_real_core tb_anc_core_freeze_hold -gW=12 -gL=32 -gALGO=0 -gMU_INT=512 -gK=4 -gACC_W=29 -gEPS_EXP=10 +vec=vectors/rtl/lms_W12_freeze_hold -do run -all; quit -f
+TB_RESULT: # TB_RESULT PASS vec=vectors/rtl/lms_W12_freeze_hold ALGO=0 W=12 L=32 samples=200 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=73
+
+RUN CMD: C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_hold_real_core tb_anc_core_freeze_hold -gW=12 -gL=32 -gALGO=1 -gMU_INT=51 -gK=4 -gACC_W=29 -gEPS_EXP=10 +vec=vectors/rtl/nlms_W12_freeze_hold -do run -all; quit -f
+TB_RESULT: # TB_RESULT PASS vec=vectors/rtl/nlms_W12_freeze_hold ALGO=1 W=12 L=32 samples=200 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=127
+
+============================================================
+Mutant: M-ignore
+============================================================
+COMPILE CMD: C:\altera_lite\25.1std\questa_fse\win64\vlog.exe -work build/work_hold_M_ignore -sv build/mutants/anc_core_m_ignore.v tb/tb_anc_core_freeze_hold.v
+COMPILE RC: 0
+RUN CMD: C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_hold_M_ignore tb_anc_core_freeze_hold -gW=12 -gL=32 -gALGO=2 -gMU_INT=512 -gK=3 -gACC_W=29 -gEPS_EXP=2 +vec=vectors/rtl/shift_W12_freeze_hold -do run -all; quit -f
+TB_RESULT: # TB_RESULT FAIL vec=vectors/rtl/shift_W12_freeze_hold ALGO=2 W=12 L=32 samples=200 y_bad=65 e_bad=65 w_bad=31 lat_bad=0 cnt_bad=0 n_out=200 flags_ok=1
+
+RUN CMD: C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_hold_M_ignore tb_anc_core_freeze_hold -gW=12 -gL=32 -gALGO=0 -gMU_INT=512 -gK=4 -gACC_W=29 -gEPS_EXP=10 +vec=vectors/rtl/lms_W12_freeze_hold -do run -all; quit -f
+TB_RESULT: # TB_RESULT FAIL vec=vectors/rtl/lms_W12_freeze_hold ALGO=0 W=12 L=32 samples=200 y_bad=102 e_bad=102 w_bad=31 lat_bad=0 cnt_bad=0 n_out=200 flags_ok=1
+
+RUN CMD: C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_hold_M_ignore tb_anc_core_freeze_hold -gW=12 -gL=32 -gALGO=1 -gMU_INT=51 -gK=4 -gACC_W=29 -gEPS_EXP=10 +vec=vectors/rtl/nlms_W12_freeze_hold -do run -all; quit -f
+TB_RESULT: # TB_RESULT FAIL vec=vectors/rtl/nlms_W12_freeze_hold ALGO=1 W=12 L=32 samples=200 y_bad=184 e_bad=184 w_bad=32 lat_bad=0 cnt_bad=0 n_out=200 flags_ok=1
+
+============================================================
+Mutant: M-live
+============================================================
+COMPILE CMD: C:\altera_lite\25.1std\questa_fse\win64\vlog.exe -work build/work_hold_M_live -sv build/mutants/anc_core_m_live.v tb/tb_anc_core_freeze_hold.v
+COMPILE RC: 0
+RUN CMD: C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_hold_M_live tb_anc_core_freeze_hold -gW=12 -gL=32 -gALGO=2 -gMU_INT=512 -gK=3 -gACC_W=29 -gEPS_EXP=2 +vec=vectors/rtl/shift_W12_freeze_hold -do run -all; quit -f
+TB_RESULT: # TB_RESULT FAIL vec=vectors/rtl/shift_W12_freeze_hold ALGO=2 W=12 L=32 samples=200 y_bad=19 e_bad=19 w_bad=27 lat_bad=0 cnt_bad=0 n_out=200 flags_ok=1
+
+RUN CMD: C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_hold_M_live tb_anc_core_freeze_hold -gW=12 -gL=32 -gALGO=0 -gMU_INT=512 -gK=4 -gACC_W=29 -gEPS_EXP=10 +vec=vectors/rtl/lms_W12_freeze_hold -do run -all; quit -f
+TB_RESULT: # TB_RESULT FAIL vec=vectors/rtl/lms_W12_freeze_hold ALGO=0 W=12 L=32 samples=200 y_bad=29 e_bad=29 w_bad=30 lat_bad=0 cnt_bad=0 n_out=200 flags_ok=1
+
+RUN CMD: C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_hold_M_live tb_anc_core_freeze_hold -gW=12 -gL=32 -gALGO=1 -gMU_INT=51 -gK=4 -gACC_W=29 -gEPS_EXP=10 +vec=vectors/rtl/nlms_W12_freeze_hold -do run -all; quit -f
+TB_RESULT: # TB_RESULT FAIL vec=vectors/rtl/nlms_W12_freeze_hold ALGO=1 W=12 L=32 samples=200 y_bad=179 e_bad=179 w_bad=31 lat_bad=0 cnt_bad=0 n_out=200 flags_ok=1
+
+============================================================
+Mutant: M-late
+============================================================
+COMPILE CMD: C:\altera_lite\25.1std\questa_fse\win64\vlog.exe -work build/work_hold_M_late -sv build/mutants/anc_core_m_late.v tb/tb_anc_core_freeze_hold.v
+COMPILE RC: 0
+RUN CMD: C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_hold_M_late tb_anc_core_freeze_hold -gW=12 -gL=32 -gALGO=2 -gMU_INT=512 -gK=3 -gACC_W=29 -gEPS_EXP=2 +vec=vectors/rtl/shift_W12_freeze_hold -do run -all; quit -f
+TB_RESULT: # TB_RESULT FAIL vec=vectors/rtl/shift_W12_freeze_hold ALGO=2 W=12 L=32 samples=200 y_bad=43 e_bad=43 w_bad=30 lat_bad=0 cnt_bad=0 n_out=200 flags_ok=1
+
+RUN CMD: C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_hold_M_late tb_anc_core_freeze_hold -gW=12 -gL=32 -gALGO=0 -gMU_INT=512 -gK=4 -gACC_W=29 -gEPS_EXP=10 +vec=vectors/rtl/lms_W12_freeze_hold -do run -all; quit -f
+TB_RESULT: # TB_RESULT FAIL vec=vectors/rtl/lms_W12_freeze_hold ALGO=0 W=12 L=32 samples=200 y_bad=63 e_bad=63 w_bad=30 lat_bad=0 cnt_bad=0 n_out=200 flags_ok=1
+
+RUN CMD: C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_hold_M_late tb_anc_core_freeze_hold -gW=12 -gL=32 -gALGO=1 -gMU_INT=51 -gK=4 -gACC_W=29 -gEPS_EXP=10 +vec=vectors/rtl/nlms_W12_freeze_hold -do run -all; quit -f
+TB_RESULT: # TB_RESULT FAIL vec=vectors/rtl/nlms_W12_freeze_hold ALGO=1 W=12 L=32 samples=200 y_bad=183 e_bad=183 w_bad=32 lat_bad=0 cnt_bad=0 n_out=200 flags_ok=1
+
+============================================================
+Mutant: M-flag
+============================================================
+COMPILE CMD: C:\altera_lite\25.1std\questa_fse\win64\vlog.exe -work build/work_hold_M_flag -sv build/mutants/anc_core_m_flag.v tb/tb_anc_core_freeze_hold.v
+COMPILE RC: 0
+RUN CMD: C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_hold_M_flag tb_anc_core_freeze_hold -gW=12 -gL=32 -gALGO=2 -gMU_INT=512 -gK=3 -gACC_W=29 -gEPS_EXP=2 +vec=vectors/rtl/shift_W12_freeze_hold -do run -all; quit -f
+TB_RESULT: # TB_RESULT PASS vec=vectors/rtl/shift_W12_freeze_hold ALGO=2 W=12 L=32 samples=200 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=72
+
+RUN CMD: C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_hold_M_flag tb_anc_core_freeze_hold -gW=12 -gL=32 -gALGO=0 -gMU_INT=512 -gK=4 -gACC_W=29 -gEPS_EXP=10 +vec=vectors/rtl/lms_W12_freeze_hold -do run -all; quit -f
+TB_RESULT: # TB_RESULT PASS vec=vectors/rtl/lms_W12_freeze_hold ALGO=0 W=12 L=32 samples=200 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=35 busy_cycles=73
+
+RUN CMD: C:\altera_lite\25.1std\questa_fse\win64\vsim.exe -c -work build/work_hold_M_flag tb_anc_core_freeze_hold -gW=12 -gL=32 -gALGO=1 -gMU_INT=51 -gK=4 -gACC_W=29 -gEPS_EXP=10 +vec=vectors/rtl/nlms_W12_freeze_hold -do run -all; quit -f
+TB_RESULT: # TB_RESULT PASS vec=vectors/rtl/nlms_W12_freeze_hold ALGO=1 W=12 L=32 samples=200 y_bad=0 e_bad=0 w_bad=0 flags=000000 lat=37 busy_cycles=127
+

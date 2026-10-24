@@ -1,0 +1,213 @@
+================================================================================
+QUARTUS PRIME LITE 25.1 COMPILATION AND TIMING ANALYSIS LOG
+================================================================================
+
+TIMING SUMMARY (Slow 1200mV 0C and 85C):
+------------------------------------------------------------
+Timing Analyzer Summary
+------------------------------------------------------------
+
+Type  : Slow 1200mV 85C Model Setup 'CLOCK_50'
+Slack : 3.432
+TNS   : 0.000
+
+Type  : Slow 1200mV 85C Model Hold 'CLOCK_50'
+Slack : 0.402
+TNS   : 0.000
+
+Type  : Slow 1200mV 85C Model Recovery 'CLOCK_50'
+Slack : 13.200
+TNS   : 0.000
+
+Type  : Slow 1200mV 85C Model Removal 'CLOCK_50'
+Slack : 6.040
+TNS   : 0.000
+
+Type  : Slow 1200mV 85C Model Minimum Pulse Width 'CLOCK_50'
+Slack : 9.419
+TNS   : 0.000
+
+Type  : Slow 1200mV 85C Model Minimum Pulse Width 'AUD_BCLK'
+Slack : 316.000
+TNS   : 0.000
+
+Type  : Slow 1200mV 0C Model Setup 'CLOCK_50'
+Slack : 4.858
+TNS   : 0.000
+
+Type  : Slow 1200mV 0C Model Hold 'CLOCK_50'
+Slack : 0.353
+TNS   : 0.000
+
+Type  : Slow 1200mV 0C Model Recovery 'CLOCK_50'
+Slack : 13.756
+TNS   : 0.000
+
+Type  : Slow 1200mV 0C Model Removal 'CLOCK_50'
+Slack : 5.413
+TNS   : 0.000
+
+Type  : Slow 1200mV 0C Model Minimum Pulse Width 'CLOCK_50'
+Slack : 9.444
+TNS   : 0.000
+
+Type  : Slow 1200mV 0C Model Minimum Pulse Width 'AUD_BCLK'
+Slack : 316.000
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Setup 'CLOCK_50'
+Slack : 11.544
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Hold 'CLOCK_50'
+Slack : 0.181
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Recovery 'CLOCK_50'
+Slack : 16.267
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Removal 'CLOCK_50'
+Slack : 3.089
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Minimum Pulse Width 'CLOCK_50'
+Slack : 9.242
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Minimum Pulse Width 'AUD_BCLK'
+Slack : 316.000
+TNS   : 0.000
+
+------------------------------------------------------------
+
+
+================================================================================
+FLOW REPORT:
+================================================================================
+
+Flow report for anc_de2_115
+Tue Oct 20 21:52:16 2026
+Quartus Prime Version 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
+
+
+---------------------
+; Table of Contents ;
+---------------------
+  1. Legal Notice
+  2. Flow Summary
+  3. Flow Settings
+  4. Flow Non-Default Global Settings
+  5. Flow Elapsed Time
+  6. Flow OS Summary
+  7. Flow Log
+  8. Flow Messages
+  9. Flow Suppressed Messages
+
+
+
+----------------
+; Legal Notice ;
+----------------
+Copyright (C) 2025  Altera Corporation. All rights reserved.
+Your use of Altera Corporation's design tools, logic functions 
+and other software and tools, and any partner logic 
+functions, and any output files from any of the foregoing 
+(including device programming or simulation files), and any 
+associated documentation or information are expressly subject 
+to the terms and conditions of the Altera Program License 
+Subscription Agreement, the Altera Quartus Prime License Agreement,
+the Altera IP License Agreement, or other applicable license
+agreement, including, without limitation, that your use is for
+the sole purpose of programming logic devices manufactured by
+Altera and sold by Altera or its authorized distributors.  Please
+refer to the Altera Software License Subscription Agreements 
+on the Quartus Prime software download page.
+
+
+
++--------------------------------------------------------------------------------------+
+; Flow Summary                                                                         ;
++------------------------------------+-------------------------------------------------+
+; Flow Status                        ; Successful - Tue Oct 20 21:52:10 2026           ;
+; Quartus Prime Version              ; 25.1std.0 Build 1129 10/21/2025 SC Lite Edition ;
+; Revision Name                      ; anc_de2_115                                     ;
+; Top-level Entity Name              ; anc_de2_115_top                                 ;
+; Family                             ; Cyclone IV E                                    ;
+; Device                             ; EP4CE115F29C7                                   ;
+; Timing Models                      ; Final                                           ;
+; Total logic elements               ; 2,627 / 114,480 ( 2 % )                         ;
+;     Total combinational functions  ; 2,421 / 114,480 ( 2 % )                         ;
+;     Dedicated logic registers      ; 1,182 / 114,480 ( 1 % )                         ;
+; Total registers                    ; 1182                                            ;
+; Total pins                         ; 27 / 529 ( 5 % )                                ;
+; Total virtual pins                 ; 0                                               ;
+; Total memory bits                  ; 0 / 3,981,312 ( 0 % )                           ;
+; Embedded Multiplier 9-bit elements ; 4 / 532 ( < 1 % )                               ;
+; Total PLLs                         ; 0 / 4 ( 0 % )                                   ;
++------------------------------------+-------------------------------------------------+
+
+
++-----------------------------------------+
+; Flow Settings                           ;
++-------------------+---------------------+
+; Option            ; Setting             ;
++-------------------+---------------------+
+; Start date & time ; 10/20/2026 21:51:00 ;
+; Main task         ; Compilation         ;
+; Revision Name     ; anc_de2_115         ;
++-------------------+---------------------+
+
+
++-----------------------------------------------------------------------------------------------------------------------------+
+; Flow Non-Default Global Settings                                                                                            ;
++-------------------------------------+----------------------------------------+---------------+-----------------+------------+
+; Assignment Name                     ; Value                                  ; Default Value ; Entity Name     ; Section Id ;
++-------------------------------------+----------------------------------------+---------------+-----------------+------------+
+; COMPILER_SIGNATURE_ID               ; 1098046895347.179251325934732          ; --            ; --              ; --         ;
+; MAX_CORE_JUNCTION_TEMP              ; 85                                     ; --            ; --              ; --         ;
+; MIN_CORE_JUNCTION_TEMP              ; 0                                      ; --            ; --              ; --         ;
+; PARTITION_COLOR                     ; -- (Not supported for targeted family) ; --            ; anc_de2_115_top ; Top        ;
+; PARTITION_FITTER_PRESERVATION_LEVEL ; -- (Not supported for targeted family) ; --            ; anc_de2_115_top ; Top        ;
+; PARTITION_NETLIST_TYPE              ; -- (Not supported for targeted family) ; --            ; anc_de2_115_top ; Top        ;
+; POWER_BOARD_THERMAL_MODEL           ; None (CONSERVATIVE)                    ; --            ; --              ; --         ;
+; POWER_PRESET_COOLING_SOLUTION       ; 23 MM HEAT SINK WITH 200 LFPM AIRFLOW  ; --            ; --              ; --         ;
+; TOP_LEVEL_ENTITY                    ; anc_de2_115_top                        ; anc_de2_115   ; --              ; --         ;
++-------------------------------------+----------------------------------------+---------------+-----------------+------------+
+
+
++--------------------------------------------------------------------------------------------------------------------------+
+; Flow Elapsed Time                                                                                                        ;
++----------------------+--------------+-------------------------+---------------------+------------------------------------+
+; Module Name          ; Elapsed Time ; Average Processors Used ; Peak Virtual Memory ; Total CPU Time (on all processors) ;
++----------------------+--------------+-------------------------+---------------------+------------------------------------+
+; Analysis & Synthesis ; 00:00:37     ; 1.0                     ; 4909 MB             ; 00:00:40                           ;
+; Fitter               ; 00:00:26     ; 1.2                     ; 6861 MB             ; 00:00:42                           ;
+; Assembler            ; 00:00:04     ; 1.0                     ; 5003 MB             ; 00:00:04                           ;
+; Timing Analyzer      ; 00:00:05     ; 1.5                     ; 5066 MB             ; 00:00:04                           ;
+; Total                ; 00:01:12     ; --                      ; --                  ; 00:01:30                           ;
++----------------------+--------------+-------------------------+---------------------+------------------------------------+
+
+
++------------------------------------------------------------------------------------+
+; Flow OS Summary                                                                    ;
++----------------------+------------------+------------+------------+----------------+
+; Module Name          ; Machine Hostname ; OS Name    ; OS Version ; Processor type ;
++----------------------+------------------+------------+------------+----------------+
+; Analysis & Synthesis ; sug              ; Windows 10 ; 10.0       ; x86_64         ;
+; Fitter               ; sug              ; Windows 10 ; 10.0       ; x86_64         ;
+; Assembler            ; sug              ; Windows 10 ; 10.0       ; x86_64         ;
+; Timing Analyzer      ; sug              ; Windows 10 ; 10.0       ; x86_64         ;
++----------------------+------------------+------------+------------+----------------+
+
+
+------------
+; Flow Log ;
+------------
+quartus_map --read_settings_files=on --write_settings_files=off anc_de2_115 -c anc_de2_115
+quartus_fit --read_settings_files=on --write_settings_files=off anc_de2_115 -c anc_de2_115
+quartus_asm --read_settings_files=on --write_settings_files=off anc_de2_115 -c anc_de2_115
+quartus_sta anc_de2_115 -c anc_de2_115
+
+
+

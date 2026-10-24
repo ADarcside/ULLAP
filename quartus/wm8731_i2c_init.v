@@ -10,8 +10,8 @@ module wm8731_i2c_init (
     input  wire rst_n,       // Active-low synchronous reset
     output reg  i2c_sclk,    // I2C clock output to codec
     inout  wire i2c_sdat,    // I2C bidirectional open-drain data
-    output reg  init_done,   // High when all 11 registers successfully configured
-    output reg  init_error   // High if any transfer NACK received
+    output reg  init_done,   // High only if all 11 registers ACKed; remains 0 on any NACK
+    output reg  init_error   // High (sticky) if any transfer NACK received; suppresses init_done
 );
 
     // -------------------------------------------------------------------------
@@ -20,28 +20,32 @@ module wm8731_i2c_init (
     localparam NUM_REGS = 11;
     reg [15:0] config_rom [0:NUM_REGS-1];
 
+    // Note on datasheet verification:
+    // WM8731 datasheet is inaccessible in this environment.
+    // All register values and delay requirements below are UNVERIFIED against official datasheet.
+    // Any required post-reset settling delay after R15 reset write is UNVERIFIED.
     initial begin
-        // R15: Reset Codec
+        // R15: Reset Codec [UNVERIFIED: datasheet inaccessible; post-reset delay unverified]
         config_rom[0]  = {7'h0F, 9'b0_0000_0000};
-        // R6: Power Down Control (Power up all blocks: Line In, Mic, ADC, DAC, OSC, OUT)
+        // R6: Power Down Control [UNVERIFIED: power up all blocks]
         config_rom[1]  = {7'h06, 9'b0_0000_0000};
-        // R0: Left Line In (Unmute, 0 dB default gain)
+        // R0: Left Line In [UNVERIFIED: unmute, 0 dB default gain]
         config_rom[2]  = {7'h00, 9'b0_0001_0111};
-        // R1: Right Line In (Unmute, 0 dB default gain)
+        // R1: Right Line In [UNVERIFIED: unmute, 0 dB default gain]
         config_rom[3]  = {7'h01, 9'b0_0001_0111};
-        // R2: Left Headphone Out (0 dB volume, zero-cross detect)
+        // R2: Left Headphone Out [UNVERIFIED: 0 dB volume; zero-cross detect disabled (bit 7 = 0)]
         config_rom[4]  = {7'h02, 9'b0_0111_1001};
-        // R3: Right Headphone Out (0 dB volume, zero-cross detect)
+        // R3: Right Headphone Out [UNVERIFIED: 0 dB volume; zero-cross detect disabled (bit 7 = 0)]
         config_rom[5]  = {7'h03, 9'b0_0111_1001};
-        // R4: Analogue Audio Path (DAC select, mic mute, bypass disable)
+        // R4: Analogue Audio Path [UNVERIFIED: DAC select, mic mute, bypass disable]
         config_rom[6]  = {7'h04, 9'b0_0001_0010};
-        // R5: Digital Audio Path (De-emphasis off, HPF enable)
+        // R5: Digital Audio Path [UNVERIFIED: de-emphasis off, HPF enable]
         config_rom[7]  = {7'h05, 9'b0_0000_0000};
-        // R7: Digital Audio Format: I2S format, 16-bit, Master mode (codec drives BCLK/LRCK)
+        // R7: Digital Audio Format [UNVERIFIED: I2S format, 16-bit, Master mode]
         config_rom[8]  = {7'h07, 9'b0_0100_0010};
-        // R8: Sampling Rate Control: Normal mode, 256fs (48 kHz / 8 kHz)
+        // R8: Sampling Rate Control [UNVERIFIED: Normal mode, base oversampling 256fs; comment '48 kHz / 8 kHz' removed]
         config_rom[9]  = {7'h08, 9'b0_0000_0000};
-        // R9: Active Control: Activate digital core
+        // R9: Active Control [UNVERIFIED: activate digital core]
         config_rom[10] = {7'h09, 9'b0_0000_0001};
     end
 
@@ -114,8 +118,10 @@ module wm8731_i2c_init (
                         state <= S_START;
                         phase <= 2'd0;
                     end else begin
-                        init_done <= 1'b1;
-                        state     <= S_DONE;
+                        // init_done asserted ONLY if all 11 writes were ACKed (no error)
+                        if (!init_error)
+                            init_done <= 1'b1;
+                        state <= S_DONE;
                     end
                 end
 
@@ -208,7 +214,8 @@ module wm8731_i2c_init (
                 S_DONE: begin
                     sdat_out  <= 1'b1;
                     i2c_sclk  <= 1'b1;
-                    init_done <= 1'b1;
+                    if (!init_error)
+                        init_done <= 1'b1;
                 end
             endcase
         end

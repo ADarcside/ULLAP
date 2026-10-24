@@ -1,0 +1,16 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.5, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\work\ULLAP
+configfile: pyproject.toml
+testpaths: py
+plugins: anyio-4.13.0
+collected 37 items
+
+py\test_anc.py .........                                                 [ 24%]
+py\test_extended_verification.py .                                       [ 27%]
+py\test_freeze.py .....                                                  [ 40%]
+py\test_rtl_model.py ........                                            [ 62%]
+py\test_run_questa_regression.py .....                                   [ 75%]
+py\test_sta_parser.py .........                                          [100%]
+
+============================= 37 passed in 14.15s =============================

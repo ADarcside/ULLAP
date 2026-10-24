@@ -70,7 +70,7 @@ def setup_library():
         if rc != 0:
             raise RuntimeError(f"vlib failed: {out}")
     # Compile RTL and testbenches
-    rc, out = run_cmd([VLOG, "-work", WORK_DIR, "rtl/anc_core.v", "tb/tb_anc_core.v", "tb/tb_anc_protocol.v"])
+    rc, out = run_cmd([VLOG, "-work", WORK_DIR, "rtl/anc_core.v", "tb/tb_anc_core.v", "tb/tb_anc_protocol.v", "quartus/wm8731_i2c_init.v", "quartus/i2s_transceiver.v", "quartus/anc_de2_115_top.v", "tb/codec_model.v", "tb/tb_top.v", "tb/tb_anc_core_freeze_hold.v"])
     if rc != 0:
         raise RuntimeError(f"vlog failed: {out}")
     print("[Questa] RTL and testbenches compiled successfully.")
@@ -78,7 +78,8 @@ def setup_library():
 
 def run_manifest_tests(filter_str=""):
     manifest_path = os.path.join(ROOT, "tb", "manifest.txt")
-    lines = [l.strip().split() for l in open(manifest_path) if l.strip() and not l.startswith("#")]
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        lines = [l.strip().split() for l in f if l.strip() and not l.startswith("#")]
     results = []
 
     print(f"[Questa] Running {len(lines)} manifest regression configurations...", flush=True)
@@ -145,14 +146,91 @@ def run_protocol_tests():
 
 
 
+def run_hold_tests(filter_str=""):
+    print("[Questa] Running freeze hold / toggle variant tests...", flush=True)
+    manifest_hold_path = os.path.join(ROOT, "tb", "manifest_hold.txt")
+    if not os.path.isfile(manifest_hold_path):
+        return []
+    with open(manifest_hold_path, "r", encoding="utf-8") as f:
+        lines = [l.strip().split() for l in f if l.strip() and not l.startswith("#")]
+    results = []
+    for item in lines:
+        name, algo, W, L, MU_INT, K, ACC_W, prefix, nsamples = item[:9]
+        EPS_EXP = item[9] if len(item) > 9 else "10"
+        if filter_str and filter_str not in name:
+            continue
+        cmd = [
+            VSIM, "-c", "-work", WORK_DIR, "tb_anc_core_freeze_hold",
+            f"-gW={W}", f"-gL={L}", f"-gALGO={algo}", f"-gMU_INT={MU_INT}",
+            f"-gK={K}", f"-gACC_W={ACC_W}", f"-gEPS_EXP={EPS_EXP}",
+            f"+vec={prefix}",
+            "-do", "run -all; quit -f"
+        ]
+        rc, out = run_cmd(cmd)
+        passed = is_pass(rc, out, "TB_RESULT")
+        res_line = [l for l in out.splitlines() if "TB_RESULT" in l]
+        detail = res_line[0] if res_line else ("FAIL (no result line)" if rc != 0 else "UNKNOWN")
+        results.append({
+            "name": name,
+            "passed": passed,
+            "detail": detail
+        })
+        status_str = "PASS" if passed else "FAIL"
+        print(f"  [{status_str}] {name:35s}: {detail}", flush=True)
+    return results
+
+
+def run_top_tests(filter_str=""):
+    print("[Questa] Running top-level DE2-115 verification tests...", flush=True)
+    top_scenarios = [
+        ("top_T1_i2c", "T1"),
+        ("top_T1b_nack", "T1b"),
+        ("top_T2_bypass", "T2"),
+        ("top_T3_anc", "T3"),
+        ("top_T4_freeze", "T4"),
+        ("top_T5_reset", "T5"),
+        ("top_T6_flags", "T6"),
+        ("top_T7_clock", "T7"),
+        ("top_T8_skew", "T8"),
+    ]
+    results = []
+    for name, test_arg in top_scenarios:
+        if filter_str and filter_str not in name:
+            continue
+        cmd = [
+            VSIM, "-c", "-work", WORK_DIR, "tb_top",
+            f"+test={test_arg}",
+            "-do", "run -all; quit -f"
+        ]
+        rc, out = run_cmd(cmd)
+        passed = is_pass(rc, out, "TB_TOP")
+        res_line = [l for l in out.splitlines() if "TB_TOP" in l]
+        detail = res_line[-1] if res_line else ("FAIL (no result line)" if rc != 0 else "UNKNOWN")
+        if rc != 0 and res_line:
+            detail += f" [simulator exit code {rc}]"
+        results.append({
+            "name": name,
+            "passed": passed,
+            "detail": detail
+        })
+        status_str = "PASS" if passed else "FAIL"
+        print(f"  [{status_str}] {name:35s}: {detail}", flush=True)
+    return results
+
+
 def main():
     t_start = time.time()
     setup_library()
     manifest_results = run_manifest_tests()
     proto_results = run_protocol_tests()
+    hold_results = run_hold_tests()
+    top_results = run_top_tests()
 
-    total = len(manifest_results) + len(proto_results)
-    passed = sum(1 for r in manifest_results if r["passed"]) + sum(1 for r in proto_results if r["passed"])
+    total = len(manifest_results) + len(proto_results) + len(hold_results) + len(top_results)
+    passed = (sum(1 for r in manifest_results if r["passed"])
+              + sum(1 for r in proto_results if r["passed"])
+              + sum(1 for r in hold_results if r["passed"])
+              + sum(1 for r in top_results if r["passed"]))
 
     os.makedirs(os.path.dirname(OUT_LOG), exist_ok=True)
     with open(OUT_LOG, "w") as f:
@@ -168,6 +246,12 @@ def main():
             f.write(f"{r['name']:35s} | {'PASS' if r['passed'] else 'FAIL'} | {r['detail']}\n")
         f.write("\nPROTOCOL TESTS:\n")
         for r in proto_results:
+            f.write(f"{r['name']:35s} | {'PASS' if r['passed'] else 'FAIL'} | {r['detail']}\n")
+        f.write("\nHOLD / TOGGLE VARIANT TESTS:\n")
+        for r in hold_results:
+            f.write(f"{r['name']:35s} | {'PASS' if r['passed'] else 'FAIL'} | {r['detail']}\n")
+        f.write("\nTOP-LEVEL TESTS:\n")
+        for r in top_results:
             f.write(f"{r['name']:35s} | {'PASS' if r['passed'] else 'FAIL'} | {r['detail']}\n")
 
     print("=" * 80)
