@@ -36,8 +36,14 @@ algorithm as a contribution. Its defensible contributions are:
 | Jagadeeswari et al. (cut-set retimed NLMS for audio) | Analog Integr. Circ. Sig. Process. 126, 2025/26 | Not described on the page | Xilinx Spartan-6, 74.67 MHz vs 33.37 MHz un-retimed | 55.3% shorter critical path; no board audio test described | Opened ([Springer](https://link.springer.com/article/10.1007/s10470-025-02537-3)) |
 | Fohl, Matthies, Schwarz | DAFx 2009 | LMS (no division) | Spartan-3 XC3S400 + UCB1400 codec | Dummy-head measurements; numbers in full paper | Opened ([DAFx](https://dafx.de/paper-archive/details/CCYighrFAC9mNN7xktMJow)) |
 | Thannoon, Hashim | Eng. Technol. J. 42(2) 2024 | Non-restoring division (RLS, AP) | Spartan-6 xc6slx16 | Systolic LMS/RLS/AP; power reductions 5.9% to 40.5% | Opened ([ETJ](https://etj.uotechnology.edu.iq/journal/vol42/iss2/2/)) |
+| Pathi, Santosh Kumar, Jnaneswari, Leela Krishna, Swamulu (Vishnu Inst. Tech.) | ICICV 2026, pp. 564-569, doi:10.1109/ICICV68925.2026.11554859 | Leading-one detector + priority encoder + barrel shifter, single-cycle shift division | FPGA (device not in abstract) | About 50% fewer LUTs, 30% lower latency than conventional NLMS; convergence barely affected | Abstract only (Crossref, Semantic Scholar); full text paywalled |
+| Karakaya, Aytar | IEEE Access 14, 53860-53872, 2026 (open access) | NLMS and VSLMS, semi-parallel | Xilinx XC7A100T, 16-bit, 300 kHz sonar ping | SNR 8.85 dB in, 29.36 dB (NLMS), 28.57 dB (VSLMS); 2.51% / 2.91% LUTs | Abstract |
+| Meher, Park | IEEE TVLSI 22(2), 362-371, 2014 | LMS (no division): low adaptation delay, bit-level pruning | ASIC/synthesis, N = 8, 16, 32 | About 17% lower ADP and 14% lower EDP than best systolic designs | Abstract |
+| Shi, Shi, Gan | APSIPA ASC 2016 | Systolic FxLMS for feedforward ANC headsets | FPGA | Convergence analysis and simulation; no resource numbers on page | Abstract |
+| Klemd, Klauer, Timmermann, Sachau | FPL 2021, pp. 319-326 | Multi-channel feedback FxLMS | High-end FPGA, 2x2 active headrest, 11x11 benchmark at 40 kHz, 2049 taps | Noise reduction improves with compute; numbers in full paper | Abstract |
+| Park, Park | Electronics 12(11) 2511, 2023 | Fixed filters chosen by a CNN classifier instead of LMS | FPGA (device not on page) | 2.3 dB SNR gain over adaptive LMS, 53% less dynamic power from even-odd buffer (simulation) | Abstract |
 | Rodrigo, Buddhika (base paper) | TIDAC 2024 | LMS | Vivado / MATLAB simulation | No numeric results | Read in full (project file) |
-| Pathi et al. 2026 (ICICV), Ding 1996 patent | as listed in `claims.md` | various | various | not verified | Not found or not opened in this search; read before citing |
+| Ding 1996 patent | as listed in `claims.md` | various | various | not verified | Not found or not opened in this search; read before citing |
 
 ## Comparison against this work (cross-platform, qualitative)
 

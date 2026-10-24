@@ -102,9 +102,22 @@ Jagadeeswari et al.~\cite{jagadeeswari2025} retimed an NLMS audio filter on Spar
 74.67~MHz. Fohl et al.~\cite{fohl2009} built an LMS noise canceller on Spartan-3 with an audio codec
 and measured it with a dummy head. The base work of this project~\cite{rodrigo2024} simulated an LMS
 feedback suppressor in MATLAB and Vivado without numeric results.
-\TBD{Add Pathi et al. 2026 (ICICV) after reading it; Oba et al. is cited from the description in~\cite{huang2026}, read the original if available.}
-None of these works compares LMS, a true divider and a shift normaliser on one core with equal tuning,
-and only Fohl et al. test a complete audio system on a board.
+Pathi et al.~\cite{pathi2026} implemented NLMS on an FPGA with a leading-one detector, priority
+encoder and barrel shifter that performs the division in one cycle, and report about 50\% fewer LUTs
+and 30\% lower latency than a conventional NLMS with little effect on convergence; this is the
+normaliser NLMS-Shift uses, so it is closely related prior work.
+Karakaya and Aytar~\cite{karakaya2026} compared NLMS and variable-step-size LMS on a Xilinx XC7A100T
+with 16-bit arithmetic for underwater ping detection, raising the SNR from 8.85~dB to 29.36~dB (NLMS)
+and 28.57~dB (VSLMS) with under 3\% of the device's LUTs.
+On the architecture side, Meher and Park~\cite{meher2014} reduced the adaptation delay and area of
+fixed-point LMS filters and report about 17\% lower area-delay product for 8 to 32 taps. For acoustic
+noise control, Shi et al.~\cite{shi2016} proposed a systolic FxLMS structure for FPGA headsets,
+Klemd et al.~\cite{klemd2021} a multi-channel feedback FxLMS architecture validated on a 2$\times$2
+active headrest, and Park and Park~\cite{park2023} a low-power FPGA noise canceller that replaces LMS
+by CNN-selected fixed filters.
+\TBD{Pathi et al.~\cite{pathi2026} was read at abstract level only; check its device, word length and taps in the full text before submission. Oba et al. is cited from the description in~\cite{huang2026}.}
+None of these works compares LMS, a true divider and a shift normaliser on one core with equal tuning
+and statistical tests, and few test a complete audio system with a codec on a board.
 Compared with these, ULLAP's contribution is the equal-effort three-way comparison on one core,
 the bit-exact chain to hardware, and the evaluation on real recordings.
 
@@ -318,6 +331,12 @@ by the journal, and state that the authors reviewed and take responsibility for 
 \bibitem{yao2024} C.-Y. Yao, Y.-Z. Huang, The design of the NLMS adaptive filters using the fast-division approximation with CSD encoded divisors, IEEE Trans. Circuits Syst. II: Exp. Briefs 71 (4) (2024) 2459--2463.
 \bibitem{huang2024} Y.-Z. Huang, C.-Y. Yao, P.-Y. Lee, Speeding up the throughput of an NLMS adaptive filter, in: Proc. IEEE ICCE-Taiwan, 2024, pp. 221--222.
 \bibitem{huang2026} Y.-Z. Huang, C.-Y. Yao, Enhancing the power efficiency of the NLMS adaptive IIR filter with fast binary reciprocal approximation, Circuits Syst. Signal Process. 45 (2026) 7561--7584.
+\bibitem{pathi2026} A.M.V. Pathi, V. Santosh Kumar, R. Jnaneswari, P. Leela Krishna, P. Swamulu, FPGA implementation of NLMS adaptive filter using shift based division, in: Proc. 7th Int. Conf. Intelligent Communication Technologies and Virtual Mobile Networks (ICICV), Tirunelveli, 2026, pp. 564--569, doi:10.1109/ICICV68925.2026.11554859.
+\bibitem{karakaya2026} E. Karakaya, O. Aytar, FPGA implementation of NLMS and VSLMS algorithms for underwater acoustics applications, IEEE Access 14 (2026) 53860--53872, doi:10.1109/ACCESS.2026.3681282.
+\bibitem{meher2014} P.K. Meher, S.Y. Park, Area-delay-power efficient fixed-point LMS adaptive filter with low adaptation-delay, IEEE Trans. Very Large Scale Integr. (VLSI) Syst. 22 (2) (2014) 362--371, doi:10.1109/TVLSI.2013.2239321.
+\bibitem{shi2016} D. Shi, C. Shi, W.-S. Gan, A systolic FxLMS structure for implementation of feedforward active noise control on FPGA, in: Proc. APSIPA ASC, Jeju, 2016, doi:10.1109/APSIPA.2016.7820755.
+\bibitem{klemd2021} A. Klemd, B. Klauer, J. Timmermann, D. Sachau, A flexible multi-channel feedback FxLMS architecture for FPGA platforms, in: Proc. 31st Int. Conf. Field-Programmable Logic and Applications (FPL), 2021, pp. 319--326, doi:10.1109/FPL53798.2021.00063.
+\bibitem{park2023} S. Park, D. Park, Low-power FPGA realization of lightweight active noise cancellation with CNN noise classification, Electronics 12 (11) (2023) 2511, doi:10.3390/electronics12112511.
 \bibitem{lee2024} P.-Y. Lee, A dividerless NLMS adaptive filter design with the lookup-table method, M.Sc. thesis, National Taiwan University, 2024.
 \bibitem{jagadeeswari2025} M. Jagadeeswari, P. Rishabavarthani, S. Kumarganesh, S. Kannadhasan, Enhanced adaptive filtering in audio systems: normalized least mean square with cut-set retiming, Analog Integr. Circuits Signal Process. 126 (2026) 12.
 \bibitem{fohl2009} W. Fohl, J. Matthies, B. Schwarz, A FPGA-based adaptive noise cancelling system, in: Proc. DAFx, Como, 2009.
