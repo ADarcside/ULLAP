@@ -1,0 +1,8 @@
+
+
+Algorithm : SHA256
+Hash      : 3A19777344C961ED1CC7604C710CDE2EAEB55FD2A6EBC969ADC78C2F2BE42527
+Path      : C:\embedded\ULLAP\local_run\build_nlms\anc_de2_115.sof
+
+
+

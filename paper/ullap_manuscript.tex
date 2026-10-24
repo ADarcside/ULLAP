@@ -176,7 +176,8 @@ Mutation tests confirm the testbenches fail on injected faults. Verilator \textt
 leaves no unwaived warning.
 
 \begin{table}[t]\centering\small
-\caption{Verification summary (\texttt{results/metrics/iverilog\_regression\_summary.txt}).}\label{tab:verif}
+\caption{Verification summary. RTL suites pass in both Icarus Verilog and Questa
+(\texttt{results/metrics/iverilog\_regression\_summary.txt}, \texttt{results/local\_run\_da0b6f4/}).}\label{tab:verif}
 \begin{tabular}{lrl}\toprule
 Suite & Tests & Result\\\midrule
 Core golden vectors (\texttt{tb\_anc\_core}) & 68 & all pass, bit-exact\\
@@ -288,33 +289,43 @@ effective adaptation, so the chord result is sensitive to the word length and sh
 
 \subsection{Hardware cost}
 \begin{table}[t]\centering\small
-\caption{Cyclone IV E EP4CE115F29C7, $W=12$, $L=32$, Quartus Prime Lite 25.1
-(\texttt{results/quartus\_reports/}, \texttt{results/metrics/power\_activity.csv}).}\label{tab:hw}
+\caption{Complete board design (core, codec interface, synchronisers, status logic) on Cyclone IV E
+EP4CE115F29C7, $W=12$, $L=32$, Quartus Prime Lite 25.1, commit da0b6f4
+(\texttt{results/quartus\_reports/board\_da0b6f4/}, \texttt{results/metrics/power\_activity.csv}).}\label{tab:hw}
 \begin{tabular}{lccc}\toprule
  & LMS & NLMS & NLMS-Shift\\\midrule
-Logic elements & 1,885 & 2,697 & 2,690\\
-Registers & 1,148 & 1,425 & 1,213\\
+Logic elements & 1,792 & 2,626 & 2,610\\
+Registers & 1,123 & 1,404 & 1,186\\
 9-bit multipliers & 4 & 4 & 4\\
-$F_{\max}$, slow 85\,$^\circ$C (MHz) & 59.90 & 61.72 & 61.98\\
+$F_{\max}$, slow 85\,$^\circ$C (MHz) & 70.08 & 59.75 & 58.66\\
+Setup slack at 50~MHz, slow 85\,$^\circ$C (ns) & 5.731 & 3.263 & 2.953\\
 Latency (cycles) & 35 & 37 & 37\\
 Busy cycles per sample & 73 & 127 & 72\\
 RTL bit toggles per sample & 5,668 & 7,146 & 6,012\\
-Dynamic power (mW) & \TBD{} & \TBD{} & \TBD{}\\\bottomrule
+Core dynamic power, vectorless (mW) & 20.79 & 24.36 & 23.77\\\bottomrule
 \end{tabular}
 \end{table}
-LMS is about 30\% smaller than either normalised variant. NLMS-Shift and NLMS use about the same logic,
-because the divider's area is replaced by the leading-one detector, shifter and wider update path, but
-NLMS-Shift needs 43\% fewer busy cycles per sample and toggles 16\% fewer bits per sample, a proxy for
-dynamic energy. At 8.138~kHz the busiest variant uses 2\% of the 6,144-cycle sample period, so a single
-core could serve many channels or much longer filters. The complete board design with synchronisers
-(NLMS-Shift) uses 2,627 logic elements and closes at 60.36~MHz with +3.432~ns setup slack.
+LMS is about 31\% smaller than either normalised variant. NLMS-Shift and NLMS use about the same logic
+(2,610 and 2,626 logic elements), because the divider's area is replaced by the leading-one detector,
+shifter and wider update path, but NLMS-Shift has 15\% fewer registers, needs 43\% fewer busy cycles
+per sample and toggles 16\% fewer bits per sample. All three designs meet the 50~MHz constraint with at
+least +2.953~ns setup slack and +0.401~ns hold slack, with no critical warnings. At 8.138~kHz the busiest
+variant uses 2\% of the 6,144-cycle sample period, so a single core could serve many channels or much
+longer filters.
+
+The power figures are Quartus vectorless estimates with the default 12.5\% toggle rate, which Quartus
+itself rates as low confidence. Core static power (about 98.7~mW) dominates the 169 to 173~mW total.
+The dynamic estimates rank the designs LMS $<$ NLMS-Shift $<$ NLMS, as the toggle counts do, but a
+fixed toggle rate mostly tracks area and ignores that the datapath is idle for 98\% of each sample
+period, so these numbers are upper bounds and not energy per sample.
+\TBD{Gate-level activity: the post-fit netlist flattens the hierarchy that \texttt{tb\_top} probes, so a
+netlist-only testbench is needed before a VCD-based estimate can replace the vectorless one.}
 For comparison with~\cite{huang2024,huang2026}, which use the same board, energy per sample should be
-reported as dynamic power divided by the sample rate, from the Quartus Power Analyzer. Their designs
+reported as dynamic power divided by the sample rate, from a VCD-based Power Analyzer run. Their designs
 are fully parallel and run at megasamples per second, while ULLAP shares one multiplier and runs at
 8.138~kHz, so area and energy are compared per tap and per sample, not as raw totals.
 
 
-\TBD{Rebuild all three variants on the final commit and replace this table with that build; add Power Analyzer results (docs/power\_flow.md).}
 
 \subsection{On-board results}
 \TBD{Board tests T1--T11 (docs/board\_test.md): bit-exact capture result, measured latency on the GPIO

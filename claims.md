@@ -65,7 +65,23 @@ Settings with the best wav result (selected on seeds 101-103, evaluated on seeds
 
 - C10. All three compile and meet 50 MHz. NLMS-Shift: setup slack +3.867 ns (slow 85C), hold +0.402 ns (slow 85C; fast 0C hold is +0.181 ns). The pre-pipelining design failed at -7.655 ns / 36.16 MHz.
 - C11. LMS is about 30% smaller than NLMS-Shift in logic elements. NLMS-Shift and NLMS are about equal in logic elements.
-- Power: not measured (vectorless analysis unavailable).
+- Power: see 4a (vectorless estimate on the board build).
+
+### 4a. Board build on commit da0b6f4 (8.138 kHz codec, GPIO test points) — RAW
+
+Complete board design built by `quartus/build_quartus.tcl` on the authors' PC, 24 Oct 2026
+(`results/quartus_reports/board_da0b6f4/`, run log in `results/local_run_da0b6f4/REPORT.md`).
+
+| | LMS | NLMS | NLMS-Shift |
+|---|---|---|---|
+| Logic elements | 1,792 | 2,626 | 2,610 |
+| Registers | 1,123 | 1,404 | 1,186 |
+| Fmax, slow 85C (MHz) | 70.08 | 59.75 | 58.66 |
+| Setup slack, slow 85C (ns) | 5.731 | 3.263 | 2.953 |
+| Core dynamic power, vectorless (mW) | 20.79 | 24.36 | 23.77 |
+
+- C27. All three board builds meet 50 MHz (hold slack +0.401 ns each, no critical warnings), and the GPIO pins land on PIN_AB22, PIN_AC15, PIN_AB21, PIN_Y17. Questa runs the full 86-test regression on this commit with 86 passes, including T9 and T10.
+- C28. Vectorless power (12.5% default toggle rate, Quartus confidence "low"): total 169.46 / 173.15 / 172.50 mW, core static about 98.7 mW. Dynamic values are upper bounds, not energy per sample; a gate-level VCD estimate failed because the post-fit netlist flattens the hierarchy that tb_top probes.
 
 ## 5. Timing and throughput (simulation) — REPORTED
 

@@ -26,6 +26,7 @@ the fitter report shows the four `GPIO` pins on PIN_AB22, PIN_AC15, PIN_AB21, PI
 | USB-Blaster | DE2-115 USB port, programme with Quartus Programmer (JTAG) |
 | Stimulus | PC or USB audio interface line output into the blue LINE IN jack. Left = reference x[n], right = primary d[n] |
 | Recording | Green LINE OUT into the PC line input (16-bit, 48 kHz is fine) |
+| GPIO voltage | Check jumper JP6 selects 3.3 V for the GPIO header before connecting the scope; the build drives GPIO[3:0] as 3.3-V LVTTL (I/O bank 4 at 3.3 V) |
 | Scope (T10) | GPIO header JP5: pin 1 = in_valid, pin 2 = out_valid, pin 3 = busy, pin 4 = sample strobe, pin 12 or 30 = GND. 3.3 V logic |
 | Switches | SW[0] = bypass (output = d[n]), SW[1] = freeze adaptation, KEY[0] = reset |
 | LEDs | LEDR[5:0] sticky saturation flags, LEDR[6] codec configured, LEDR[7] I2C NACK, LEDR[8] overrun, LEDR[9] bypass |
