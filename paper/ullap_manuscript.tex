@@ -318,10 +318,11 @@ itself rates as low confidence. Core static power (about 98.7~mW) dominates the 
 The dynamic estimates rank the designs LMS $<$ NLMS-Shift $<$ NLMS, as the toggle counts do, but a
 fixed toggle rate mostly tracks area and ignores that the datapath is idle for 98\% of each sample
 period, so these numbers are upper bounds and not energy per sample.
-\TBD{Gate-level activity: the post-fit netlist flattens the hierarchy that \texttt{tb\_top} probes, so a
-netlist-only testbench is needed before a VCD-based estimate can replace the vectorless one.}
+A gate-level, activity-annotated estimate is left for future work: the post-fit netlist flattens the
+hierarchy that the top-level testbench observes, so it needs a netlist-only testbench.
 For comparison with~\cite{huang2024,huang2026}, which use the same board, energy per sample should be
-reported as dynamic power divided by the sample rate, from a VCD-based Power Analyzer run. Their designs
+reported as dynamic power divided by the sample rate from an activity-annotated Power Analyzer run,
+which this work does not yet have, so no energy comparison with them is claimed. Their designs
 are fully parallel and run at megasamples per second, while ULLAP shares one multiplier and runs at
 8.138~kHz, so area and energy are compared per tap and per sample, not as raw totals.
 
