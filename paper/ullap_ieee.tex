@@ -9,6 +9,11 @@
 \usepackage{adjustbox}
 \usepackage{xcolor}
 \usepackage[hidelinks]{hyperref}
+\usepackage{dblfloatfix} % keep wide floats in order and close to their first mention
+% let pages carry more floats so the figures sit next to their text rather than after the references
+\renewcommand{\topfraction}{0.9}\renewcommand{\dbltopfraction}{0.9}
+\renewcommand{\textfraction}{0.07}\renewcommand{\floatpagefraction}{0.8}\renewcommand{\dblfloatpagefraction}{0.8}
+\setcounter{topnumber}{3}\setcounter{dbltopnumber}{3}\setcounter{totalnumber}{5}
 \graphicspath{{../results/plots/}}
 \newcommand{\TBD}[1]{\textcolor{red}{[TBD: #1]}}
 \newcommand{\WT}{table*}  % wide table spans both columns
@@ -36,6 +41,7 @@ bit-exact verification.
 \end{IEEEkeywords}
 
 \input{body}
+\clearpage % place every remaining figure and table before the reference list
 
 \bibliographystyle{IEEEtran}
 \bibliography{refs}
