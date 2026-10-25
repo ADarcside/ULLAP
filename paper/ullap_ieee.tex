@@ -1,0 +1,42 @@
+% ULLAP journal manuscript, IEEE version (IEEEtran journal format).
+% Same content as ullap_manuscript.tex (Elsevier): both input abstract.tex, body.tex and refs.bib,
+% so edit the paper there and rebuild both. Red \TBD{} items are open before submission.
+\documentclass[journal]{IEEEtran}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{adjustbox}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\graphicspath{{../results/plots/}}
+\newcommand{\TBD}[1]{\textcolor{red}{[TBD: #1]}}
+\newcommand{\WT}{table*}  % wide table spans both columns
+\newcommand{\WF}{figure*} % wide figure spans both columns
+\newcommand{\fitcol}[1]{\adjustbox{max width=\columnwidth}{#1}} % shrink a table to the column width
+
+\begin{document}
+\title{A Bit-Exact, Processor-Free FPGA Adaptive Noise Canceller: Fair Comparison of LMS, NLMS and
+Divider-Free NLMS-Shift on Cyclone IV E}
+
+\author{Satvik~Garg, Aditya~Gupta, and Jaffino~G%
+\thanks{The authors are with the School of Electronics Engineering (SENSE), Vellore Institute of
+Technology, Vellore, India. Corresponding author: Jaffino G. \TBD{e-mail and author order to be
+confirmed by the authors}}}
+
+\maketitle
+
+\begin{abstract}
+\input{abstract}
+\end{abstract}
+
+\begin{IEEEkeywords}
+Adaptive noise cancellation, NLMS, divider-free normalisation, FPGA, fixed-point arithmetic,
+bit-exact verification.
+\end{IEEEkeywords}
+
+\input{body}
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+\end{document}
