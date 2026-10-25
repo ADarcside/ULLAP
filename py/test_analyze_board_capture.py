@@ -33,6 +33,36 @@ def fake_capture(path, algo, n=6000, pre=400, hexfmt=False, corrupt=False):
             f.write(f"{i - pre},1,1,{fmt(a)},{fmt(b)},{fmt(c)}\n")
 
 
+def fake_stp_export(path, algo, n=3000):
+    """The layout Quartus 25.1 writes: a Groups section, a 'time unit' header, each bus followed by
+    its bits, an all-X first row, and (Transitional qualifier on out_valid) an out_valid = 0 row
+    after every sample. The pre-trigger rows start with silence, which the zero-state model
+    reproduces by accident until the junk that follows, before the real reset."""
+    code, p = abc.ALGOS[algo]
+    x, d = build("stationary", n / 8000 + 0.1, 1, True)
+    x, d = q(x[:n]), q(d[:n])
+    e = np.array(run_rtl_model(code, x.tolist(), d.tolist(), W=12, L=32, **p)["e"])
+    rng = np.random.default_rng(1)
+    junk = [rng.integers(-500, 500, 400) for _ in range(3)]
+    xs, ds, es = (np.r_[np.zeros(300, int), j, v] for j, v in zip(junk, (x, d, e)))
+    buses = ("x_reg", "d_reg", "anc_core:u_anc_core|e_out")
+    bits = lambda v: ", ".join(str((v >> b) & 1) for b in range(11, -1, -1))
+    with open(path, "w") as f:
+        f.write("Groups:\n")
+        for b in buses:
+            f.write(f"{b}[11..0] =, " + ", ".join(f"{b}[{i}]" for i in range(11, -1, -1)) + ",  hex\n")
+        f.write("\nData:\ntime unit: ns, anc_core:u_anc_core|out_valid, "
+                + ", ".join(f"{b}[11..0], " + ", ".join(f"{b}[{i}]" for i in range(11, -1, -1)) for b in buses)
+                + ", rst_sync_2, \n")
+        f.write("0, X, " + ", ".join("XXX, " + ", ".join(["X"] * 12) for _ in buses) + ", X, \n")
+        t = 1
+        for a, b, c in zip(xs, ds, es):
+            vals = ", ".join(f"{v & 0xFFF:03X}, {bits(v & 0xFFF)}" for v in (a, b, c))
+            for ov in (1, 0):
+                f.write(f"{t}, {ov}, {vals}, 1, \n")
+                t += 1
+
+
 def fake_timing(path, split=False):
     g = np.zeros(20000, int)
     for s in (1000, 7144, 13288):
@@ -62,6 +92,13 @@ def test_bit_exact_and_nr(tmp_path):
     assert "in_valid period (cycles): 6144" in md and "in_valid to out_valid (cycles): 38" in md
     assert "busy high (cycles): 72" in md
     assert (out / "board_shift_stationary.png").exists()
+
+
+def test_quartus_export_layout(tmp_path):
+    fake_stp_export(tmp_path / "cap_nlms_wav.csv", "nlms")
+    x, d, e, radix = abc.load_capture(tmp_path / "cap_nlms_wav.csv")
+    assert radix == "hex" and len(e) == 300 + 400 + 3000
+    assert abc.align_and_check(x, d, e, "nlms") == (700, 0)
 
 
 def test_mismatch_fails(tmp_path):

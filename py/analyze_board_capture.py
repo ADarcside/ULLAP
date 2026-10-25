@@ -58,7 +58,8 @@ def read_rows(path):
 def find_header(rows, keys):
     for i, row in enumerate(rows):
         low = [c.strip().lower() for c in row]
-        if all(any(k in c for c in low) for k in keys):
+        # skip the "Groups:" section, whose lines name the buses ("GPIO[3..0] =, GPIO[3], ...")
+        if all(any(k in c for c in low) for k in keys) and not any(c.endswith("=") for c in low):
             return i, low
     raise ValueError("no header row containing " + ", ".join(keys))
 
@@ -75,6 +76,11 @@ def detect_radix(tokens):
     if any(t.startswith("-") for t in toks):
         return "dec"
     return "hex"  # Signal Tap's default bus format
+
+
+def unknown(tok):
+    """Signal Tap writes 'X' (or 'XXX' for a bus) in the first row, before the buffer start."""
+    return re.fullmatch(r"X+", tok.strip().strip('"').upper()) is not None
 
 
 def to_int(tok, radix, bits):
@@ -94,7 +100,8 @@ def load_capture(path):
     hi, header = find_header(rows, ["x_reg", "d_reg", "e_out"])
     ix, idd, ie = col(header, "x_reg"), col(header, "d_reg"), col(header, "e_out")
     iv = col(header, "out_valid")
-    body = [r for r in rows[hi + 1:] if len(r) > max(ix, idd, ie) and r[ix].strip()]
+    body = [r for r in rows[hi + 1:] if len(r) > max(ix, idd, ie) and r[ix].strip()
+            and not any(unknown(r[c]) for c in (ix, idd, ie) + ((iv,) if iv is not None else ()))]
     radix = detect_radix([r[c] for r in body[:4000] for c in (ix, idd, ie)])
     x, d, e = [], [], []
     for r in body:
@@ -106,16 +113,26 @@ def load_capture(path):
 
 # ---------------------------------------------------------------------------- analysis
 def align_and_check(x, d, e, algo):
-    """First row k from which the model started at zero state reproduces e; returns (k, mismatches)."""
+    """First row k from which the model started at zero state reproduces e; returns (k, mismatches).
+
+    Rows before the reset (pre-trigger data) can match by accident while the inputs are zero, so a
+    start that later diverges is dropped and the search resumes after the divergence."""
     code, p = ALGOS[algo]
-    cands = [k for k in range(len(e) - 1) if e[k] == d[k]][:200]
-    for k in cands:
-        probe = run_rtl_model(code, x[k:k + 300].tolist(), d[k:k + 300].tolist(), W=W, L=L, **p)["e"]
-        if list(e[k:k + 300]) != probe:
+    best = (None, None)
+    k = 0
+    while k < len(e) - 300:
+        if e[k] != d[k] or run_rtl_model(code, x[k:k + 300].tolist(), d[k:k + 300].tolist(),
+                                          W=W, L=L, **p)["e"] != list(e[k:k + 300]):
+            k += 1
             continue
         full = np.array(run_rtl_model(code, x[k:].tolist(), d[k:].tolist(), W=W, L=L, **p)["e"])
-        return k, int(np.count_nonzero(full != e[k:]))
-    return None, None
+        bad = np.flatnonzero(full != e[k:])
+        if len(bad) == 0:
+            return k, 0
+        if best[0] is None:
+            best = (k, len(bad))
+        k += int(bad[0]) + 1
+    return best
 
 
 def nr_db(d, e):
@@ -170,7 +187,8 @@ def analyse_timing(path):
     hi, header = find_header(rows, ["gpio"])
     bits = {int(m.group(1)): i for i, h in enumerate(header)
             for m in [re.search(r"gpio\[(\d)\]$", h)] if m}  # bus exported as separate bits
-    body = [r for r in rows[hi + 1:] if len(r) > max(bits.values(), default=col(header, "gpio"))]
+    body = [r for r in rows[hi + 1:] if len(r) > max(bits.values(), default=col(header, "gpio"))
+            and not any(unknown(c) for c in r[1:])]
     if len(bits) == 4:
         g = np.array([sum(to_int(r[i], "dec", 2) << b for b, i in bits.items()) for r in body])
     else:
