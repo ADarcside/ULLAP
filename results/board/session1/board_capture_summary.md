@@ -12,7 +12,7 @@
 | NLMS | wav | 28674 | 3.52 | bit-exact | 17.09 |
 | NLMS-Shift | amp_steps | 28672 | 3.52 | bit-exact | 25.69 |
 | NLMS-Shift | path_switch | 28672 | 3.52 | bit-exact | 5.45 |
-| NLMS-Shift | stationary | 32768 | 4.03 | bit-exact | 17.7 |
+| NLMS-Shift | stationary | 32230 | 3.96 | bit-exact | 17.71 |
 | NLMS-Shift | wav | 28672 | 3.52 | bit-exact | 14.05 |
 
 ## timing_lms.csv

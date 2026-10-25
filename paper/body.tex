@@ -26,7 +26,8 @@ shared multiplier, so the three are compared on identical datapath, word length 
 with the same criterion, and results are reported with 20-seed 95\% confidence intervals,
 on synthetic scenarios and on real recorded noise and speech.
 \item A bit-exact verification chain from a Python integer model to the RTL and the board wrapper
-(86 regression tests including codec, freeze and reset behaviour), \TBD{and an on-board capture showing the silicon reproduces the model sample for sample}.
+(86 regression tests including codec, freeze and reset behaviour), and on-board captures of real codec
+samples in which every output sample of all three algorithms equals the model's.
 \item A reproducible word-length study and a complete processor-free audio system that closes
 timing at 50~MHz on Cyclone IV E, released with all scripts and data.
 \end{enumerate}
@@ -54,7 +55,7 @@ Compared with these, ULLAP's contribution is the equal-effort three-way comparis
 the bit-exact chain to hardware, and the evaluation on real recordings.
 
 %--------------------------------------------------------------------------------------------
-\section{Algorithms and fixed-point model}
+\section{Algorithms and fixed-point model}\label{sec:model}
 With reference vector $\mathbf{x}[n]=[x[n],\dots,x[n-L+1]]^T$, weights $\mathbf{w}[n]$ and primary
 input $d[n]$, all three algorithms compute
 \begin{equation}
@@ -87,8 +88,9 @@ strobe with a single multiplier pipelined in three stages: $L$ cycles for the fi
 error, then $L$ cycles of weight updates. NLMS adds a sequential restoring divider for the gain;
 NLMS-Shift replaces it by a leading-one detector and a shift-amount register. A \texttt{freeze} input
 holds the weights while filtering continues. The input-to-output latency is $L+3$ cycles for LMS and
-$L+5$ for NLMS and NLMS-Shift (35 and 37 cycles at $L=32$), and the core is busy for 73, 127 and 72
-cycles per sample respectively.
+$L+5$ for NLMS and NLMS-Shift (35 and 37 cycles at $L=32$), and at the tuned settings the core is busy
+for 73, 130 and 72 cycles per sample respectively; the NLMS divider runs one iteration per dividend bit,
+and the dividend widens with the step-size constant, so its cycle count depends on $\mu$.
 
 \subsection{Board wrapper}
 The DE2-115 wrapper contains an I$^2$C engine that configures the WM8731 at reset (11 registers,
@@ -120,7 +122,7 @@ Freeze hold/toggle variants & 3 & pass\\
 Top level with codec model (T1--T10) & 11 & pass\\
 Python unit tests & 46 & pass\\
 Verilator lint (\texttt{-Wall}) & -- & 0 unwaived\\
-On-board Signal Tap capture (T9) & -- & \TBD{board}\\\bottomrule
+On-board Signal Tap captures (T9) & 12 & all bit-exact\\\bottomrule
 \end{tabular}}
 \end{table}
 
@@ -234,14 +236,14 @@ Registers & 1,123 & 1,404 & 1,186\\
 $F_{\max}$, slow 85\,$^\circ$C (MHz) & 70.08 & 59.75 & 58.66\\
 Setup slack at 50~MHz, slow 85\,$^\circ$C (ns) & 5.731 & 3.263 & 2.953\\
 Latency (cycles) & 35 & 37 & 37\\
-Busy cycles per sample & 73 & 127 & 72\\
+Busy cycles per sample (measured on the board) & 73 & 130 & 72\\
 RTL bit toggles per sample & 5,668 & 7,146 & 6,012\\
 Core dynamic power, vectorless (mW) & 20.79 & 24.36 & 23.77\\\bottomrule
 \end{tabular}}
 \end{table}
 LMS is about 31\% smaller than either normalised variant. NLMS-Shift and NLMS use about the same logic
 (2,610 and 2,626 logic elements), because the divider's area is replaced by the leading-one detector,
-shifter and wider update path, but NLMS-Shift has 15\% fewer registers, needs 43\% fewer busy cycles
+shifter and wider update path, but NLMS-Shift has 15\% fewer registers, needs 45\% fewer busy cycles
 per sample and toggles 16\% fewer bits per sample. All three designs meet the 50~MHz constraint with at
 least +2.953~ns setup slack and +0.401~ns hold slack, with no critical warnings. At 8.138~kHz the busiest
 variant uses 2\% of the 6,144-cycle sample period, so a single core could serve many channels or much
@@ -263,9 +265,41 @@ are fully parallel and run at megasamples per second, while ULLAP shares one mul
 
 
 \subsection{On-board results}
-\TBD{Board tests T1--T11 (docs/board\_test.md): bit-exact capture result, measured latency on the GPIO
-pins (expected 760~ns between in\_valid and out\_valid), measured noise reduction per scenario and algorithm
-next to the simulated value, and the 10-minute soak.}
+The board evidence is recorded by the FPGA itself with Signal Tap, so it does not depend on an
+external recorder or oscilloscope. One logic-analyser instance stores, once per sample, the two
+codec samples entering the core ($x$ and $d$, register outputs \texttt{x\_reg} and \texttt{d\_reg}) and
+the core output $e$, with a transitional storage qualifier on \texttt{out\_valid}, and triggers when the
+reset button is released; it holds 32,768 samples (4.0~s). A second instance samples the four GPIO
+test points at 50~MHz. The stimuli are the noise-only versions of the four scenarios, played from a
+laptop into LINE IN after a 1~kHz calibration tone; the reset is pressed during the tone, so each
+capture starts from zero weights on real codec data at about $-25$~dBFS, and no sample in any capture
+reaches full scale. The analysis script and the raw exports are in the repository
+(\texttt{py/analyze\_board\_capture.py}, \texttt{board\_evidence/}).
+
+\emph{Bit-exactness.} For each of the 12 captures (three algorithms, four scenarios) the integer model
+of Section~\ref{sec:model}, started from zero state at the first sample after the reset and fed the
+captured $x$ and $d$, reproduces every captured $e[n]$: 351,723 samples in total, 28,672 to 32,768
+(3.5 to 4.0~s) per capture, with no mismatch. The fixed-point arithmetic of the silicon is therefore
+exactly the one evaluated in simulation, also on analogue input with the codec's noise and offsets.
+
+\emph{Timing.} The GPIO capture gives an \texttt{in\_valid} period of 6,144 clock cycles (8,138.02~Hz),
+an \texttt{in\_valid} to \texttt{out\_valid} spacing of 38, 36 and 38 cycles for NLMS-Shift, LMS and
+NLMS (the core latency plus one accept cycle, 0.76, 0.72 and 0.76~$\mu$s) and busy times of 72, 73 and
+130 cycles, all equal to the RTL simulation of the same parameters. The Signal Tap builds still meet
+the 50~MHz constraint (setup slack $+2.65$, $+5.68$ and $+3.78$~ns); Table~\ref{tab:hw} is for the builds
+without the logic analyser.
+
+Fig.~\ref{fig:board} shows one capture: after the tone, the residual falls within about 0.5~s, and when
+the noise level triples at 2.35~s the normalised filter recovers within a few hundred milliseconds.
+\TBD{Board session 2: noise reduction on the 2~s seed-1 stimulus (the simulation signal) against the
+integer model on the same signal, freeze test, 10-minute soak, DAC-word check.}
+
+\begin{figure}[!htbp]\centering
+\includegraphics[width=\linewidth]{fig14_board_capture_shift_amp_steps.pdf}
+\caption{On-board Signal Tap capture, NLMS-Shift, amplitude-step noise: primary input $d$ and output $e$
+after the reset (the first 0.25~s is the calibration tone), running noise reduction, and power spectra
+over the capture. Every output sample equals the integer model's.}\label{fig:board}
+\end{figure}
 
 %--------------------------------------------------------------------------------------------
 \FloatBarrier % every figure and table is placed before the discussion

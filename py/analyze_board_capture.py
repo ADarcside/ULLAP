@@ -115,13 +115,15 @@ def load_capture(path):
 def align_and_check(x, d, e, algo):
     """First row k from which the model started at zero state reproduces e; returns (k, mismatches).
 
-    Rows before the reset (pre-trigger data) can match by accident while the inputs are zero, so a
-    start that later diverges is dropped and the search resumes after the divergence."""
+    Starts are only taken where the reference input is active (in silence any start matches), and a
+    start that later diverges is dropped and the search resumes after the divergence; the first
+    such start is reported if none matches to the end."""
     code, p = ALGOS[algo]
     best = (None, None)
     k = 0
     while k < len(e) - 300:
-        if e[k] != d[k] or run_rtl_model(code, x[k:k + 300].tolist(), d[k:k + 300].tolist(),
+        # a start inside silence (x = 0) matches the zero-state model by accident: skip it
+        if e[k] != d[k] or np.count_nonzero(x[k:k + 300]) < 150 or run_rtl_model(code, x[k:k + 300].tolist(), d[k:k + 300].tolist(),
                                           W=W, L=L, **p)["e"] != list(e[k:k + 300]):
             k += 1
             continue

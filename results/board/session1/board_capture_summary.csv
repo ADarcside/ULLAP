@@ -9,5 +9,5 @@ NLMS,stationary,28672,3.52,4096,hex,bit-exact,17.84,-26.7
 NLMS,wav,28674,3.52,4094,hex,bit-exact,17.09,-26.4
 NLMS-Shift,amp_steps,28672,3.52,4096,hex,bit-exact,25.69,-22.9
 NLMS-Shift,path_switch,28672,3.52,4096,hex,bit-exact,5.45,-25.9
-NLMS-Shift,stationary,32768,4.03,0,hex,bit-exact,17.7,-25.2
+NLMS-Shift,stationary,32230,3.96,538,hex,bit-exact,17.71,-25.1
 NLMS-Shift,wav,28672,3.52,4096,hex,bit-exact,14.05,-29.9
