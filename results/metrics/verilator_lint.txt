@@ -1,0 +1,92 @@
+Verilator lint (-Wall) of rtl/anc_core.v, quartus/wm8731_i2c_init.v, quartus/i2s_transceiver.v, quartus/anc_de2_115_top.v
+Verilator 5.020 2024-01-01 rev (Debian 5.020-1)
+
+Category counts:
+  BLKSEQ          34  WAIVED: blocking temporaries inside clocked blocks of anc_core (computed then registered); intentional style
+  SYNCASYNCNET     1  WAIVED: core uses a synchronous reset, wrapper flops an async-assert reset; rst_n is synchronised first
+  UNUSEDPARAM      1  WAIVED: i2s_transceiver DATA_WIDTH kept for interface compatibility (fixed 16-bit codec words)
+  UNUSEDSIGNAL     8  WAIVED: unused board inputs (KEY[3:1], SW[3:2]), dropped LSBs of 16-bit ADC words, y_out, I2S status bits
+  WIDTHEXPAND     26  WAIVED: sign/zero extension in mixed-width arithmetic; behaviour fixed by the bit-exact regression
+  WIDTHTRUNC       7  WAIVED: parameter-derived constants and saturating adds sized at elaboration; bit-exact regression
+
+Unwaived messages: 0
+
+All messages:
+  %Warning-WIDTHTRUNC: rtl/anc_core.v:90:33: Operator VAR 'MU_C' expects 23 bits on the Initial value, but Initial value's VARREF 'MU_INT' generates 32 bits.
+  %Warning-WIDTHTRUNC: rtl/anc_core.v:91:33: Operator VAR 'EPS_C' expects 31 bits on the Initial value, but Initial value's SHIFTL generates 64 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:163:34: Operator ASSIGN expects 23 bits on the Assign RHS, but Assign RHS's VARREF 'xv_new' generates 12 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:164:34: Operator ASSIGN expects 23 bits on the Assign RHS, but Assign RHS's VARREF 'xold' generates 12 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:165:34: Operator ASSIGN expects 23 bits on the Assign RHS, but Assign RHS's VARREF 'w_cur' generates 12 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:242:35: Operator ADD expects 35 bits on the LHS, but LHS's VARREF 'pw' generates 31 bits.
+  %Warning-WIDTHTRUNC: rtl/anc_core.v:242:29: Operator ASSIGNDLY expects 31 bits on the Assign RHS, but Assign RHS's ADD generates 35 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:243:35: Operator SUB expects 35 bits on the LHS, but LHS's VARREF 'pw' generates 31 bits.
+  %Warning-WIDTHTRUNC: rtl/anc_core.v:243:29: Operator ASSIGNDLY expects 31 bits on the Assign RHS, but Assign RHS's SUB generates 35 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:244:37: Operator ADD expects 35 bits on the LHS, but LHS's VARREF 'accx' generates 30 bits.
+  %Warning-WIDTHTRUNC: rtl/anc_core.v:244:29: Operator ASSIGNDLY expects 30 bits on the Assign RHS, but Assign RHS's ADD generates 35 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:248:26: Operator ASSIGN expects 36 bits on the Assign RHS, but Assign RHS's VARREF 'p_q' generates 35 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:266:30: Operator ADD expects 37 bits on the LHS, but LHS's ARRAYSEL generates 12 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:270:35: Operator LTS expects 64 bits on the LHS, but LHS's VARREF 't_wn' generates 37 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:267:26: Operator GTS expects 64 bits on the LHS, but LHS's VARREF 't_wn' generates 37 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:303:23: Operator EQ expects 32 bits on the LHS, but LHS's VARREF 'i' generates 5 bits.
+  %Warning-WIDTHTRUNC: rtl/anc_core.v:315:27: Operator ASSIGN expects 30 bits on the Assign RHS, but Assign RHS's VARREF 'ACCMAX' generates 64 bits.
+  %Warning-WIDTHTRUNC: rtl/anc_core.v:318:27: Operator ASSIGN expects 30 bits on the Assign RHS, but Assign RHS's VARREF 'ACCMIN' generates 64 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:317:36: Operator LTS expects 64 bits on the LHS, but LHS's VARREF 't_acc' generates 30 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:314:27: Operator GTS expects 64 bits on the LHS, but LHS's VARREF 't_acc' generates 30 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:326:34: Operator LTS expects 64 bits on the LHS, but LHS's VARREF 't_y' generates 30 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:323:25: Operator GTS expects 64 bits on the LHS, but LHS's VARREF 't_y' generates 30 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:336:34: Operator LTS expects 64 bits on the LHS, but LHS's VARREF 't_e' generates 13 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:333:25: Operator GTS expects 64 bits on the LHS, but LHS's VARREF 't_e' generates 13 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:349:27: Operator ASSIGNDLY expects 23 bits on the Assign RHS, but Assign RHS's VARREF 't_esat' generates 12 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:370:27: Operator ASSIGN expects 54 bits on the Assign RHS, but Assign RHS's VARREF 'pm' generates 35 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:372:43: Operator ADD expects 54 bits on the RHS, but RHS's VARREF 't_q' generates 31 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:375:27: Operator ASSIGNDLY expects 55 bits on the Assign RHS, but Assign RHS's REPLICATE generates 32 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:391:39: Operator LTS expects 64 bits on the LHS, but LHS's VARREF 't_qs' generates 55 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:388:30: Operator GTS expects 64 bits on the LHS, but LHS's VARREF 't_qs' generates 55 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:397:27: Operator ASSIGNDLY expects 23 bits on the Assign RHS, but Assign RHS's VARREF 't_g' generates 16 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:384:25: Operator EQ expects 32 bits on the LHS, but LHS's VARREF 'cnt' generates 7 bits.
+  %Warning-WIDTHEXPAND: rtl/anc_core.v:415:23: Operator EQ expects 32 bits on the LHS, but LHS's VARREF 'i' generates 5 bits.
+  %Warning-UNUSEDSIGNAL: quartus/anc_de2_115_top.v:19:24: Bits of signal are not used: 'KEY'[3:1]
+  %Warning-UNUSEDSIGNAL: quartus/anc_de2_115_top.v:20:24: Bits of signal are not used: 'SW'[3:2]
+  %Warning-UNUSEDSIGNAL: quartus/anc_de2_115_top.v:102:24: Bits of signal are not used: 'adc_left_raw'[3:0]
+  %Warning-UNUSEDSIGNAL: quartus/anc_de2_115_top.v:147:25: Signal is not used: 'y_out'
+  %Warning-UNUSEDPARAM: quartus/i2s_transceiver.v:9:23: Parameter is not used: 'DATA_WIDTH'
+  %Warning-UNUSEDSIGNAL: quartus/i2s_transceiver.v:34:15: Bits of signal are not used: 'adclrck_sync'[2]
+  %Warning-UNUSEDSIGNAL: quartus/i2s_transceiver.v:56:10: Signal is not used: 'daclrck_val'
+  %Warning-UNUSEDSIGNAL: quartus/i2s_transceiver.v:65:16: Bits of signal are not used: 'rx_shift'[15]
+  %Warning-UNUSEDSIGNAL: quartus/i2s_transceiver.v:112:16: Signal is not used: 'tx_channel'
+  %Warning-BLKSEQ: rtl/anc_core.v:247:26: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:248:26: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:251:31: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:253:32: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:254:32: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:255:32: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:257:32: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:266:22: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:268:28: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:271:28: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:274:28: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:369:27: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:370:27: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:371:27: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:372:27: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:386:26: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:387:26: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:389:29: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:392:29: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:395:29: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:401:26: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:313:23: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:315:27: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:318:27: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:321:22: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:322:22: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:324:28: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:327:28: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:330:28: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:332:21: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:334:28: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:337:28: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:340:28: Blocking assignment '=' in sequential logic process
+  %Warning-BLKSEQ: rtl/anc_core.v:348:27: Blocking assignment '=' in sequential logic process
+  %Warning-SYNCASYNCNET: quartus/anc_de2_115_top.v:54:10: Signal flopped as both synchronous and async: 'anc_de2_115_top.rst_n'
+  %Error: Exiting due to 77 warning(s)

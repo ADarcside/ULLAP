@@ -50,3 +50,4 @@ build/
 # Scratch and editor configs
 scratch/
 .vscode/
+data_cache/

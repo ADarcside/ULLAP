@@ -1,0 +1,4 @@
+algo,samples,toggles_total,toggles_per_sample,top_signals,relative_to_nlms
+lms,1000,5667535,5667.5,dut.prod=800; dut.p_q=800; dut.mul_b=348; dut.mb_q=348; dut.xv_cur=324,0.793
+nlms,1000,7146260,7146.3,dut.prod=865; dut.p_q=865; dut.dvd=581; dut.mul_b=361; dut.mb_q=361,1.0
+nlms_shift,1000,6011823,6011.8,dut.prod=876; dut.p_q=876; dut.t_px=382; dut.mul_b=349; dut.mb_q=349,0.841

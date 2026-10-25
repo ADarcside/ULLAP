@@ -32,7 +32,10 @@ module anc_de2_115_top #(
     inout  wire        I2C_SDAT,     // I2C Data (PIN_A8)
 
     // Status / Diagnostic LEDs
-    output wire [9:0]  LEDR          // Red LEDs for status/diagnostics
+    output wire [9:0]  LEDR,         // Red LEDs for status/diagnostics
+
+    // Scope Test Points on GPIO header JP5 (3.3 V, pins 1-4)
+    output reg  [3:0]  GPIO          // {sample_strobe, busy, out_valid, in_valid}, registered
 );
 
     // -------------------------------------------------------------------------
@@ -228,5 +231,18 @@ module anc_de2_115_top #(
     assign LEDR[7]   = codec_init_error;// ON if I2C NACK occurs
     assign LEDR[8]   = overrun_flag;    // ON if audio frame lost
     assign LEDR[9]   = bypass_active;   // ON when bypass switch SW[0] is active
+
+    // -------------------------------------------------------------------------
+    // 8. Scope Test Points (GPIO[0] = JP5 pin 1 ... GPIO[3] = JP5 pin 4)
+    // -------------------------------------------------------------------------
+    // All four are registered once, so relative timing is preserved. The core accepts
+    // in_valid one edge after it rises, so GPIO[0] -> GPIO[1] rising edges are LAT + 1
+    // cycles apart: 38 cycles = 760 ns for NLMS-Shift (W=12, L=32, LAT=37).
+    always @(posedge CLOCK_50 or negedge rst_n) begin
+        if (!rst_n)
+            GPIO <= 4'b0000;
+        else
+            GPIO <= {sample_strobe, anc_busy, anc_out_valid, core_in_valid};
+    end
 
 endmodule

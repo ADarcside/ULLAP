@@ -1,0 +1,8 @@
+
+
+Algorithm : SHA256
+Hash      : B9BE384A029679325F3FA358418EE23E6BCD41106EC3100C15E0CEA8DF4672B1
+Path      : C:\embedded\ULLAP\local_run\build_lms\anc_de2_115.sof
+
+
+

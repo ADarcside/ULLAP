@@ -1,0 +1,8 @@
+
+
+Algorithm : SHA256
+Hash      : 0B223131C80DBDE5BFE16F149EC51EB4E0BA89AD13A7EFFDD5837C2A9F4CEFBC
+Path      : C:\embedded\ULLAP\local_run\build_nlms_shift\anc_de2_115.sof
+
+
+

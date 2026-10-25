@@ -482,7 +482,7 @@ def plot_fig11_latency(quartus_data, out_base):
     algo_labels = ["LMS (W=12)", "NLMS (W=12)", "NLMS-Shift (W=12)"]
 
     out_lat_cycles = [35, 37, 37]
-    total_busy_cycles = [73, 124, 72]
+    total_busy_cycles = [73, 127, 72]
 
     t_clk_50 = 20.0
     time_out_50_us = [(c * t_clk_50) / 1000.0 for c in out_lat_cycles]
@@ -510,16 +510,14 @@ def plot_fig11_latency(quartus_data, out_base):
         yval = bar.get_height()
         ax_cyc.text(bar.get_x() + bar.get_width() / 2.0, yval + 2, f"{yval} cyc", ha="center", va="bottom", fontsize=8.2, fontweight="bold")
 
-    budget_us = 20.833  # 48 kHz audio sample period = 20.833 us (at 12.5 MHz MCLK / 256)
-    budget_10pct = budget_us * 0.10  # 2.083 us
+    budget_us = 1e6 * 1536 / 12.5e6  # 8.138 kHz sample period = 122.88 us (12.5 MHz XCK / 1536)
 
     bars_tout = ax_time.bar(x - w/2, time_out_50_us, width=w, label="Output Latency @ 50 MHz (us)",
                             color="#3498db", edgecolor="#2980b9", linewidth=0.8)
     bars_ttot = ax_time.bar(x + w/2, time_tot_50_us, width=w, label="Total Processing @ 50 MHz (us)",
                             color="#2ecc71", edgecolor="#27ae60", linewidth=0.8)
 
-    ax_time.axhline(budget_10pct, color="#e67e22", linestyle="--", linewidth=1.2, label=f"10% Budget Guideline ({budget_10pct:.2f} us)")
-    ax_time.set_title("Processing Time at 50 MHz vs 48 kHz Codec Budget\nSample Period = 20.83 us (Codec filter delays: estimates, unverified)", fontsize=10.0, pad=10)
+    ax_time.set_title("Processing Time at 50 MHz vs 8.138 kHz Sample Period\nSample Period = 122.88 us (percentages = share of period)", fontsize=10.0, pad=10)
     ax_time.set_ylabel("Time (microseconds, us)")
     ax_time.set_xticks(x)
     ax_time.set_xticklabels(algo_labels, fontsize=9.0)

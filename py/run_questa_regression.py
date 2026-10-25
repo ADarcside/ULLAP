@@ -192,6 +192,8 @@ def run_top_tests(filter_str=""):
         ("top_T6_flags", "T6"),
         ("top_T7_clock", "T7"),
         ("top_T8_skew", "T8"),
+        ("top_T9_rate", "T9"),
+        ("top_T10_gpio", "T10"),
     ]
     results = []
     for name, test_arg in top_scenarios:

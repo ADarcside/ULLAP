@@ -65,7 +65,23 @@ Settings with the best wav result (selected on seeds 101-103, evaluated on seeds
 
 - C10. All three compile and meet 50 MHz. NLMS-Shift: setup slack +3.867 ns (slow 85C), hold +0.402 ns (slow 85C; fast 0C hold is +0.181 ns). The pre-pipelining design failed at -7.655 ns / 36.16 MHz.
 - C11. LMS is about 30% smaller than NLMS-Shift in logic elements. NLMS-Shift and NLMS are about equal in logic elements.
-- Power: not measured (vectorless analysis unavailable).
+- Power: see 4a (vectorless estimate on the board build).
+
+### 4a. Board build on commit da0b6f4 (8.138 kHz codec, GPIO test points) — RAW
+
+Complete board design built by `quartus/build_quartus.tcl` on the authors' PC, 24 Oct 2026
+(`results/quartus_reports/board_da0b6f4/`, run log in `results/local_run_da0b6f4/REPORT.md`).
+
+| | LMS | NLMS | NLMS-Shift |
+|---|---|---|---|
+| Logic elements | 1,792 | 2,626 | 2,610 |
+| Registers | 1,123 | 1,404 | 1,186 |
+| Fmax, slow 85C (MHz) | 70.08 | 59.75 | 58.66 |
+| Setup slack, slow 85C (ns) | 5.731 | 3.263 | 2.953 |
+| Core dynamic power, vectorless (mW) | 20.79 | 24.36 | 23.77 |
+
+- C27. All three board builds meet 50 MHz (hold slack +0.401 ns each, no critical warnings), and the GPIO pins land on PIN_AB22, PIN_AC15, PIN_AB21, PIN_Y17. Questa runs the full 86-test regression on this commit with 86 passes, including T9 and T10.
+- C28. Vectorless power (12.5% default toggle rate, Quartus confidence "low"): total 169.46 / 173.15 / 172.50 mW, core static about 98.7 mW. Dynamic values are upper bounds, not energy per sample; a gate-level VCD estimate failed because the post-fit netlist flattens the hierarchy that tb_top probes.
 
 ## 5. Timing and throughput (simulation) — REPORTED
 
@@ -74,7 +90,7 @@ Settings with the best wav result (selected on seeds 101-103, evaluated on seeds
 | Input-to-output latency, cycles | 35 | 37 | 37 |
 | Busy cycles per sample | 73 | 127 | 72 |
 
-- C12. NLMS-Shift needs 43% fewer busy cycles per sample than NLMS (72 vs 127) with no divider. At fs = 48 kHz (about 1041 cycles at 50 MHz) busy fractions are 7.0% / 12.2% / 6.9%. Simulated signals are 8 kHz (6250 cycles per sample at 50 MHz): busy fractions 1.17% / 2.03% / 1.15%. The codec runs at 48 kHz.
+- C12. NLMS-Shift needs 43% fewer busy cycles per sample than NLMS (72 vs 127) with no divider. The codec now runs at 8.138 kHz (R8 = 0x00C, 6,144 cycles per sample at 50 MHz; tb_top T7/T9): busy fractions 1.19% / 2.07% / 1.17%. The earlier 48.83 kHz setting (1,024 cycles) gave 7.1% / 12.4% / 7.0%.
 - Claim NOT made: a latency reduction. Input-to-output latency is the same for NLMS and NLMS-Shift. The codec's internal filter delay is not included (the datasheet figures could not be verified).
 
 ## 6. Level robustness — RAW
@@ -92,16 +108,38 @@ Settings with the best wav result (selected on seeds 101-103, evaluated on seeds
 - C15. Python unit tests: 23 OK — RAW (summary line seen, repo commit d6508ce).
 - C16. RTL vs integer model bit-exactness: 57/57 Questa tests pass in the full regression run (394 s, also 23/23 Python tests and a Quartus metrics check) — RAW (summary lines seen, repo commit d6508ce).
 - C17. CDC: no internal register is clocked by the codec bit clock (it is sampled as data by 50 MHz flops) — REPORTED.
+- C18. Open-source regression (Icarus Verilog 12, `py/run_iverilog_regression.py`): 86/86 pass — 68 core vector sets, 4 protocol, 3 freeze-hold, 11 top-level (T1-T10 incl. new T9 8 kHz rate and T10 GPIO timing). The new T9/T10 have not yet been run in Questa — RAW (this session).
+- C19. Verilator 5.020 `-Wall` lint: 0 unwaived warnings (77 waived in 6 reviewed categories, `results/metrics/verilator_lint.txt`) — RAW.
+- C20. Python tests: 46 pass (adds Signal Tap checker and board stimulus tests) — RAW.
+
+## 9. Word length at the fair-tuned settings — RAW (`results/metrics/wordlength_fair_summary.csv`, fig13)
+
+- C21. W = 8..16, 20 seeds, loss against the float run of the same algorithm and setting. Worst-scenario mean loss: W = 10: 4.09 / 5.93 / 4.18 dB (LMS / NLMS / NLMS-Shift); W = 11: 1.24 / 1.14 / 0.93 dB; W = 12: 0.26 / 0.39 / 0.27 dB. W = 11 is the smallest W within 3 dB with zero overflow; W = 12 keeps the margin. This replaces known limit 6 below.
+- C22. On the chord recording the fixed-point result is better than float at W = 11 and 12 (up to 3.39 dB) and worse at W = 13 (1.27 to 1.29 dB): the wav scenario is word-length sensitive and should not decide W.
+
+## 10. Real recorded noise and speech — RAW (`results/metrics/real_audio_summary.csv`)
+
+- C23. MS-SNSD (pinned commit, SHA-256 checked), 4 noises x 20 seeds, 0 dB input SNR, simulated 16-tap paths, W = 12. Without reference crosstalk: NR 11.65 to 14.90 dB; STOI 0.69-0.78 -> 0.95-0.98; PESQ-NB 1.36-1.54 -> 2.30-2.81. NLMS leads LMS by 0.39 to 0.61 dB, NLMS-Shift trails NLMS by 0.15 to 0.34 dB.
+- C24. With speech leakage into the reference at minus 20 dB into the reference: NR drops by 2.3 to 4.6 dB, PESQ by 0.25-0.60, and 18,500 saturation events occur over 19.2 M processed samples.
+- Claim NOT made: real acoustic validation. Only the acoustic paths are simulated, but they are simulated.
+
+## 11. Paired statistics — RAW (`results/metrics/paired_stats.csv`)
+
+- C25. Seeds 1-20 re-run reproduce the paper_numbers.csv means exactly. All NLMS-Shift vs NLMS differences are within a TOST equivalence margin of 0.5 dB either way (p < 0.05), though some are non-zero (path_switch +0.38 dB, p = 1.9e-8; wav -0.27 dB). Normalised vs LMS on amp_steps: +1.79 / +1.97 dB, p < 3e-8. This replaces known limit 7.
+
+## 12. Energy proxy — RAW (`results/metrics/power_activity.csv`)
+
+- C26. RTL bit toggles per processed sample at the board rate (clock excluded): LMS 5,668, NLMS 7,146, NLMS-Shift 6,012 (NLMS-Shift 16% fewer than NLMS). A relative proxy only; no mW figure.
 
 ---
 
 ## Not claimed
 
 - No board measurement exists. All performance and timing claims are from simulation and Quartus reports. OPEN: programme the NLMS-Shift .sof, observe flags, bypass and freeze, measure latency with a scope.
-- No real recorded noise. Scenarios are synthetic plus one fixed chord recording. OPEN.
-- Novelty is not claimed. REPORTED related work, from an AI deep-research tool (not read by the author): Pathi et al. 2026, IEEE ICICV (NLMS with leading-one detector, priority encoder and barrel shifter, claims about 50% fewer LUTs and 30% lower latency; abstract only seen), Huang & Yao 2026, Circuits Systems and Signal Processing (binary reciprocal approximation for adaptive IIR NLMS; opened by the tool, different algorithm), Yao & Huang 2024, IEEE TCAS-II (CSD fast-division NLMS; abstract), Zhao et al. 2018, IEEE Access (division-free variable-regularized LMS; opened by the tool), Huang, Yao & Lee 2024, ICCE-Taiwan (LUT reciprocal NLMS; abstract), Oba, Kim & Arai 2006, ISPACS (FPGA LMS/NLMS with bit-shift division; abstract, secondary description only), and a 1996 patent by Ding on eliminating division in NLMS. A "Lee 2024 thesis" could not be found. OPEN: read Pathi 2026 and Oba 2006 in full and position the work.
+- Real recorded noise and speech are now evaluated (C23-C24) but with simulated acoustic paths; no real two-microphone recording. OPEN.
+- Novelty is not claimed. REPORTED related work, from an AI deep-research tool (not read by the author): Pathi et al. 2026, IEEE ICICV (NLMS with leading-one detector, priority encoder and barrel shifter, claims about 50% fewer LUTs and 30% lower latency; abstract only seen), Huang & Yao 2026, Circuits Systems and Signal Processing (binary reciprocal approximation for adaptive IIR NLMS; opened by the tool, different algorithm), Yao & Huang 2024, IEEE TCAS-II (CSD fast-division NLMS; abstract), Zhao et al. 2018, IEEE Access (division-free variable-regularized LMS; opened by the tool), Huang, Yao & Lee 2024, ICCE-Taiwan (LUT reciprocal NLMS; abstract), Oba, Kim & Arai 2006, ISPACS (FPGA LMS/NLMS with bit-shift division; secondary description in Huang & Yao 2026), and a 1996 patent by Ding on eliminating division in NLMS. A "Lee 2024 thesis" could not be found. Full texts of Zhao 2018, Huang, Yao & Lee 2024 and Huang & Yao 2026 were supplied and are summarised in docs/related_work.md (the last two use the same DE2-115 board). Pathi et al. 2026 was located (ICICV 2026, pp. 564-569, doi:10.1109/ICICV68925.2026.11554859) and is cited at abstract level. OPEN: read its full text to confirm device, word length and taps. Found in this session (abstract level, docs/related_work.md): Garrett et al., ISLPED 2002, already replace the NLMS division by power-of-two operations from leading-zero counts, so the NLMS-Shift step itself is prior art.
 - No comparison with the base paper's numbers is possible: it reports no numeric results.
-- No power, no real-speech intelligibility, no listening test.
+- No measured or Quartus-estimated power (only the toggle proxy C26; flow in docs/power_flow.md). Objective intelligibility/quality (STOI, PESQ) only; no listening test.
 
 ## Pending verification before external use
 
@@ -111,7 +149,7 @@ Known limits:
 1. The explanation given for an earlier paper_numbers.csv diff (nr_avg vs nr_all) does not match the diff shown (its direction is reversed, and the cited change is not in the displayed reproduce.py diff). What is relied on is the end state: the regenerated CSV equals the committed CSV, and its level-sweep rows (including 4x) agree with the raw level-sweep output. An earlier committed version of the CSV held stale level-sweep rows from the old tuning.
 2. The number audit is a typo guard, not independent verification. It matches numbers by value within metric-specific columns of the repo's own CSVs and Quartus reports (markdown files were removed from its ground-truth pool), so it cannot catch a wrong number that equals another valid number in the same column family. The row-by-row headline-table check was tuned against two planted errors. Coverage of confidence intervals, percentages (43%, 30%) and derived busy fractions is not confirmed.
 3. Quartus reports are tracked in results/quartus_reports/ and the audit reads them from there; results/metrics/quartus_summary.csv is the summary. Specification numbers (50 MHz clock, 20.0 ns period, +0.5 / +3.0 ns Gate B targets, the 2,531 LE estimate) are not measured values and are not matched by the audit.
-4. Not done: board test.
-5. The audit's allowlist has 57 entries (spec 19, threshold 21, derived 8, historical 9; counts printed in its summary block). Historical entries are numbers from earlier runs with no reproducible source. The audit also matches numbers by value across all CSV columns, so a "matched" number can be matched to an unrelated cell.
-6. The committed raw sweep (results/metrics/fixed_sweep.csv) has word lengths 8, 10, 12, 14, 16, 20 and 24 only. There are no W=9 or W=11 data points in the repository, so the evidence for choosing W=12 over W=11 (worst-case degradation 2.97 dB against a 3.0 dB threshold, docs/verification.md) cannot be reproduced. An earlier precision table in docs/results.md did not match the raw data and was replaced. The NLMS degradation column uses a differently tuned float reference and is not a pure quantisation loss.
-7. C1 and C2 'ties' mean overlapping 95% CIs, not an equivalence test; paired per-seed differences are not computed (per-seed values exist on disk for 3 seeds only). The 22/24 dB Pareto thresholds were chosen post hoc.
+4. Not done: board test (procedure in docs/board_test.md, tools py/check_board_capture.py and py/board_stimulus.py).
+5. The audit's allowlist has 66 entries (spec 28, threshold 21, derived 8, historical 9; counts printed in its summary block). docs/related_work.md is excluded from the audit because its numbers are other papers' figures. Historical entries are numbers from earlier runs with no reproducible source. The audit also matches numbers by value across all CSV columns, so a "matched" number can be matched to an unrelated cell.
+6. RESOLVED by C21 (wordlength_fair_*.csv, W = 8..16, 20 seeds). Original note: the committed raw sweep (results/metrics/fixed_sweep.csv) has word lengths 8, 10, 12, 14, 16, 20 and 24 only. There are no W=9 or W=11 data points in the repository, so the evidence for choosing W=12 over W=11 (worst-case degradation 2.97 dB against a 3.0 dB threshold, docs/verification.md) cannot be reproduced. An earlier precision table in docs/results.md did not match the raw data and was replaced. The NLMS degradation column uses a differently tuned float reference and is not a pure quantisation loss.
+7. RESOLVED by C25 (paired_stats.csv: paired t, Wilcoxon and TOST). Original note: C1 and C2 'ties' mean overlapping 95% CIs, not an equivalence test; paired per-seed differences are not computed (per-seed values exist on disk for 3 seeds only). The 22/24 dB Pareto thresholds were chosen post hoc.

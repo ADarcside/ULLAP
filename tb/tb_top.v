@@ -9,8 +9,10 @@
 //   T4   : Filter Adaptation Freeze Mode (SW[1]=1, output and weight match)
 //   T5   : Hardware Reset Mid-Stream & Glitch Immunity (KEY[0])
 //   T6   : Arithmetic Saturation Status LEDs (LEDR[5:0]) and Overrun (LEDR[8])
-//   T7   : AUD_XCK Master Clock Period and Derived Sample Rate fs Measurement
+//   T7   : AUD_XCK Master Clock Period and LRCK-Measured Sample Rate fs
 //   T8   : Skew Sweep across 45 combinations (9 skews x 5 clk2out delays)
+//   T9   : 8 kHz Sample Rate (R8 = 0x00C, LRCK = XCK/1536), no overrun
+//   T10  : GPIO Scope Test Points (in_valid -> out_valid pins 38 cycles = LAT 37 + 1, busy, strobe)
 // =============================================================================
 
 module tb_top #(
@@ -33,6 +35,8 @@ module tb_top #(
     wire       i2c_sclk;
     wire       i2c_sdat;
     wire [9:0] ledr;
+    wire [3:0] gpio;
+    wire [8:0] codec_r8;
 
     pullup(i2c_sdat);
 
@@ -77,7 +81,8 @@ module tb_top #(
         .AUD_XCK     (aud_xck),
         .I2C_SCLK    (i2c_sclk),
         .I2C_SDAT    (i2c_sdat),
-        .LEDR        (ledr)
+        .LEDR        (ledr),
+        .GPIO        (gpio)
     );
 
     // -------------------------------------------------------------------------
@@ -107,7 +112,8 @@ module tb_top #(
         .sample_start       (codec_sample_start),
         .dac_left_out       (captured_dac_left),
         .dac_right_out      (captured_dac_right),
-        .dac_valid          (captured_dac_valid)
+        .dac_valid          (captured_dac_valid),
+        .r8_value           (codec_r8)
     );
 
     // -------------------------------------------------------------------------
@@ -196,6 +202,15 @@ module tb_top #(
         if (test_name == "ALL" || test_name == "T6")   run_T6();
         if (test_name == "ALL" || test_name == "T7")   run_T7();
         if (test_name == "ALL" || test_name == "T8")   run_T8();
+        if (test_name == "ALL" || test_name == "T9")   run_T9();
+        if (test_name == "ALL" || test_name == "T10")  run_T10();
+
+        if (test_name != "ALL" && test_name != "T1" && test_name != "T1b" && test_name != "T2" &&
+            test_name != "T3" && test_name != "T4" && test_name != "T5" && test_name != "T6" &&
+            test_name != "T7" && test_name != "T8" && test_name != "T9" && test_name != "T10") begin
+            $display("# TB_TOP FAIL unknown test=%0s", test_name);
+            $finish(1);
+        end
 
         $display("================================================================================");
         $display("# TB_TOP PASS all_completed test=%0s", test_name);
@@ -504,18 +519,112 @@ module tb_top #(
     // Test T7: AUD_XCK Period and Derived fs Measurement
     // =========================================================================
     task run_T7;
-        realtime t_rise1, t_rise2, period_ns, fs_hz;
+        realtime t_rise1, t_rise2, xck_ns, t_lr1, t_lr2, lrck_ns, fs_hz;
         begin
             $display("[TB_TOP] Running T7: Clock Period & Sample Rate Measurement...");
+            reset_and_init(10000);
             @(posedge aud_xck);
             t_rise1 = $realtime;
             @(posedge aud_xck);
             t_rise2 = $realtime;
-            period_ns = t_rise2 - t_rise1;
-            fs_hz = 1.0e9 / (period_ns * 256.0);
+            xck_ns = t_rise2 - t_rise1;
+            // fs measured from the codec LRCK after configuration, not derived from XCK
+            @(posedge aud_adclrck);
+            @(posedge aud_adclrck);
+            t_lr1 = $realtime;
+            @(posedge aud_adclrck);
+            t_lr2 = $realtime;
+            lrck_ns = t_lr2 - t_lr1;
+            fs_hz = 1.0e9 / lrck_ns;
+            $display("[TB_TOP] AUD_XCK period = %0.2f ns, LRCK period = %0.1f ns, fs = %0.2f Hz", xck_ns, lrck_ns, fs_hz);
+            if (xck_ns < 79.9 || xck_ns > 80.1) begin
+                $display("# TB_TOP FAIL T7 AUD_XCK period %0.2f ns (exp 80.00)", xck_ns);
+                $finish(1);
+            end
+            $display("# TB_TOP PASS T7_clock xck_period_ns=%0.2f lrck_fs_hz=%0.2f", xck_ns, fs_hz);
+        end
+    endtask
 
-            $display("[TB_TOP] AUD_XCK period = %0.2f ns, derived fs = %0.2f Hz", period_ns, fs_hz);
-            $display("# TB_TOP PASS T7_clock period_ns=%0.2f derived_fs_hz=%0.2f", period_ns, fs_hz);
+    // =========================================================================
+    // Test T9: Sample Rate Matches the 8 kHz Simulation Study
+    // R8 must be written as SR=0011 (8 kHz normal mode) and LRCK = XCK/1536 =
+    // 8138.02 Hz; 20 frames must stream with no overrun.
+    // =========================================================================
+    task run_T9;
+        realtime t_lr1, t_lr2, fs_hz;
+        reg signed [15:0] rx_l, rx_r;
+        integer f;
+        begin
+            $display("[TB_TOP] Running T9: 8 kHz sample-rate configuration...");
+            reset_and_init(10000);
+            if (codec_r8 !== 9'h00C) begin
+                $display("# TB_TOP FAIL T9 R8 written as 0x%03h (exp 0x00C, SR=0011)", codec_r8);
+                $finish(1);
+            end
+            @(posedge aud_adclrck);
+            @(posedge aud_adclrck);
+            t_lr1 = $realtime;
+            @(posedge aud_adclrck);
+            t_lr2 = $realtime;
+            fs_hz = 1.0e9 / (t_lr2 - t_lr1);
+            if (fs_hz < 8130.0 || fs_hz > 8146.0) begin
+                $display("# TB_TOP FAIL T9 fs = %0.2f Hz (exp 8138.02)", fs_hz);
+                $finish(1);
+            end
+            sw = 4'b0000;
+            for (f = 0; f < 20; f = f + 1)
+                stream_frame(16'sh1230 + f, 16'sh0450 - f, rx_l, rx_r);
+            if (ledr[8] !== 1'b0) begin
+                $display("# TB_TOP FAIL T9 overrun flag set at 8 kHz");
+                $finish(1);
+            end
+            $display("# TB_TOP PASS T9_rate r8=0x%03h fs_hz=%0.2f frames=20 overrun=0", codec_r8, fs_hz);
+        end
+    endtask
+
+    // =========================================================================
+    // Test T10: GPIO Scope Test Points
+    // GPIO[0] = in_valid, GPIO[1] = out_valid, GPIO[2] = busy, GPIO[3] = sample strobe.
+    // The core accepts in_valid on the clock edge after it rises and registers out_valid
+    // LAT = 37 edges later (NLMS-Shift, L=32), so on the pins the rising edges are
+    // LAT + 1 = 38 cycles (760 ns) apart. Busy must be high in between, and a sample
+    // strobe must precede each in_valid.
+    // =========================================================================
+    task run_T10;
+        realtime t_in, t_out, t_strobe;
+        integer n, cyc, busy_low;
+        begin
+            $display("[TB_TOP] Running T10: GPIO scope test points...");
+            reset_and_init(10000);
+            sw = 4'b0000;
+            for (n = 0; n < 5; n = n + 1) begin
+                @(posedge gpio[3]);
+                t_strobe = $realtime;
+                @(posedge gpio[0]);
+                t_in = $realtime;
+                busy_low = 0;
+                cyc = 0;
+                while (gpio[1] !== 1'b1 && cyc < 200) begin
+                    @(posedge clk50);
+                    #1;
+                    cyc = cyc + 1;
+                    if (gpio[1] !== 1'b1 && gpio[2] !== 1'b1) busy_low = busy_low + 1;
+                end
+                t_out = $realtime - 1.0;  // undo the #1 sampling offset
+                if (cyc != 38) begin
+                    $display("# TB_TOP FAIL T10 in_valid->out_valid = %0d cycles (exp 38 = LAT 37 + accept edge)", cyc);
+                    $finish(1);
+                end
+                if (busy_low != 0) begin
+                    $display("# TB_TOP FAIL T10 busy low for %0d cycles before out_valid", busy_low);
+                    $finish(1);
+                end
+                if (t_in - t_strobe > 100.0) begin
+                    $display("# TB_TOP FAIL T10 in_valid %0.1f ns after strobe (exp <= 100 ns)", t_in - t_strobe);
+                    $finish(1);
+                end
+            end
+            $display("# TB_TOP PASS T10_gpio pin_spacing_cycles=38 core_lat=37 spacing_ns=%0.1f pulses=5", t_out - t_in);
         end
     endtask
 

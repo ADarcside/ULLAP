@@ -43,8 +43,10 @@ module wm8731_i2c_init (
         config_rom[7]  = {7'h05, 9'b0_0000_0000};
         // R7: Digital Audio Format [UNVERIFIED: I2S format, 16-bit, Master mode]
         config_rom[8]  = {7'h07, 9'b0_0100_0010};
-        // R8: Sampling Rate Control [UNVERIFIED: Normal mode, base oversampling 256fs; comment '48 kHz / 8 kHz' removed]
-        config_rom[9]  = {7'h08, 9'b0_0000_0000};
+        // R8: Sampling Rate Control [UNVERIFIED on board: Normal mode, BOSR=0, SR=0011 -> ADC/DAC 8 kHz
+        //     at MCLK 12.288 MHz; with the 12.5 MHz AUD_XCK fs = 12.5 MHz / 1536 = 8.138 kHz,
+        //     matching the 8 kHz Python study. SR=0000 (the old value) gave 48.83 kHz.]
+        config_rom[9]  = {7'h08, 9'b0_0000_1100};
         // R9: Active Control [UNVERIFIED: activate digital core]
         config_rom[10] = {7'h09, 9'b0_0000_0001};
     end
@@ -216,6 +218,12 @@ module wm8731_i2c_init (
                     i2c_sclk  <= 1'b1;
                     if (!init_error)
                         init_done <= 1'b1;
+                end
+
+                // Unused encodings 7-15: return to idle (Verilator CASEINCOMPLETE)
+                default: begin
+                    state <= S_IDLE;
+                    phase <= 2'd0;
                 end
             endcase
         end

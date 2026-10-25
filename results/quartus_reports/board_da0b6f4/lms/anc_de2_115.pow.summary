@@ -1,0 +1,12 @@
+Power Analyzer Status : Successful - Sat Oct 24 23:14:04 2026
+Quartus Prime Version : 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
+Revision Name : anc_de2_115
+Top-level Entity Name : anc_de2_115_top
+Family : Cyclone IV E
+Device : EP4CE115F29C7
+Power Models : Final
+Total Thermal Power Dissipation : 169.46 mW
+Core Dynamic Thermal Power Dissipation : 20.79 mW
+Core Static Thermal Power Dissipation : 98.69 mW
+I/O Thermal Power Dissipation : 49.98 mW
+Power Estimation Confidence : Low: user provided insufficient toggle rate data

@@ -32,7 +32,8 @@ module anc_de2_115_top #(
     inout  wire        I2C_SDAT,     // I2C Data (PIN_A8)
 
     // Status / Diagnostic LEDs
-    output wire [9:0]  LEDR          // Red LEDs for status/diagnostics
+    output wire [9:0]  LEDR,         // Red LEDs for status/diagnostics
+    output reg  [3:0]  GPIO          // Scope test points (same as anc_de2_115_top)
 );
 
     // -------------------------------------------------------------------------
@@ -228,5 +229,12 @@ module anc_de2_115_top #(
     assign LEDR[7]   = codec_init_error;// ON if I2C NACK occurs
     assign LEDR[8]   = overrun_flag;    // ON if audio frame lost
     assign LEDR[9]   = bypass_active;   // ON when bypass switch SW[0] is active
+
+    always @(posedge CLOCK_50 or negedge rst_n) begin
+        if (!rst_n)
+            GPIO <= 4'b0000;
+        else
+            GPIO <= {sample_strobe, anc_busy, anc_out_valid, core_in_valid};
+    end
 
 endmodule
