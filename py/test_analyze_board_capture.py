@@ -33,16 +33,21 @@ def fake_capture(path, algo, n=6000, pre=400, hexfmt=False, corrupt=False):
             f.write(f"{i - pre},1,1,{fmt(a)},{fmt(b)},{fmt(c)}\n")
 
 
-def fake_timing(path):
+def fake_timing(path, split=False):
     g = np.zeros(20000, int)
     for s in (1000, 7144, 13288):
         g[s] |= 1                      # in_valid strobe
         g[s + 38] |= 2                 # out_valid strobe
         g[s + 1:s + 73] |= 4           # busy
     with open(path, "w") as f:
-        f.write("Sample,GPIO[3..0]\n")
-        for i, v in enumerate(g):
-            f.write(f"{i},{v:X}\n")
+        if split:
+            f.write("Sample,GPIO[3],GPIO[2],GPIO[1],GPIO[0]\n")
+            for i, v in enumerate(g):
+                f.write(f"{i}," + ",".join(str((v >> b) & 1) for b in (3, 2, 1, 0)) + "\n")
+        else:
+            f.write("Sample,GPIO[3..0]\n")
+            for i, v in enumerate(g):
+                f.write(f"{i},{v:X}\n")
 
 
 def test_bit_exact_and_nr(tmp_path):
@@ -62,3 +67,9 @@ def test_bit_exact_and_nr(tmp_path):
 def test_mismatch_fails(tmp_path):
     fake_capture(tmp_path / "cap_nlms_stationary.csv", "nlms", corrupt=True)
     assert abc.main([str(tmp_path), "--out", str(tmp_path / "out")]) == 1
+
+
+def test_timing_split_bits(tmp_path):
+    fake_timing(tmp_path / "timing_lms.csv", split=True)
+    res = abc.analyse_timing(tmp_path / "timing_lms.csv")
+    assert res["in_valid period (cycles)"] == 6144 and res["in_valid to out_valid (cycles)"] == 38

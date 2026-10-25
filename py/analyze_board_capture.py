@@ -168,10 +168,16 @@ def analyse_timing(path):
     """GPIO[3:0] = {sample_strobe, busy, out_valid, in_valid} sampled at 50 MHz."""
     rows = read_rows(path)
     hi, header = find_header(rows, ["gpio"])
-    ig = col(header, "gpio")
-    body = [r for r in rows[hi + 1:] if len(r) > ig and r[ig].strip()]
-    radix = detect_radix([r[ig] for r in body[:2000]])
-    g = np.array([to_int(r[ig], radix, 5) & 0xF for r in body])
+    bits = {int(m.group(1)): i for i, h in enumerate(header)
+            for m in [re.search(r"gpio\[(\d)\]$", h)] if m}  # bus exported as separate bits
+    body = [r for r in rows[hi + 1:] if len(r) > max(bits.values(), default=col(header, "gpio"))]
+    if len(bits) == 4:
+        g = np.array([sum(to_int(r[i], "dec", 2) << b for b, i in bits.items()) for r in body])
+    else:
+        ig = col(header, "gpio")
+        body = [r for r in body if r[ig].strip()]
+        radix = detect_radix([r[ig] for r in body[:2000]])
+        g = np.array([to_int(r[ig], radix, 5) & 0xF for r in body])
     bit = lambda b: (g >> b) & 1
     rise = lambda s: np.flatnonzero((s[1:] == 1) & (s[:-1] == 0)) + 1
     iv, ov, busy = bit(0), bit(1), bit(2)
