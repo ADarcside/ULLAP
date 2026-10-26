@@ -15,3 +15,14 @@ Reproduce the analysis:
 Result (`results/board/session1/board_capture_summary.md`): all 12 captures bit-exact against
 `py/rtl_model.py` from the reset onward; 8,138.02 Hz sample rate; in_valid to out_valid 38 / 36 / 38
 cycles and busy 72 / 73 / 130 cycles for NLMS-Shift / LMS / NLMS.
+
+Bench-laptop files (from branch `bench-laptop-2026-10-26`, commit 6f68be5): `signaltap/REPORT.md`
+and `signaltap/capture_script.tcl` (the operator's report and Tcl capture script), `stimulus_6s/`
+(the exact 6 s WAVs played in session 1), `quartus/anc_t9.stp` and the Signal Tap assignments in
+`quartus/anc_de2_115.qsf`. The 30 s stimulus WAVs (regenerable with `py/board_stimulus.py`) and a
+second copy of the session-1 zip were left out. REPORT.md says `analyze_board_capture.py` does not
+exist; it was written afterwards in this repo (`py/analyze_board_capture.py`).
+
+Note: with `anc_t9.stp` enabled in the .qsf, every build includes Signal Tap. The resource and
+timing figures in the paper's hardware table are for builds without it; remove the
+`ENABLE_SIGNALTAP` / `USE_SIGNALTAP_FILE` lines for that build.
