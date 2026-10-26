@@ -47,6 +47,20 @@ def digital_reference(algo, scen):
     return abc.nr_db(di[lo:], e[lo:]), di, e
 
 
+def model_at_board_level(algo, scen, xb, db):
+    """NR_final of the integer model on the 8 kHz stimulus scaled to the RMS the board received on each
+    channel over the scenario: separates the effect of the playback level from everything else."""
+    code, p = abc.ALGOS[algo]
+    x, d = build(scen, SECONDS, SEED, True)
+    x, d = x[:N8K], d[:N8K]
+    gx = np.sqrt(np.mean(xb.astype(float) ** 2) / np.mean(x ** 2))
+    gd = np.sqrt(np.mean(db.astype(float) ** 2) / np.mean(d ** 2))
+    xi, di = np.round(x * gx).astype(int), np.round(d * gd).astype(int)
+    e = np.array(run_rtl_model(code, xi.tolist(), di.tolist(), W=abc.W, L=abc.L, **p)["e"])
+    lo = int(0.75 * N8K)
+    return abc.nr_db(di[lo:], e[lo:])
+
+
 def scenario_start(x_board, scen):
     """Index in the post-reset capture where the 2 s scenario starts, and the correlation peak."""
     x, _ = build(scen, SECONDS, SEED, True)
@@ -158,12 +172,18 @@ def main(argv=None):
             verdict = (f"bit-exact with freeze on from sample {f} ({f / abc.FS:.2f} s after reset)"
                        if f is not None and nb == 0 else f"FAIL ({nb} samples differ)")
             ok &= f is not None and nb == 0
-            if f is not None:
+            s, _ = scenario_start(x[k0:], "stationary")
+            if f is not None and s is not None and k0 + s + n <= len(d):
                 win = int(0.25 * abc.FS)
-                pre = abc.nr_db(d[k0 + f - win:k0 + f], e[k0 + f - win:k0 + f])
-                end = int(np.flatnonzero(x)[-1]) + 1      # last active sample (silence follows)
-                post = abc.nr_db(d[end - win:end], e[end - win:end])
-                verdict += f"; NR {pre:.1f} dB in the 0.25 s before the switch, {post:.1f} dB in the last 0.25 s of signal"
+                i0, i1 = k0 + f, k0 + s + n                # from the switch to the end of the scenario
+                code, p = abc.ALGOS["shift"]
+                free = np.array(run_rtl_model(code, x[k0:i1].tolist(), d[k0:i1].tolist(), W=abc.W, L=abc.L, **p)["e"])
+                pre = abc.nr_db(d[i0 - win:i0], e[i0 - win:i0])
+                post = abc.nr_db(d[i0:i1], e[i0:i1])
+                post_free = abc.nr_db(d[i0:i1], free[f:])
+                verdict += (f", {(f - s) / abc.FS:.2f} s into the scenario; NR {pre:.1f} dB in the 0.25 s before "
+                            f"the switch, {post:.1f} dB frozen from the switch to the end of the scenario "
+                            f"({post_free:.1f} dB if adaptation had continued)")
             lines.append(f"- Freeze (NLMS-Shift, stationary): {verdict}")
             print("freeze:", verdict)
             continue
@@ -174,17 +194,20 @@ def main(argv=None):
         xb, db, eb = x[k:], d[k:], e[k:]
         s, rho = scenario_start(xb, scen)
         nr_r, ref_d, ref_e = digital_reference(algo, scen)
+        nr_l = float("nan")
         if s is None or s + n > len(db) or rho < 0.5:
             nr_b, note = float("nan"), f"scenario not fully inside the capture (start {s}, rho {rho:.2f})"
             ok = False
         else:
+            nr_l = model_at_board_level(algo, scen, xb[s:s + n], db[s:s + n])
             lo = s + int(0.75 * n)
             nr_b, note = abc.nr_db(db[lo:s + n], eb[lo:s + n]), ""
             plot_2s(f"{abc.NAMES[algo]}, {scen}", db, eb, s, n, ref_d, ref_e, nr_b, nr_r,
                     os.path.join(a.out, f"board2s_{algo}_{scen}"))
         rows.append(dict(algorithm=abc.NAMES[algo], scenario=scen, t9=t9, scenario_start_s=round(s / abc.FS, 3) if s is not None else "",
                          corr=round(rho, 3), nr_board_db=round(nr_b, 2), nr_model_db=round(nr_r, 2),
-                         diff_db=round(nr_b - nr_r, 2), note=note))
+                         diff_db=round(nr_b - nr_r, 2), nr_model_board_level_db=round(nr_l, 2),
+                         diff_board_level_db=round(nr_b - nr_l, 2), note=note))
         print(rows[-1])
     for name, byp in (("dac_anc.csv", False), ("dac_bypass.csv", True)):
         p = os.path.join(a.dir, name)
@@ -207,9 +230,11 @@ def main(argv=None):
     with open(os.path.join(a.out, "board_session2_summary.md"), "w") as f:
         f.write("# Board session 2\n\n")
         if rows:
-            f.write("| Algorithm | Scenario | T9 | NR board (dB) | NR model, same signal (dB) | Difference |\n|---|---|---|---|---|---|\n")
+            f.write("| Algorithm | Scenario | T9 | NR board (dB) | NR model, same signal (dB) | Difference | "
+                    "NR model at the board's input level (dB) | Difference |\n|---|---|---|---|---|---|---|---|\n")
             for r in rows:
-                f.write(f"| {r['algorithm']} | {r['scenario']} | {r['t9']} | {r['nr_board_db']} | {r['nr_model_db']} | {r['diff_db']} |\n")
+                f.write(f"| {r['algorithm']} | {r['scenario']} | {r['t9']} | {r['nr_board_db']} | {r['nr_model_db']} | "
+                        f"{r['diff_db']} | {r['nr_model_board_level_db']} | {r['diff_board_level_db']} |\n")
         f.write("\n" + "\n".join(lines) + "\n")
     return 0 if ok else 1
 

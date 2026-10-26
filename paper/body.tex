@@ -120,9 +120,10 @@ Core golden vectors (\texttt{tb\_anc\_core}) & 68 & all pass, bit-exact\\
 Protocol corner cases & 4 & pass\\
 Freeze hold/toggle variants & 3 & pass\\
 Top level with codec model (T1--T10) & 11 & pass\\
-Python unit tests & 46 & pass\\
+Python unit tests & 53 & pass\\
 Verilator lint (\texttt{-Wall}) & -- & 0 unwaived\\
-On-board Signal Tap captures (T9) & 12 & all bit-exact\\\bottomrule
+On-board Signal Tap captures (T9) & 25 & all bit-exact\\
+On-board freeze, DAC word, 10-min soak & 4 & pass\\\bottomrule
 \end{tabular}}
 \end{table}
 
@@ -296,8 +297,64 @@ and track the step at 2.1~s, where the level of $d$ rises by 7.4~dB, with only a
 the residual power after the step ($-47$ to $-52$~dBFS) is below its level before it ($-44$~dBFS), so
 the noise reduction rises to 25 to 30~dB. Over the last quarter of the window the reduction is about
 40~dB below 1.5~kHz and 11 to 15~dB near the band edge (3.5 to 3.9~kHz).
-\TBD{Board session 2: noise reduction on the 2~s seed-1 stimulus (the simulation signal) against the
-integer model on the same signal, freeze test, 10-minute soak, DAC-word check.}
+
+\emph{Noise reduction on the simulation signal.} In a second session the stimulus was the 2~s,
+seed-1 noise-only signal of each scenario, i.e.\ exactly the 16,000-sample signal of the simulations,
+played once after the calibration tone so that the whole scenario lies inside the capture. Its start is
+found by correlating the captured $x$ with the stimulus (correlation 0.95 to 0.99), and
+$\mathrm{NR}_\mathrm{final}$ is taken over the same last 25~\% as in simulation. All 12 captures (28,672
+samples after the reset each) are again bit-exact. Table~\ref{tab:board} compares the board with the
+integer model on the same signal. The board is 2.9 to 10.6~dB below the simulation, by similar amounts for all three
+algorithms, and the cause is the input level, not the hardware: the codec delivered $x$ and $d$ at
+about $-27$~dBFS, 3~dB below the simulation level, and at the tuned step sizes a lower input power slows
+adaptation within the 2~s. Run at the level the board received, the model reproduces the board within
+0.2~dB on stationary and path-switch noise (Fig.~\ref{fig:boardlevel}). For amplitude steps and the
+recorded noise, whose final quarter is quiet ($d$ at about $-41$ and $-57$~dBFS), the board stays 1.7 to
+8.1~dB below the level-matched model; there the analogue noise of the playback and codec path
+($-70$~dBFS measured in the silence after the stimulus) and an ADC offset that decays during the first
+second after the reset are no longer small against $d$, and for amplitude steps the best 32-tap least-squares filter fitted to the board samples of that
+window reaches 24~dB instead of 28~dB on the ideal signal. On the board the three algorithms are
+within 0.7~dB of one another in every scenario.
+
+\begin{table}[!htbp]\centering\small
+\caption{On-board $\mathrm{NR}_\mathrm{final}$ (dB) on the 2~s seed-1 stimulus against the integer model on
+the same signal, at the simulation level and scaled to the level the board received
+(\texttt{results/board/session2/}). Every board capture is bit-exact.}\label{tab:board}
+\fitcol{\begin{tabular}{llrrr}\toprule
+Algorithm & Scenario & Board & Model, sim.\ level & Model, board level\\\midrule
+LMS & stationary & 15.88 & 22.77 & 15.76\\
+ & amplitude steps & 17.13 & 27.71 & 25.23\\
+ & path switch & 14.67 & 19.84 & 14.47\\
+ & recorded noise & 5.99 & 9.11 & 7.78\\\midrule
+NLMS & stationary & 15.65 & 21.60 & 15.53\\
+ & amplitude steps & 16.76 & 27.19 & 23.64\\
+ & path switch & 14.03 & 19.06 & 14.04\\
+ & recorded noise & 5.80 & 8.72 & 7.45\\\midrule
+NLMS-Shift & stationary & 15.80 & 22.68 & 15.78\\
+ & amplitude steps & 16.57 & 25.79 & 22.10\\
+ & path switch & 14.40 & 19.86 & 14.44\\
+ & recorded noise & 5.46 & 8.63 & 7.32\\\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{\WF}[!htbp]\centering
+\includegraphics[width=\linewidth]{fig15_board_vs_model_stationary.pdf}
+\caption{Running noise reduction (0.125~s windows) on the 2~s stationary stimulus: board capture, integer
+model at the simulation level, and integer model with the stimulus scaled to the level the board
+received. Shaded: the $\mathrm{NR}_\mathrm{final}$ window.}\label{fig:boardlevel}
+\end{\WF}
+
+\emph{Freeze, DAC word and endurance.} With NLMS-Shift on stationary noise, SW[1] was flipped by hand
+1.44~s into the scenario. The captured output equals the model with adaptation stopped from that
+sample on (28,672 samples, no mismatch), and the noise reduction stays at 15.2~dB from the switch to
+the end of the scenario, against 15.4~dB just before it and 15.9~dB had adaptation continued. A third
+Signal Tap instance recorded the word sent to the DAC: in ANC mode it equals $\{e, 0000\}$ and in bypass
+($\mathrm{SW}[0]=1$) its upper 12 bits equal $d$, in all 1,792 samples of each capture. Since the LINE OUT
+signal could not be recorded with the available equipment, this closes the chain up to the DAC
+interface. After 10~minutes of continuous operation on looped noise, the GPIO timing was unchanged
+(6,144 cycles per sample, 38 cycles from \texttt{in\_valid} to \texttt{out\_valid}, 72 busy cycles) and
+no saturation, NACK or overrun flag was lit; the build with all three logic-analyser instances still
+met timing (slack $+2.93$~ns).
 
 \begin{\WF}[!htbp]\centering
 \includegraphics[width=\linewidth]{fig14_board_capture_amp_steps.pdf}
@@ -317,10 +374,21 @@ steady. It does not show that NLMS-Shift is better than NLMS in cancellation.
 The acoustic paths are simulated, also for the real recordings; the evaluation does not cover
 acoustic feedback (the closed-loop howling scenario of the base work), for which reference-based ANC
 is not the right structure. Power is a switching-activity proxy until gate-level analysis is done.
-\TBD{Update after the board test.}
+On the board, the output is proven equal to the model up to the DAC word, but the analogue LINE OUT
+signal was not recorded, and the absolute noise reduction depends on the input level: with the
+stimulus 3~dB below the simulation level the board reached 14 to 17~dB instead of 19 to 28~dB on the
+synthetic scenarios, and on stationary and path-switch noise the model reproduces this at that level. A deployment should therefore set the
+codec input gain so that the reference uses most of the 12-bit range, or retune the step size for the
+expected level.
 
 \section{Conclusion}
-\TBD{Write after the board results: three to four sentences restating the measured outcome.}
+ULLAP implements LMS, NLMS and NLMS-Shift on one serial 12-bit, 32-tap core on a low-cost Cyclone IV
+board, compared under equal tuning effort. NLMS-Shift matches NLMS within the 95\% confidence interval
+on stationary and amplitude-step noise while needing 72 instead of 130 busy cycles per sample, and all
+three remove 11.7 to 14.9~dB of real recorded noise. On the board, 25 Signal Tap captures of real codec
+data (724,459 samples) are bit-exact with the integer model, as are the freeze behaviour and the DAC
+word, and on stationary and path-switch noise the measured noise reduction equals the model's at the
+input level the board received within 0.2~dB.
 
 \section*{Data and code availability}
 All RTL, testbenches, scripts and result files are in the project repository
