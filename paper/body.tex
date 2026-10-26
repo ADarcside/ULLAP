@@ -289,17 +289,23 @@ NLMS (the core latency plus one accept cycle, 0.76, 0.72 and 0.76~$\mu$s) and bu
 the 50~MHz constraint (setup slack $+2.65$, $+5.68$ and $+3.78$~ns); Table~\ref{tab:hw} is for the builds
 without the logic analyser.
 
-Fig.~\ref{fig:board} shows one capture: after the tone, the residual falls within about 0.5~s, and when
-the noise level triples at 2.35~s the normalised filter recovers within a few hundred milliseconds.
+Fig.~\ref{fig:board} shows the three algorithms on the same amplitude-step stimulus, aligned to the start of
+the scenario (KEY0 was pressed by hand during the calibration tone, so the reset falls at a slightly
+different point of the stimulus in each capture). All three settle to about 15~dB in the first 1.5~s
+and track the step at 2.1~s, where the level of $d$ rises by 7.4~dB, with only a short burst in $e$:
+the residual power after the step ($-47$ to $-52$~dBFS) is below its level before it ($-44$~dBFS), so
+the noise reduction rises to 25 to 30~dB. Over the last quarter of the window the reduction is about
+40~dB below 1.5~kHz and 11 to 15~dB near the band edge (3.5 to 3.9~kHz).
 \TBD{Board session 2: noise reduction on the 2~s seed-1 stimulus (the simulation signal) against the
 integer model on the same signal, freeze test, 10-minute soak, DAC-word check.}
 
-\begin{figure}[!htbp]\centering
-\includegraphics[width=\linewidth]{fig14_board_capture_shift_amp_steps.pdf}
-\caption{On-board Signal Tap capture, NLMS-Shift, amplitude-step noise: primary input $d$ and output $e$
-after the reset (the first 0.25~s is the calibration tone), running noise reduction, and power spectra
-over the capture. Every output sample equals the integer model's.}\label{fig:board}
-\end{figure}
+\begin{\WF}[!htbp]\centering
+\includegraphics[width=\linewidth]{fig14_board_capture_amp_steps.pdf}
+\caption{On-board Signal Tap captures of LMS, NLMS and NLMS-Shift on the same amplitude-step noise, from
+the start of the scenario: primary input $d$ and output $e$ (top), running noise reduction in 0.125~s
+windows (bottom left; shaded: last 25~\% of the common window) and power spectra over that window
+(bottom right). Every output sample of all three captures equals the integer model's.}\label{fig:board}
+\end{\WF}
 
 %--------------------------------------------------------------------------------------------
 \FloatBarrier % every figure and table is placed before the discussion
