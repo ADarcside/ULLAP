@@ -68,12 +68,19 @@ with two instances, compiled into the design:
 
 | Instance | Clock | Depth | Storage qualifier | Nodes | Trigger |
 |---|---|---|---|---|---|
-| `cap` | `CLOCK_50` | 64K | Input port: `anc_core:u_anc_core\|out_valid` = 1 | `x_reg`, `d_reg`, `anc_core:u_anc_core\|e_out`, `anc_core:u_anc_core\|out_valid` | `rst_sync_2` rising edge, pre-trigger position |
-| `timing` | `CLOCK_50` | 8K | Continuous | `GPIO` | `GPIO[0]` (in_valid) rising edge, pre-trigger position |
+| `cap` | `CLOCK_50` | 64K | Transitional, on `anc_core:u_anc_core\|out_valid` only | `x_reg`, `d_reg`, `anc_core:u_anc_core\|e_out`, `anc_core:u_anc_core\|out_valid`, `rst_sync_2` | `rst_sync_2` rising edge (trigger-in), pre-trigger position |
+| `timing` | `CLOCK_50` | 8K | Continuous | `GPIO[3..0]` | `GPIO[0]` (in_valid) rising edge (trigger-in), pre-trigger position |
 
-64K rows at 8.138 kHz is 8.05 s, of which about 7 s follow the reset (pre-trigger position keeps
-12 % before the trigger; the analysis skips those rows). Set every bus to Signed Decimal or
-leave the default hexadecimal; the script detects both.
+Quartus Prime Lite 25.1 does not accept an internal node as an "Input port" storage qualifier (it
+falls back to an unconnected pin `auto_stp_external_storage_qualifier` and stores nothing useful),
+so `cap` uses a Transitional qualifier on out_valid: one row when out_valid rises and one when it
+falls, 32,768 samples (4.03 s) per capture, of which about 3.5 s follow the reset. In the node table
+keep Data Enable and Trigger Enable ticked for all 38 bits and tick Storage Enable / Storage
+Qualifier only for out_valid. Any change to the `.stp` needs a full recompile, otherwise Signal Tap
+reports "not compatible" and will not run. The exported CSV starts with a "Groups:" section and an
+all-X row; `py/analyze_board_capture.py` skips both and keeps the out_valid = 1 rows. Captures can be
+scripted with `quartus_stp -t` (`open_session`, `run -instance cap ... -data_log`,
+`export_data_log ... -format csv`); see `board_evidence/`.
 
 Per algorithm (one compile each, `quartus_sh -t build_quartus.tcl <args>` keeps the `.stp`):
 
