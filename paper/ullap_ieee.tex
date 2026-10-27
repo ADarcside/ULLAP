@@ -9,6 +9,9 @@
 \usepackage{adjustbox}
 \usepackage{placeins}
 \usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds}
+\newif\ifshowabstract\showabstractfalse % authors' format: no abstract; set \showabstracttrue to restore it (journals require one at submission)
 \usepackage[hidelinks]{hyperref}
 \usepackage{dblfloatfix} % keep wide floats in order and close to their first mention
 % let pages carry more floats so the figures sit next to their text rather than after the references
@@ -25,16 +28,18 @@
 \title{A Bit-Exact, Processor-Free FPGA Adaptive Noise Canceller: Fair Comparison of LMS, NLMS and
 Divider-Free NLMS-Shift on Cyclone IV E}
 
-\author{Satvik~Garg, Aditya~Gupta, and Jaffino~G%
+\author{Satvik~Garg \& Aditya~Gupta \& Jaffino~G%
 \thanks{The authors are with the School of Electronics Engineering (SENSE), Vellore Institute of
 Technology, Vellore, India. Corresponding author: Jaffino G. \TBD{e-mail and author order to be
 confirmed by the authors}}}
 
 \maketitle
 
+\ifshowabstract
 \begin{abstract}
 \input{abstract}
 \end{abstract}
+\fi
 
 \begin{IEEEkeywords}
 Adaptive noise cancellation, NLMS, divider-free normalisation, FPGA, fixed-point arithmetic,
