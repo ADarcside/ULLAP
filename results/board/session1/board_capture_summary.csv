@@ -1,0 +1,13 @@
+algorithm,scenario,samples_after_reset,seconds,skipped_pre_reset_rows,radix,t9_bit_exact,nr_final_db,d_rms_dbfs
+LMS,amp_steps,28673,3.52,4095,hex,bit-exact,28.74,-22.6
+LMS,path_switch,28672,3.52,4096,hex,bit-exact,7.03,-24.6
+LMS,stationary,32768,4.03,0,hex,bit-exact,18.14,-26.1
+LMS,wav,28674,3.52,4094,hex,bit-exact,18.15,-25.6
+NLMS,amp_steps,28672,3.52,4096,hex,bit-exact,27.77,-23.0
+NLMS,path_switch,28672,3.52,4096,hex,bit-exact,5.06,-27.5
+NLMS,stationary,28672,3.52,4096,hex,bit-exact,17.84,-26.7
+NLMS,wav,28674,3.52,4094,hex,bit-exact,17.09,-26.4
+NLMS-Shift,amp_steps,28672,3.52,4096,hex,bit-exact,25.69,-22.9
+NLMS-Shift,path_switch,28672,3.52,4096,hex,bit-exact,5.45,-25.9
+NLMS-Shift,stationary,32230,3.96,538,hex,bit-exact,17.71,-25.1
+NLMS-Shift,wav,28672,3.52,4096,hex,bit-exact,14.05,-29.9

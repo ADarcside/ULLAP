@@ -70,7 +70,7 @@ SPEC_ALLOWLIST = {
     ("claims.md", 154, "2.97"): ("historical", "W=11 degradation figure from the 2026-10-11 log in docs/verification.md; no reproducible source"),
     ("claims.md", 155, "24"): ("threshold", "Pareto acceptance boundary threshold for amp_steps (24 dB; post hoc threshold)"),
     ("docs/verification.md", 135, "760"): ("spec", "GPIO in_valid->out_valid pin spacing: (LAT 37 + 1 accept edge) x 20 ns, checked by tb_top T10"),
-    ("docs/board_test.md", 56, "760"): ("spec", "GPIO in_valid->out_valid pin spacing: (LAT 37 + 1 accept edge) x 20 ns, checked by tb_top T10"),
+    ("docs/board_test.md", 57, "760"): ("spec", "GPIO in_valid->out_valid pin spacing: (LAT 37 + 1 accept edge) x 20 ns, checked by tb_top T10"),
 
     # Design targets, thresholds, and historical verification logs in docs/ and results/
     ("docs/phase1_eps_tuning.md", 27, "10"): ("threshold", "Project noise cancellation design target on tonal chord (10 dB)"),

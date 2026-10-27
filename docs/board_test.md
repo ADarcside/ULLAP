@@ -51,29 +51,55 @@ clean and no saturation LED lights; keep this level for all tests.
 | T4 Freeze | Converge, then SW[1] = 1 for 10 s, then 0 | Cancellation holds while frozen; adaptation resumes when released | Recording with switch times noted |
 | T5 Reset | KEY[0] five times during playback | LEDR[6] returns each time, cancellation restarts | Notes |
 | T6 Overload | Raise the input level until clipping | No hang or sustained oscillation; flags may light and clear on reset | Photo of LEDs |
-| T7 Sample rate | Scope on AUD_ADCLRCK (or GPIO pin 4) | 8.138 kHz (period 122.9 us) | Scope screenshot |
+| T7 Sample rate | Scope on AUD_ADCLRCK (or GPIO pin 4), or the `timing` Signal Tap instance (section 4) | 8.138 kHz (period 122.9 us) | Scope screenshot |
 | T8 Soak | 10 minutes of `stationary_noise_48k.wav` in ANC | No dropouts, no return of noise, no new flags | Notes, LED photo |
 | T9 Bit-exact | Signal Tap capture (section 4) after a reset | `py/check_board_capture.py` reports T9 PASS | Exported CSV + script output |
-| T10 Timing | Scope GPIO pin 1 (in_valid) and pin 2 (out_valid) | Rising edges 38 cycles = 760 ns apart (core LAT 37 + 1 accept edge); busy (pin 3) high in between | Scope screenshot |
-| T11 Board NR | For each scenario `*_noise_48k.wav`: record once with SW[0] = 1, once with SW[0] = 0 | Report `python py/board_stimulus.py analyze --bypass b.wav --anc a.wav --seconds 30` for each algorithm and scenario | Recordings + table |
+| T10 Timing | Scope GPIO pin 1 (in_valid) and pin 2 (out_valid), or the `timing` Signal Tap instance | Rising edges 38 cycles = 760 ns apart (core LAT 37 + 1 accept edge); busy (pin 3) high in between | Scope screenshot |
+| T11 Board NR | For each scenario `*_noise_48k.wav`: record once with SW[0] = 1, once with SW[0] = 0 | Report `python py/board_stimulus.py analyze ...` for each algorithm and scenario, or capture with Signal Tap and run `py/analyze_board_capture.py` (section 4) | Recordings or Signal Tap CSVs + table |
 
 T11 measures the end-to-end noise reduction including the codec's analogue path. Report it next
 to the simulated nr_final for the same scenario; the difference is the board's contribution
 (ADC/DAC noise floor, gain mismatch between channels, PC resampling).
 
-## 4. Signal Tap set-up for T9
+## 4. Signal Tap capture (T9, T11 and T7/T10 without a recorder or scope)
 
-1. Tools > Signal Tap Logic Analyzer, new file `quartus/anc_t9.stp`, clock `CLOCK_50`.
-2. Nodes: `x_reg[11..0]`, `d_reg[11..0]`, `anc_core:u_anc_core|e_out[11..0]`, `anc_core:u_anc_core|out_valid`.
-3. Storage qualifier: Input port, `out_valid` = 1 (one row per processed sample). Sample depth 8K.
-4. Trigger: `core_in_valid` rising, trigger position pre = 0 %, so the buffer starts at the first sample after reset.
-5. Add the `.stp` to the project, recompile, programme. Arm the analyzer, press KEY[0] with SW[1] = 0
-   and stimulus playing. When the buffer is full, File > Export > CSV.
-6. `python py/check_board_capture.py --csv board_evidence/t9_<algo>.csv --algo <0|1|2>`.
+The FPGA records its own data, so no audio recorder or oscilloscope is needed. One `.stp` file
+with two instances, compiled into the design:
 
-Because capture starts from reset, the integer model starts from zero state and must match every
-captured e[n]. Remove the `.stp` from the project for the final timing build (Signal Tap adds
-logic and changes slack), and note this in the build manifest.
+| Instance | Clock | Depth | Storage qualifier | Nodes | Trigger |
+|---|---|---|---|---|---|
+| `cap` | `CLOCK_50` | 64K | Transitional, on `anc_core:u_anc_core\|out_valid` only | `x_reg`, `d_reg`, `anc_core:u_anc_core\|e_out`, `anc_core:u_anc_core\|out_valid`, `rst_sync_2` | `rst_sync_2` rising edge (trigger-in), pre-trigger position |
+| `timing` | `CLOCK_50` | 8K | Continuous | `GPIO[3..0]` | `GPIO[0]` (in_valid) rising edge (trigger-in), pre-trigger position |
+
+Quartus Prime Lite 25.1 does not accept an internal node as an "Input port" storage qualifier (it
+falls back to an unconnected pin `auto_stp_external_storage_qualifier` and stores nothing useful),
+so `cap` uses a Transitional qualifier on out_valid: one row when out_valid rises and one when it
+falls, 32,768 samples (4.03 s) per capture, of which about 3.5 s follow the reset. In the node table
+keep Data Enable and Trigger Enable ticked for all 38 bits and tick Storage Enable / Storage
+Qualifier only for out_valid. Any change to the `.stp` needs a full recompile, otherwise Signal Tap
+reports "not compatible" and will not run. The exported CSV starts with a "Groups:" section and an
+all-X row; `py/analyze_board_capture.py` skips both and keeps the out_valid = 1 rows. Captures can be
+scripted with `quartus_stp -t` (`open_session`, `run -instance cap ... -data_log`,
+`export_data_log ... -format csv`); see `board_evidence/`.
+
+Per algorithm (one compile each, `quartus_sh -t build_quartus.tcl <args>` keeps the `.stp`):
+
+1. Programme the `.sof` from the Signal Tap window, SW[1] = 0 (SW[0] does not matter: the capture
+   is taken inside the FPGA).
+2. For each scenario: arm `cap` (Run Analysis), start the noise-only file, press KEY[0] during the
+   calibration beep, wait for the buffer to fill, File > Export > CSV as
+   `board_evidence/signaltap/cap_<lms|nlms|shift>_<scenario>.csv`. Use the 6 s stimulus
+   (`board_stimulus.py make --seconds 6`) for `amp_steps` and `path_switch`, so their events fall
+   inside the capture.
+3. Arm `timing` while audio plays and export `timing_<algo>.csv`.
+4. `python py/analyze_board_capture.py board_evidence/signaltap` reports, for every capture, the
+   bit-exact result (T9), NR_final over the last 25 % of the post-reset samples (T11, measured on
+   the codec's real ADC samples), the sample period and in_valid-to-out_valid latency (T7, T10),
+   and writes figures and a summary to `results/board/`.
+
+Because the core restarts from zero weights at the reset, the integer model started at the first
+post-reset row must reproduce every captured e[n]. Remove the `.stp` from the project for the final
+timing build (Signal Tap adds logic and changes slack), and note this in the build manifest.
 
 ## 5. Record
 

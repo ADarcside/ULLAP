@@ -1,0 +1,13 @@
+algorithm,scenario,t9,scenario_start_s,corr,nr_board_db,nr_model_db,diff_db,nr_model_board_level_db,diff_board_level_db,note
+LMS,amp_steps,bit-exact,0.217,0.917,17.13,27.71,-10.58,25.23,-8.1,
+LMS,path_switch,bit-exact,0.199,0.95,14.67,19.84,-5.18,14.47,0.2,
+LMS,stationary,bit-exact,0.233,0.939,15.88,22.77,-6.89,15.76,0.11,
+LMS,wav,bit-exact,0.222,0.991,5.99,9.11,-3.12,7.78,-1.78,
+NLMS,amp_steps,bit-exact,0.16,0.978,16.76,27.19,-10.42,23.64,-6.88,
+NLMS,path_switch,bit-exact,0.148,0.915,14.03,19.06,-5.03,14.04,-0.01,
+NLMS,stationary,bit-exact,0.009,0.896,15.65,21.6,-5.95,15.53,0.12,
+NLMS,wav,bit-exact,0.201,0.994,5.8,8.72,-2.92,7.45,-1.65,
+NLMS-Shift,amp_steps,bit-exact,0.236,0.972,16.57,25.79,-9.22,22.1,-5.53,
+NLMS-Shift,path_switch,bit-exact,0.298,0.95,14.4,19.86,-5.46,14.44,-0.04,
+NLMS-Shift,stationary,bit-exact,0.255,0.986,15.8,22.68,-6.87,15.78,0.02,
+NLMS-Shift,wav,bit-exact,0.274,0.99,5.46,8.63,-3.18,7.32,-1.87,

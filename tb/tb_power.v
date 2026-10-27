@@ -10,7 +10,12 @@
 //   +vec=<prefix>   reads <prefix>.vec (x d y e, hex); only x and d are used
 //   +vcd=<file>     VCD output file (default tb_power.vcd)
 //   +n=<N>          samples to stream (default 2000)
-// No checking is done here; bit-exactness is covered by tb_anc_core.
+//   +gap=<G>        clock cycles between samples (default GAP); a gap just above the
+//                   busy cycles gives the maximum-throughput activity
+// Each e_out is compared with the e column of the vector file (golden output of
+// py/rtl_model.py for the same parameters); the summary line reports mismatches.
+// Compile with +define+GATE_LEVEL to bind to a Quartus gate-level netlist of
+// anc_core, whose parameters are fixed at compile time.
 // -----------------------------------------------------------------------------
 module tb_power;
     parameter integer W       = 12;
@@ -29,8 +34,12 @@ module tb_power;
     wire signed [W-1:0] y_out, e_out;
     wire [5:0] sat_flags;
 
+`ifdef GATE_LEVEL
+    anc_core dut (
+`else
     anc_core #(.W(W), .L(L), .ALGO(ALGO), .MU_INT(MU_INT), .K(K),
                .ACC_W(ACC_W), .EPS_EXP(EPS_EXP)) dut (
+`endif
         .clk(clk), .rst_n(rst_n), .in_valid(in_valid), .freeze(1'b0), .x_in(x_in), .d_in(d_in),
         .out_valid(out_valid), .y_out(y_out), .e_out(e_out), .sat_flags(sat_flags), .busy(busy));
 
@@ -39,10 +48,11 @@ module tb_power;
 
     reg [W-1:0] vx [0:NMAX-1];
     reg [W-1:0] vd [0:NMAX-1];
-    reg [W-1:0] t2, t3;
+    reg [W-1:0] ve [0:NMAX-1];
+    reg [W-1:0] t2;
     reg [8*256-1:0] prefix, vcd;
     reg [8*264-1:0] fname;
-    integer fd, rc, nsamp, nreq, i;
+    integer fd, rc, nsamp, nreq, i, gap, nout, nbad;
 
     initial begin
         if (!$value$plusargs("vec=%s", prefix)) begin
@@ -50,18 +60,19 @@ module tb_power;
         end
         if (!$value$plusargs("vcd=%s", vcd)) vcd = "tb_power.vcd";
         if (!$value$plusargs("n=%d", nreq)) nreq = 2000;
+        if (!$value$plusargs("gap=%d", gap)) gap = GAP;
         $sformat(fname, "%0s.vec", prefix);
         fd = $fopen(fname, "r");
         if (fd == 0) begin $display("TB_POWER FAIL cannot open %0s", fname); $finish(1); end
         nsamp = 0;
         while (!$feof(fd) && nsamp < NMAX) begin
-            rc = $fscanf(fd, "%h %h %h %h\n", vx[nsamp], vd[nsamp], t2, t3);
+            rc = $fscanf(fd, "%h %h %h %h\n", vx[nsamp], vd[nsamp], t2, ve[nsamp]);
             if (rc == 4) nsamp = nsamp + 1;
         end
         $fclose(fd);
         if (nreq > nsamp) nreq = nsamp;
 
-        rst_n = 1'b0; in_valid = 1'b0; x_in = 0; d_in = 0;
+        rst_n = 1'b0; in_valid = 1'b0; x_in = 0; d_in = 0; nout = 0; nbad = 0;
         repeat (4) @(posedge clk);
         rst_n = 1'b1;
         @(posedge clk);
@@ -72,10 +83,18 @@ module tb_power;
             x_in = vx[i]; d_in = vd[i]; in_valid = 1'b1;
             @(negedge clk);
             in_valid = 1'b0;
-            repeat (GAP - 1) @(negedge clk);
+            repeat (gap - 1) @(negedge clk);
         end
         $dumpoff;
-        $display("TB_POWER DONE samples=%0d gap=%0d cycles=%0d", nreq, GAP, nreq * GAP);
+        $display("TB_POWER DONE samples=%0d gap=%0d cycles=%0d outputs=%0d mismatches=%0d",
+                 nreq, gap, nreq * gap, nout, nbad);
         $finish(0);
+    end
+    always @(posedge clk) if (rst_n && out_valid) begin
+        if (e_out !== ve[nout]) begin
+            if (nbad < 5) $display("TB_POWER MISMATCH sample %0d e=%h expected %h", nout, e_out, ve[nout]);
+            nbad = nbad + 1;
+        end
+        nout = nout + 1;
     end
 endmodule

@@ -136,7 +136,7 @@ Recent simulation and extended verification runs (`results/research_summary.md`)
 | RTL switching-activity energy proxy | `python py/power_activity.py` | `results/metrics/power_activity.csv` |
 | Board stimulus WAVs and LINE OUT NR analysis | `python py/board_stimulus.py make` / `analyze` | `board_evidence/` |
 | Signal Tap capture vs integer model (board T9) | `python py/check_board_capture.py --csv ... --algo 2` | PASS/FAIL |
-| Journal manuscript draft | `cd paper && python make_tables.py && pdflatex ullap_manuscript.tex` | `paper/ullap_manuscript.pdf` |
+| Journal manuscript draft (Elsevier and IEEE versions, shared `body.tex`, `abstract.tex`, `refs.bib`) | `cd paper && python make_tables.py && latexmk -pdf ullap_manuscript.tex ullap_ieee.tex` | `paper/ullap_manuscript.pdf`, `paper/ullap_ieee.pdf` |
 
 The board now runs the codec at 8.138 kHz (R8 = 0x00C) to match the simulation study, and brings
 in_valid, out_valid, busy and the sample strobe out on GPIO JP5 pins 1-4. Bench procedure:

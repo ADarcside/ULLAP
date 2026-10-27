@@ -1,0 +1,314 @@
+Power Analyzer report for core_nlms_shift
+Tue Oct 27 09:41:46 2026
+Quartus Prime Version 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
+
+
+---------------------
+; Table of Contents ;
+---------------------
+  1. Legal Notice
+  2. Parallel Compilation
+  3. Power Analyzer Summary
+  4. Power Analyzer Settings
+  5. Power Analyzer Simulation Files Read
+  6. Operating Conditions Used
+  7. Thermal Power Dissipation by Block
+  8. Thermal Power Dissipation by Block Type
+  9. Thermal Power Dissipation by Hierarchy
+ 10. Core Dynamic Thermal Power Dissipation by Clock Domain
+ 11. Current Drawn from Voltage Supplies Summary
+ 12. VCCIO Supply Current Drawn by I/O Bank
+ 13. VCCIO Supply Current Drawn by Voltage
+ 14. Confidence Metric Details
+ 15. Signal Activities
+ 16. Power Analyzer Messages
+
+
+
+----------------
+; Legal Notice ;
+----------------
+Copyright (C) 2025  Altera Corporation. All rights reserved.
+Your use of Altera Corporation's design tools, logic functions 
+and other software and tools, and any partner logic 
+functions, and any output files from any of the foregoing 
+(including device programming or simulation files), and any 
+associated documentation or information are expressly subject 
+to the terms and conditions of the Altera Program License 
+Subscription Agreement, the Altera Quartus Prime License Agreement,
+the Altera IP License Agreement, or other applicable license
+agreement, including, without limitation, that your use is for
+the sole purpose of programming logic devices manufactured by
+Altera and sold by Altera or its authorized distributors.  Please
+refer to the Altera Software License Subscription Agreements 
+on the Quartus Prime software download page.
+
+
+
++------------------------------------------+
+; Parallel Compilation                     ;
++----------------------------+-------------+
+; Processors                 ; Number      ;
++----------------------------+-------------+
+; Number detected on machine ; 16          ;
+; Maximum allowed            ; 16          ;
+;                            ;             ;
+; Average used               ; 1.04        ;
+; Maximum used               ; 16          ;
+;                            ;             ;
+; Usage by Processor         ; % Time Used ;
+;     Processor 1            ; 100.0%      ;
+;     Processors 2-16        ;   0.2%      ;
++----------------------------+-------------+
+
+
++------------------------------------------------------------------------------------------+
+; Power Analyzer Summary                                                                   ;
++----------------------------------------+-------------------------------------------------+
+; Power Analyzer Status                  ; Successful - Tue Oct 27 09:41:46 2026           ;
+; Quartus Prime Version                  ; 25.1std.0 Build 1129 10/21/2025 SC Lite Edition ;
+; Revision Name                          ; core_nlms_shift                                 ;
+; Top-level Entity Name                  ; anc_core                                        ;
+; Family                                 ; Cyclone IV E                                    ;
+; Device                                 ; EP4CE115F29C7                                   ;
+; Power Models                           ; Final                                           ;
+; Total Thermal Power Dissipation        ; 158.24 mW                                       ;
+; Core Dynamic Thermal Power Dissipation ; 5.93 mW                                         ;
+; Core Static Thermal Power Dissipation  ; 99.61 mW                                        ;
+; I/O Thermal Power Dissipation          ; 52.70 mW                                        ;
+; Power Estimation Confidence            ; High: user provided sufficient toggle rate data ;
++----------------------------------------+-------------------------------------------------+
+
+
++----------------------------------------------------------------------------------------------------------------+
+; Power Analyzer Settings                                                                                        ;
++------------------------------------------------------------------+-----------------------------+---------------+
+; Option                                                           ; Setting                     ; Default Value ;
++------------------------------------------------------------------+-----------------------------+---------------+
+; Use smart compilation                                            ; Off                         ; Off           ;
+; Enable parallel Assembler and Timing Analyzer during compilation ; On                          ; On            ;
+; Enable compact report table                                      ; Off                         ; Off           ;
+; Preset Cooling Solution                                          ; No Heat Sink With Still Air ;               ;
+; Board thermal model                                              ; None (CONSERVATIVE)         ;               ;
+; Default Power Toggle Rate                                        ; 12.5%                       ; 12.5%         ;
+; Default Power Input I/O Toggle Rate                              ; 12.5%                       ; 12.5%         ;
+; Use vectorless estimation                                        ; On                          ; On            ;
+; Use Input Files                                                  ; Off                         ; Off           ;
+; Filter Glitches in VCD File Reader                               ; On                          ; On            ;
+; Power Analyzer Report Signal Activity                            ; Off                         ; Off           ;
+; Power Analyzer Report Power Dissipation                          ; Off                         ; Off           ;
+; Device Power Characteristics                                     ; TYPICAL                     ; TYPICAL       ;
+; Automatically Compute Junction Temperature                       ; On                          ; On            ;
+; Specified Junction Temperature                                   ; 25                          ; 25            ;
+; Ambient Temperature                                              ; 25                          ; 25            ;
+; Use Custom Cooling Solution                                      ; Off                         ; Off           ;
+; Board Temperature                                                ; 25                          ; 25            ;
++------------------------------------------------------------------+-----------------------------+---------------+
+
+
++------------------------------------------------------------------------------------------------------------------------------+
+; Power Analyzer Simulation Files Read                                                                                         ;
++---------+-------------------------------------+-----------+-----------+----------------+--------------+-----------+----------+
+; File ID ; File Name                           ; File Type ; Entity    ; VCD Start Time ; VCD End Time ; Unknown % ; Toggle % ;
++---------+-------------------------------------+-----------+-----------+----------------+--------------+-----------+----------+
+; f1      ; sim_nlms_shift/nlms_shift_board.vcd ; VCD       ; |anc_core ; N/A            ; N/A          ; 0.0%      ; 90.9%    ;
++---------+-------------------------------------+-----------+-----------+----------------+--------------+-----------+----------+
+
+
++----------------------------------------------------------------------+
+; Operating Conditions Used                                            ;
++-----------------------------------------+----------------------------+
+; Setting                                 ; Value                      ;
++-----------------------------------------+----------------------------+
+; Device power characteristics            ; Typical                    ;
+;                                         ;                            ;
+; Voltages                                ;                            ;
+;     VCCINT                              ; 1.20 V                     ;
+;     VCCA                                ; 2.50 V                     ;
+;     VCCD                                ; 1.20 V                     ;
+;     2.5 V I/O Standard                  ; 2.5 V                      ;
+;                                         ;                            ;
+; Auto computed junction temperature      ; 28.0 degrees Celsius       ;
+;     Ambient temperature                 ; 25.0 degrees Celsius       ;
+;     Junction-to-Case thermal resistance ; 3.90 degrees Celsius/Watt  ;
+;     Case-to-Ambient thermal resistance  ; 15.00 degrees Celsius/Watt ;
+;                                         ;                            ;
+; Board model used                        ; Typical                    ;
++-----------------------------------------+----------------------------+
+
+
++----------------------------------------------------------------------------------------------------------------------------------------------+
+; Thermal Power Dissipation by Block                                                                                                           ;
++------------+------------+---------------------+-----------------------------+--------------------------------+-------------------------------+
+; Block Name ; Block Type ; Total Thermal Power ; Block Thermal Dynamic Power ; Block Thermal Static Power (1) ; Routing Thermal Dynamic Power ;
++------------+------------+---------------------+-----------------------------+--------------------------------+-------------------------------+
+(1) The "Thermal Power Dissipation by Block" Table has been hidden. To show this table, please select the "Write power dissipation by block to report file" option under "PowerPlay Power Analyzer Settings".
+
+
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Thermal Power Dissipation by Block Type                                                                                                                                                                                   ;
++----------------------------+-----------------------------------+-----------------------------+--------------------------------+-------------------------------+-----------------------------------------------------------+
+; Block Type                 ; Total Thermal Power by Block Type ; Block Thermal Dynamic Power ; Block Thermal Static Power (1) ; Routing Thermal Dynamic Power ; Block Average Toggle Rate (millions of transitions / sec) ;
++----------------------------+-----------------------------------+-----------------------------+--------------------------------+-------------------------------+-----------------------------------------------------------+
+; Embedded multiplier block  ; 0.01 mW                           ; 0.01 mW                     ; --                             ; 0.00 mW                       ;   15.647                                                  ;
+; Embedded multiplier output ; 0.00 mW                           ; 0.00 mW                     ; --                             ; 0.00 mW                       ;    0.174                                                  ;
+; Combinational cell         ; 0.11 mW                           ; 0.04 mW                     ; --                             ; 0.07 mW                       ;    0.132                                                  ;
+; Clock control block        ; 4.77 mW                           ; 0.00 mW                     ; --                             ; 4.77 mW                       ;  100.000                                                  ;
+; Register cell              ; 1.03 mW                           ; 1.01 mW                     ; --                             ; 0.02 mW                       ;    0.016                                                  ;
+; I/O                        ; 22.70 mW                          ; 0.12 mW                     ; 22.59 mW                       ; 0.00 mW                       ;    1.157                                                  ;
++----------------------------+-----------------------------------+-----------------------------+--------------------------------+-------------------------------+-----------------------------------------------------------+
+(1) The "Block Thermal Static Power" for all block types except Pins and the Voltage Regulator, if one exists, is part of the "Core Static Thermal Power Dissipation" value found on the PowerPlay Power Analyzer-->Summary report panel. The "Core Static Thermal Power Dissipation" also contains the thermal static power dissipated by the routing.
+
+
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Thermal Power Dissipation by Hierarchy                                                                                                                                                                                                  ;
++-------------------------------------+--------------------------------------+---------------------------------+-----------------------------------+-----------------------------------+--------------------------------------------------+
+; Compilation Hierarchy Node          ; Total Thermal Power by Hierarchy (1) ; Block Thermal Dynamic Power (1) ; Block Thermal Static Power (1)(2) ; Routing Thermal Dynamic Power (1) ; Full Hierarchy Name                              ;
++-------------------------------------+--------------------------------------+---------------------------------+-----------------------------------+-----------------------------------+--------------------------------------------------+
+; |anc_core                           ; 28.63 mW (28.62 mW)                  ; 1.17 mW (1.17 mW)               ; 22.59 mW (22.59 mW)               ; 4.87 mW (4.87 mW)                 ; |anc_core                                        ;
+;     |lpm_mult:Mult0                 ; 0.00 mW (0.00 mW)                    ; 0.00 mW (0.00 mW)               ; --                                ; 0.00 mW (0.00 mW)                 ; |anc_core|lpm_mult:Mult0                         ;
+;         |mult_06t:auto_generated    ; 0.00 mW (0.00 mW)                    ; 0.00 mW (0.00 mW)               ; --                                ; 0.00 mW (0.00 mW)                 ; |anc_core|lpm_mult:Mult0|mult_06t:auto_generated ;
+;     |hard_block:auto_generated_inst ; 0.00 mW (0.00 mW)                    ; 0.00 mW (0.00 mW)               ; --                                ; 0.00 mW (0.00 mW)                 ; |anc_core|hard_block:auto_generated_inst         ;
++-------------------------------------+--------------------------------------+---------------------------------+-----------------------------------+-----------------------------------+--------------------------------------------------+
+(1) Value in parentheses is the power consumed at that level of hierarchy. Value not in parentheses is the power consumed at that level of hierarchy plus the power consumed by all levels of hierarchy below it.
+
+(2) The "Block Thermal Static Power" for all levels of hierarchy except the top-level hierarchy is part of the "Core Static Thermal Power Dissipation" value found on the PowerPlay Power Analyzer-->Summary report panel. The "Core Static Thermal Power Dissipation" also contains the thermal static power dissipated by the routing.
+
+
++--------------------------------------------------------------------+
+; Core Dynamic Thermal Power Dissipation by Clock Domain             ;
++-----------------+-----------------------+--------------------------+
+; Clock Domain    ; Clock Frequency (MHz) ; Total Core Dynamic Power ;
++-----------------+-----------------------+--------------------------+
+; clk             ; 37.50                 ; 5.92                     ;
+; No clock domain ; 0.00                  ; 0.01                     ;
++-----------------+-----------------------+--------------------------+
+
+
++------------------------------------------------------------------------------------------------------------------------------------+
+; Current Drawn from Voltage Supplies Summary                                                                                        ;
++----------------+-------------------------+---------------------------+--------------------------+----------------------------------+
+; Voltage Supply ; Total Current Drawn (1) ; Dynamic Current Drawn (1) ; Static Current Drawn (1) ; Minimum Power Supply Current (2) ;
++----------------+-------------------------+---------------------------+--------------------------+----------------------------------+
+; VCCINT         ; 30.26 mA                ; 4.96 mA                   ; 25.30 mA                 ; 30.26 mA                         ;
+; VCCIO          ; 12.28 mA                ; 0.02 mA                   ; 12.25 mA                 ; 12.28 mA                         ;
+; VCCA           ; 35.08 mA                ; 0.00 mA                   ; 35.08 mA                 ; 35.08 mA                         ;
+; VCCD           ; 2.93 mA                 ; 0.00 mA                   ; 2.93 mA                  ; 2.93 mA                          ;
++----------------+-------------------------+---------------------------+--------------------------+----------------------------------+
+(1) Currents reported in columns "Total Current Drawn", "Dynamic Current Drawn", and "Static Current Drawn" are sufficient for user operation of the device.  
+(2) Currents reported in column "Minimum Power Supply Current" are sufficient for power-up, configuration, and user operation of the device.
+
+
++-----------------------------------------------------------------------------------------------+
+; VCCIO Supply Current Drawn by I/O Bank                                                        ;
++----------+---------------+---------------------+-----------------------+----------------------+
+; I/O Bank ; VCCIO Voltage ; Total Current Drawn ; Dynamic Current Drawn ; Static Current Drawn ;
++----------+---------------+---------------------+-----------------------+----------------------+
+; 1        ; 2.5V          ; 1.55 mA             ; 0.02 mA               ; 1.52 mA              ;
+; 2        ; 2.5V          ; 1.50 mA             ; 0.00 mA               ; 1.50 mA              ;
+; 3        ; 2.5V          ; 1.51 mA             ; 0.00 mA               ; 1.51 mA              ;
+; 4        ; 2.5V          ; 1.52 mA             ; 0.00 mA               ; 1.52 mA              ;
+; 5        ; 2.5V          ; 1.50 mA             ; 0.00 mA               ; 1.50 mA              ;
+; 6        ; 2.5V          ; 1.51 mA             ; 0.00 mA               ; 1.51 mA              ;
+; 7        ; 2.5V          ; 1.64 mA             ; 0.00 mA               ; 1.64 mA              ;
+; 8        ; 2.5V          ; 1.54 mA             ; 0.00 mA               ; 1.54 mA              ;
++----------+---------------+---------------------+-----------------------+----------------------+
+
+
++-----------------------------------------------------------------------------------------------------------------------------------+
+; VCCIO Supply Current Drawn by Voltage                                                                                             ;
++---------------+-------------------------+---------------------------+--------------------------+----------------------------------+
+; VCCIO Voltage ; Total Current Drawn (1) ; Dynamic Current Drawn (1) ; Static Current Drawn (1) ; Minimum Power Supply Current (2) ;
++---------------+-------------------------+---------------------------+--------------------------+----------------------------------+
+; 2.5V          ; 12.28 mA                ; 0.02 mA                   ; 12.25 mA                 ; 12.28 mA                         ;
++---------------+-------------------------+---------------------------+--------------------------+----------------------------------+
+(1) Currents reported in columns "Total Current Drawn", "Dynamic Current Drawn", and "Static Current Drawn" are sufficient for user operation of the device.  
+(2) Currents reported in column "Minimum Power Supply Current" are sufficient for power-up, configuration, and user operation of the device.
+
+
++----------------------------------------------------------------------------------------------------------------------------------------------------+
+; Confidence Metric Details                                                                                                                          ;
++----------------------------------------------------------------------------------------+--------------+------------+---------------+---------------+
+; Data Source                                                                            ; Total        ; Pin        ; Registered    ; Combinational ;
++----------------------------------------------------------------------------------------+--------------+------------+---------------+---------------+
+; Simulation (from file)                                                                 ;              ;            ;               ;               ;
+;     -- Simulation time nodes in unknown state                                          ; 0.0%         ;            ;               ;               ;
+;     -- Number of signals with Toggle Rate from Simulation                              ; 3781 (97.9%) ; 58 (89.2%) ; 1022 (100.0%) ; 2701 (97.3%)  ;
+;     -- Number of signals with Zero toggle rate, from Simulation                        ; 345 (8.9%)   ; 6 (9.2%)   ; 37 (3.6%)     ; 302 (10.9%)   ;
+;     -- Number of signals with Static Probability from Simulation                       ; 3781 (97.9%) ; 58 (89.2%) ; 1022 (100.0%) ; 2701 (97.3%)  ;
+;                                                                                        ;              ;            ;               ;               ;
+; Node, entity or clock assignment                                                       ;              ;            ;               ;               ;
+;     -- Number of signals with Toggle Rate from Node, entity or clock assignment        ; 0 (0.0%)     ; 0 (0.0%)   ; 0 (0.0%)      ; 0 (0.0%)      ;
+;     -- Number of signals with Static Probability from Node, entity or clock assignment ; 0 (0.0%)     ; 0 (0.0%)   ; 0 (0.0%)      ; 0 (0.0%)      ;
+;                                                                                        ;              ;            ;               ;               ;
+; Vectorless estimation                                                                  ;              ;            ;               ;               ;
+;     -- Number of signals with Toggle Rate from Vectorless estimation                   ; 80 (2.1%)    ; 4 (6.2%)   ; 0 (0.0%)      ; 76 (2.7%)     ;
+;     -- Number of signals with Zero toggle rate, from Vectorless estimation             ; 33 (0.9%)    ; 4 (6.2%)   ; 0 (0.0%)      ; 29 (1.0%)     ;
+;     -- Number of signals with Static Probability from Vectorless estimation            ; 80 (2.1%)    ; 4 (6.2%)   ; 0 (0.0%)      ; 76 (2.7%)     ;
+;                                                                                        ;              ;            ;               ;               ;
+; Default assignment                                                                     ;              ;            ;               ;               ;
+;     -- Number of signals with Toggle Rate from Default assignment                      ; 0 (0.0%)     ; 0 (0.0%)   ; 0 (0.0%)      ; 0 (0.0%)      ;
+;     -- Number of signals with Static Probability from Default assignment               ; 3 (0.1%)     ; 3 (4.6%)   ; 0 (0.0%)      ; 0 (0.0%)      ;
+;                                                                                        ;              ;            ;               ;               ;
+; Assumed 0                                                                              ;              ;            ;               ;               ;
+;     -- Number of signals with Toggle Rate assumed 0                                    ; 3 (0.1%)     ; 3 (4.6%)   ; 0 (0.0%)      ; 0 (0.0%)      ;
++----------------------------------------------------------------------------------------+--------------+------------+---------------+---------------+
+
+
++-----------------------------------------------------------------------------------------------------------------------------------------------------+
+; Signal Activities                                                                                                                                   ;
++--------+------+---------------------------------------------+-----------------------------+--------------------+------------------------------------+
+; Signal ; Type ; Toggle Rate (millions of transitions / sec) ; Toggle Rate Data Source (1) ; Static Probability ; Static Probability Data Source (1) ;
++--------+------+---------------------------------------------+-----------------------------+--------------------+------------------------------------+
+(1) The "Signal Activity" Table has been hidden. To show this table, please select the "Write signal activities to report file" option under "PowerPlay Power Analyzer Settings".
+
+
++-------------------------+
+; Power Analyzer Messages ;
++-------------------------+
+Info: *******************************************************************
+Info: Running Quartus Prime Power Analyzer
+    Info: Version 25.1std.0 Build 1129 10/21/2025 SC Lite Edition
+    Info: Copyright (C) 2025  Altera Corporation. All rights reserved.
+    Info: Your use of Altera Corporation's design tools, logic functions 
+    Info: and other software and tools, and any partner logic 
+    Info: functions, and any output files from any of the foregoing 
+    Info: (including device programming or simulation files), and any 
+    Info: associated documentation or information are expressly subject 
+    Info: to the terms and conditions of the Altera Program License 
+    Info: Subscription Agreement, the Altera Quartus Prime License Agreement,
+    Info: the Altera IP License Agreement, or other applicable license
+    Info: agreement, including, without limitation, that your use is for
+    Info: the sole purpose of programming logic devices manufactured by
+    Info: Altera and sold by Altera or its authorized distributors.  Please
+    Info: refer to the Altera Software License Subscription Agreements 
+    Info: on the Quartus Prime software download page.
+    Info: Processing started: Tue Oct 27 09:41:08 2026
+Info: Command: quartus_pow core_nlms_shift --input_vcd=sim_nlms_shift/nlms_shift_board.vcd --vcd_filter_glitches=on
+Warning (18236): Number of processors has not been specified which may cause overloading on shared machines.  Set the global assignment NUM_PARALLEL_PROCESSORS in your QSF to an appropriate value for best performance.
+Info (21076): High junction temperature operating condition is not set. Assuming a default value of '85'.
+Info (21076): Low junction temperature operating condition is not set. Assuming a default value of '0'.
+Info (222002): Starting scan of VCD file sim_nlms_shift/nlms_shift_board.vcd (0 ns to End of File) for signal static probabilities and transition densities
+Info (22678): An alias for the "Questa Intel FPGA (Verilog)" simulation tool has been found. Updating the tool name to "Questa Altera FPGA (Verilog)".
+Info (22678): An alias for the "Questa Intel FPGA (Verilog)" simulation tool has been found. Updating the tool name to "Questa Altera FPGA (Verilog)".
+Info (22678): An alias for the "Questa Intel FPGA (Verilog)" simulation tool has been found. Updating the tool name to "Questa Altera FPGA (Verilog)".
+Info (22678): An alias for the "Questa Intel FPGA (Verilog)" simulation tool has been found. Updating the tool name to "Questa Altera FPGA (Verilog)".
+Info (222003): Finished scan of VCD file sim_nlms_shift/nlms_shift_board.vcd (0 ns to End of File) for signal static probabilities and transition densities
+Info (332104): Reading SDC File: 'core_power.sdc'
+Info (332151): Clock uncertainty is not calculated until you update the timing netlist.
+Info (332123): Deriving Clock Uncertainty. Please refer to report_sdc in the Timing Analyzer to see clock uncertainties.
+Info (223000): Starting Vectorless Power Activity Estimation
+Info (223001): Completed Vectorless Power Activity Estimation
+Info (215037): Detailed signal activity file source information is not written to output Signal Activity File.
+Info (218000): Using Advanced I/O Power to simulate I/O buffers with the specified board trace model
+Info (334003): Started post-fitting delay annotation
+Info (334004): Delay annotation completed successfully
+Info (215049): Average toggle rate for this design is 0.439 millions of transitions / sec
+Info (215031): Total thermal power estimate for the design is 158.24 mW
+Info: Quartus Prime Power Analyzer was successful. 0 errors, 1 warning
+    Info: Peak virtual memory: 5247 megabytes
+    Info: Processing ended: Tue Oct 27 09:41:46 2026
+    Info: Elapsed time: 00:00:38
+    Info: Total CPU time (on all processors): 00:01:23
+
+
