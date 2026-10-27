@@ -588,18 +588,83 @@ least +2.953~ns setup slack and +0.401~ns hold slack, with no critical warnings.
 variant uses 2\% of the 6,144-cycle sample period, so a single core could serve many channels or much
 longer filters.
 
-The power figures are Quartus vectorless estimates with the default 12.5\% toggle rate, which Quartus
-itself rates as low confidence. Core static power (about 98.7~mW) dominates the 169 to 173~mW total.
-The dynamic estimates rank the designs LMS $<$ NLMS-Shift $<$ NLMS, as the toggle counts do, but a
-fixed toggle rate mostly tracks area and ignores that the datapath is idle for 98\% of each sample
-period, so these numbers are upper bounds and not energy per sample.
-A gate-level, activity-annotated estimate is left for future work: the post-fit netlist flattens the
-hierarchy that the top-level testbench observes, so it needs a netlist-only testbench.
-For comparison with~\cite{huang2026}, which uses the same board, energy per sample should be
-reported as dynamic power divided by the sample rate from an activity-annotated Power Analyzer run,
-which this work does not yet have, so no energy comparison with them is claimed. Their design
-is fully parallel and run at megasamples per second, while ULLAP shares one multiplier and runs at
-8.138~kHz, so area and energy are compared per tap and per sample, not as raw totals.
+The power row of Table~\ref{tab:hw} is a Quartus vectorless estimate with the default 12.5\% toggle
+rate, which Quartus itself rates as low confidence. Core static power (about 98.7~mW) dominates the
+169 to 173~mW total. A fixed toggle rate mostly tracks area and ignores that the datapath is idle for
+98\% of each sample period, so these numbers are upper bounds and say nothing about energy per sample.
+
+\subsection{Gate-level power and energy per sample}\label{sec:power}
+To obtain activity-based figures, the core alone (\texttt{anc\_core}, without the codec interface) was
+compiled for each algorithm, and its post-fit netlist was simulated in Questa with SDF back-annotation
+at the slow 1.2~V, 85\,$^\circ$C corner. A netlist-only testbench feeds the same golden input vectors
+that the RTL regression uses and checks every output against the integer model; the recorded switching
+activity (VCD) is then read by the Quartus Power Analyzer. Each core is run in two modes. In the
+\emph{board} mode a new sample arrives every $G=6{,}144$ clock cycles (200 samples), as on the board.
+In the \emph{max} mode samples arrive back to back, a few cycles above the busy cycles of each core
+($G=81$, 138 and 80 for LMS, NLMS and NLMS-Shift, 2,000 samples). With $f_{\mathrm{clk}}=50$~MHz the
+sample rate and the dynamic energy per sample are
+\begin{align}
+f_s &= \frac{f_{\mathrm{clk}}}{G}, \label{eq:fs}\\
+E_s &= \frac{P_{\mathrm{dyn}}}{f_s} = \frac{P_{\mathrm{dyn}}\,G}{f_{\mathrm{clk}}}, \label{eq:es}
+\end{align}
+where $P_{\mathrm{dyn}}$ is the core dynamic power reported by the Power Analyzer. Static and I/O power
+are left out of $E_s$ because they do not depend on the algorithm (Table~\ref{tab:power}).
+
+\begin{table}[!htbp]\centering\small
+\caption{Gate-level power of the core alone (Cyclone IV E EP4CE115F29C7, slow 85\,$^\circ$C netlist,
+Questa activity, Quartus Power Analyzer, confidence High in all six runs, 0 output mismatches in all
+six runs). Core alone: 1,554, 2,393 and 2,383 logic elements; $F_{\max}$ 72.63, 57.36 and 59.86~MHz
+(\texttt{results/metrics/power\_gate\_level.csv}, \texttt{results/quartus\_reports/power\_gate\_level/}).}\label{tab:power}
+\fitcol{\begin{tabular}{llccc}\toprule
+Mode & & LMS & NLMS & NLMS-Shift\\\midrule
+\multirow{4}{*}{Board} & Sample rate (kHz) & 8.138 & 8.138 & 8.138\\
+ & Core dynamic power (mW) & 3.90 & 7.63 & 5.93\\
+ & Total power (mW) & 155.81 & 159.20 & 158.24\\
+ & Dynamic energy per sample (nJ) & 479.2 & 937.6 & 728.7\\\midrule
+\multirow{4}{*}{Max} & Sample rate (kHz) & 617.3 & 362.3 & 625.0\\
+ & Core dynamic power (mW) & 12.80 & 13.78 & 17.76\\
+ & Total power (mW) & 165.35 & 165.72 & 170.68\\
+ & Dynamic energy per sample (nJ) & 20.7 & 38.0 & 28.4\\\midrule
+ & Core static power (mW) & 99.5--99.6 & 99.6--99.7 & 99.6--99.7\\
+ & I/O power (mW) & 52.4--52.9 & 52.0--52.3 & 52.7--53.2\\
+ & VCD toggle coverage (\%) & 98.6--99.0 & 91.3--91.7 & 90.9--93.0\\\bottomrule
+\end{tabular}}
+\end{table}
+
+All six netlist simulations reproduce every golden output, so the activity behind each number is that of
+a correct computation. Core static power (99.5--99.7~mW) and I/O power (52--53~mW) are almost equal in
+all runs, so only the core dynamic power separates the algorithms. At the board rate LMS needs
+3.90~mW, NLMS-Shift 5.93~mW and NLMS 7.63~mW; NLMS-Shift uses 22\% less dynamic energy per sample
+than NLMS (728.7 against 937.6~nJ). At the maximum rate the ranking of energy per sample is the same,
+LMS 20.7~nJ, NLMS-Shift 28.4~nJ and NLMS 38.0~nJ, a 25\% saving of NLMS-Shift over NLMS, although
+NLMS-Shift draws the highest power there because it processes 1.7 times as many samples per second.
+
+The two modes also show where the energy goes. Taking the dynamic power as linear in the sample rate,
+\begin{align}
+P_{\mathrm{dyn}}(f_s) &= P_0 + E_c\,f_s, \label{eq:plin}\\
+E_c &= \frac{P_{\mathrm{dyn}}^{\max}-P_{\mathrm{dyn}}^{\mathrm{board}}}{f_s^{\max}-f_s^{\mathrm{board}}},
+\qquad P_0 = P_{\mathrm{dyn}}^{\mathrm{board}} - E_c\,f_s^{\mathrm{board}}, \label{eq:p0}
+\end{align}
+the two runs of each core give a rate-independent part $P_0$ of 3.78, 7.49 and 5.77~mW and a
+per-sample compute energy $E_c$ of 14.6, 17.4 and 19.2~nJ for LMS, NLMS and NLMS-Shift. $P_0$ is the
+clock tree and the registers that are clocked every cycle whether or not a sample is being processed;
+it follows the register count of the core (960, 1,241 and 1,022). At 8.138~kHz it accounts for more
+than 97\% of the dynamic energy per sample of every core, which is why the board-rate values are so
+much larger than the max-rate ones. The saving of NLMS-Shift over NLMS therefore comes from its smaller
+always-on state and from finishing a sample in 72 instead of 130 busy cycles, not from cheaper
+arithmetic: its compute energy per sample is about 10\% higher than that of NLMS, as the wider update
+path and the shifter switch more nets. A two-point fit is a simple model, so $P_0$ and $E_c$ should be
+read as a split of the measured totals rather than as separate measurements.
+
+Huang and Yao~\cite{huang2026}, on the same board, report 5.07~nJ per sample for their binary-reciprocal
+NLMS IIR filter against 8.33~nJ with an SRT divider, a 39.1\% reduction. Replacing the restoring
+divider by the shift in ULLAP reduces the energy per sample at the maximum rate by 25\%, the same
+direction. The absolute values are not comparable: their design is fully parallel and runs at
+megasamples per second, while ULLAP shares one multiplier over 72 to 130 cycles, so most of its energy
+is clocking spent while the datapath steps through the taps. Two details of the flow are reported for
+reproducibility: \texttt{quartus\_pow} needs an Assembler run, which the build script now includes, and
+the NLMS-Shift netlist reports three hold-time checks at 73~ns, where the testbench releases the reset on
+a clock edge; this is before the activity recording starts, and all outputs match.
 
 
 
@@ -716,7 +781,8 @@ speech at the primary input limits all three algorithms far more than the algori
 (6.4--17.9~dB against at most 0.6~dB between algorithms).
 The acoustic paths are simulated, also for the real recordings; the evaluation does not cover
 acoustic feedback (closed-loop howling), for which reference-based ANC
-is not the right structure. Power is a switching-activity proxy until gate-level analysis is done.
+is not the right structure. The power figures are for the core alone; the codec interface and status
+logic of the board design add to them, and the energy split of \eqref{eq:plin} rests on two operating points.
 On the board, the output is proven equal to the model up to the DAC word, but the analogue LINE OUT
 signal was not recorded, and the absolute noise reduction depends on the input level: with the
 stimulus 3~dB below the simulation level the board reached 14 to 17~dB instead of 19 to 28~dB on the
