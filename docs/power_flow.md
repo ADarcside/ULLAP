@@ -37,7 +37,15 @@ cannot bind to the core inside it. The flow therefore compiles `anc_core` on its
    with the dynamic energy per sample: core dynamic power / 8,138 Hz for `board`, and
    core dynamic power x gap / 50 MHz for `max` (comparable with power/throughput figures of merit).
 
-Expected shape (not a measurement): Cyclone IV E static power dominates (on the order of 100 mW
+Measured result (27 Oct 2026, bench laptop, Quartus Prime Lite 25.1, Questa 2025.2): all six runs
+`mismatches=0`, Power Analyzer confidence High, raw reports and logs in
+`results/quartus_reports/power_gate_level/`, table in `results/metrics/power_gate_level.csv`.
+Two notes from that run: `quartus_asm` had to be run by hand before `quartus_pow` (now part of
+`core_power.tcl`), and the NLMS-Shift netlist logs three `$hold` timing-check messages at 73 ns,
+where `tb_power` releases `rst_n` on the clock edge itself; this is before `$dumpvars`, so it is outside
+the recorded activity, and every output still matches.
+
+Expected shape (written before the run): Cyclone IV E static power dominates (on the order of 100 mW
 for the EP4CE115), and the core's dynamic power is small because the datapath is busy for only
 72 to 130 of 6,144 cycles per sample. That is why the paper should report dynamic energy per
 sample, not total power, when comparing algorithms.

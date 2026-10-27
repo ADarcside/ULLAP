@@ -47,6 +47,7 @@ set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 
 execute_module -tool map
 execute_module -tool fit
+execute_module -tool asm   ;# quartus_pow refuses to run without an Assembler result
 execute_module -tool sta
 execute_module -tool eda
 project_close

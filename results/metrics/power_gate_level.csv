@@ -1,0 +1,7 @@
+algo,mode,samples,gap,outputs,mismatches,total_mw,core_dynamic_mw,core_static_mw,io_mw,confidence,sample_rate_hz,dyn_energy_nj_per_sample
+lms,board,200,6144,200,0,155.81,3.9,99.52,52.38,High: user provided sufficient toggle rate data,8138.02,479.232
+lms,max,2000,81,2000,0,165.35,12.8,99.61,52.94,High: user provided sufficient toggle rate data,617283.95,20.736
+nlms,board,200,6144,200,0,159.2,7.63,99.6,51.97,High: user provided sufficient toggle rate data,8138.02,937.574
+nlms,max,2000,138,2000,0,165.72,13.78,99.67,52.27,High: user provided sufficient toggle rate data,362318.84,38.033
+nlms_shift,board,200,6144,200,0,158.24,5.93,99.61,52.7,High: user provided sufficient toggle rate data,8138.02,728.678
+nlms_shift,max,2000,80,2000,0,170.68,17.76,99.72,53.2,High: user provided sufficient toggle rate data,625000.0,28.416
