@@ -11,9 +11,13 @@ codec interface. With step sizes tuned on held-out seeds, NLMS-Shift matches NLM
 confidence interval on stationary and amplitude-step noise (22.37 and 24.33~dB final noise
 reduction over 20 seeds) and is about 2~dB better than LMS on amplitude steps, while needing 72
 instead of 130 busy cycles per sample and 16\% fewer register-transfer-level bit toggles than NLMS.
-On real recorded noise and speech at 0~dB input SNR, the three algorithms remove 11.7--14.9~dB of noise and raise STOI from 0.69--0.78 to 0.95--0.98 and narrow-band PESQ from 1.4--1.5 to 2.3--2.8, with NLMS 0.4--0.6~dB ahead of LMS and NLMS-Shift between them.
+On real recorded noise and speech at 0~dB input SNR, the three algorithms remove 11.7--14.9~dB of noise and raise STOI from 0.69--0.78 to 0.95--0.98 and narrow-band PESQ from 1.4--1.5 to 2.3--2.8, with NLMS 0.4--0.6~dB ahead of LMS and NLMS-Shift between them. Without speech the same filters remove 18.5--31.9~dB, so the speech, not the noise,
+limits them. NLMS-Shift is shown to equal NLMS with a level-dependent step between 0.5 and 1 times the nominal one.
 A word-length study at the tuned settings shows 11 bits is the shortest word within 3~dB of floating
 point and 12 bits keeps the loss below 0.4~dB on broadband noise. All variants close timing at
-50~MHz. On the board, Signal Tap captures of real codec samples show every one of 351,723 output samples
-of the three algorithms equal to the integer model's, and the measured sample rate, latency and busy
-cycles match the RTL. \TBD{Measured on-board noise reduction, after board session 2.}
+50~MHz. On the board, 25 Signal Tap captures of real codec samples show every one of 724,459 output
+samples of the three algorithms equal to the integer model's, the freeze switch and the DAC word behave
+as modelled, and the measured sample rate, latency and busy cycles match the RTL, also after
+10~minutes of operation. On the simulation signals the board removes 14.0--17.1~dB of synthetic noise,
+which on stationary and path-switch noise equals the model within 0.2~dB at the 3~dB lower input level
+the board received.

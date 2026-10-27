@@ -1,0 +1,13 @@
+noise,algo,n,nr_speech,nr_speech_ci95,nr_nospeech,nr_nospeech_ci95,loss
+air_conditioner,lms,20,11.653,0.751,19.222,2.388,7.569
+air_conditioner,nlms,20,12.045,0.825,18.455,2.326,6.41
+air_conditioner,nlms_shift,20,11.895,0.798,18.906,2.361,7.011
+vacuum,lms,20,14.325,0.324,30.794,1.517,16.469
+vacuum,nlms,20,14.898,0.332,28.303,1.179,13.405
+vacuum,nlms_shift,20,14.564,0.348,28.273,1.108,13.709
+copy_machine,lms,20,14.022,0.376,31.879,1.528,17.857
+copy_machine,nlms,20,14.634,0.335,29.44,1.474,14.806
+copy_machine,nlms_shift,20,14.388,0.32,29.249,1.284,14.861
+babble,lms,20,11.95,0.417,23.478,2.651,11.528
+babble,nlms,20,12.425,0.488,22.399,2.614,9.974
+babble,nlms_shift,20,12.273,0.463,22.757,2.609,10.484
