@@ -11,7 +11,8 @@
 \usepackage{xcolor}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,fit,backgrounds}
-\newif\ifshowabstract\showabstractfalse % authors' format: no abstract; set \showabstracttrue to restore it (journals require one at submission)
+\newif\ifshowabstract\showabstracttrue % abstract shown (CSSP requires 150-250 words); set \showabstractfalse to hide it
+\newtheorem{proposition}{Proposition}
 \usepackage{hyperref}
 % let pages carry more floats so figures sit next to their text instead of on half-empty float pages
 \renewcommand{\topfraction}{0.9}\renewcommand{\bottomfraction}{0.8}
@@ -23,6 +24,7 @@
 \newcommand{\WT}{table}  % wide table (table* in the IEEE version)
 \newcommand{\WF}{figure} % wide figure (figure* in the IEEE version)
 \newcommand{\fitcol}[1]{#1}  % no-op here; shrinks a table to the column width in the IEEE version
+\newcommand{\fitwide}[1]{\adjustbox{max width=\linewidth}{#1}} % shrink a wide table to the text width
 
 \journal{Microprocessors and Microsystems}
 

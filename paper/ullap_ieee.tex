@@ -11,7 +11,8 @@
 \usepackage{xcolor}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,fit,backgrounds}
-\newif\ifshowabstract\showabstractfalse % authors' format: no abstract; set \showabstracttrue to restore it (journals require one at submission)
+\newif\ifshowabstract\showabstracttrue % abstract shown (CSSP requires 150-250 words); set \showabstractfalse to hide it
+\newtheorem{proposition}{Proposition}
 \usepackage[hidelinks]{hyperref}
 \usepackage{dblfloatfix} % keep wide floats in order and close to their first mention
 % let pages carry more floats so the figures sit next to their text rather than after the references
@@ -23,6 +24,7 @@
 \newcommand{\WT}{table*}  % wide table spans both columns
 \newcommand{\WF}{figure*} % wide figure spans both columns
 \newcommand{\fitcol}[1]{\adjustbox{max width=\columnwidth}{#1}} % shrink a table to the column width
+\newcommand{\fitwide}[1]{\adjustbox{max width=\linewidth}{#1}} % shrink a wide table to the text width
 
 \begin{document}
 \title{A Bit-Exact, Processor-Free FPGA Adaptive Noise Canceller: Fair Comparison of LMS, NLMS and

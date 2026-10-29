@@ -1,0 +1,48 @@
+% ULLAP journal manuscript, Springer Nature version for Circuits, Systems, and Signal Processing (sn-jnl).
+% Same content as ullap_manuscript.tex (Elsevier) and ullap_ieee.tex (IEEE): all input abstract.tex,
+% body.tex and refs.bib, so edit the paper there and rebuild all three. Red \TBD{} items are open before submission.
+% sn-jnl.cls and sn-mathphys-num.bst: Springer Nature LaTeX template (Apache-2.0 copy,
+% github.com/DanySK/template-latex-springer-nature-sn-jnl).
+\documentclass[pdflatex,sn-mathphys-num]{sn-jnl}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{adjustbox}
+\usepackage{placeins}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds}
+\graphicspath{{../results/plots/}}
+\setlength{\emergencystretch}{1.5em}
+\newcommand{\TBD}[1]{\textcolor{red}{[TBD: #1]}}
+\newcommand{\WT}{tableorg} % plain LaTeX table (sn-jnl's table wraps threeparttable, which cannot be boxed)
+\newcommand{\WF}{figure}
+\newcommand{\fitcol}[1]{#1}   % sn-jnl tables (threeparttable) do not take an adjustbox
+\newcommand{\fitwide}[1]{\adjustbox{max width=\linewidth}{#1}}
+\theoremstyle{thmstyleone}
+\newtheorem{proposition}{Proposition}
+\raggedbottom
+
+\begin{document}
+\title[Bit-exact FPGA adaptive noise canceller]{A Bit-Exact, Processor-Free FPGA Adaptive Noise Canceller:
+Fair Comparison of LMS, NLMS and Divider-Free NLMS-Shift on Cyclone IV E}
+
+\author[1]{\fnm{Satvik} \sur{Garg}}
+\author[1]{\fnm{Aditya} \sur{Gupta}}
+\author*[1]{\fnm{Jaffino} \sur{G}}\email{\TBD{e-mail; author order to be confirmed by the authors}}
+\affil*[1]{\orgdiv{School of Electronics Engineering (SENSE)}, \orgname{Vellore Institute of Technology},
+\orgaddress{\city{Vellore}, \country{India}}}
+
+\abstract{\input{abstract}}
+
+\keywords{adaptive noise cancellation, NLMS, divider-free normalisation, FPGA, fixed-point arithmetic,
+bit-exact verification}
+
+\maketitle
+
+\input{body}
+
+\bibliography{refs}
+\end{document}

@@ -1,6 +1,7 @@
-% Shared manuscript body (input by ullap_manuscript.tex [Elsevier] and ullap_ieee.tex [IEEE]).
-% Edit the paper here; \WT / \WF are table / figure environments that span both columns in the IEEE version,
-% and \fitcol{} shrinks a tabular to the column width there (no effect in the Elsevier version).
+% Shared manuscript body (input by ullap_manuscript.tex [Elsevier], ullap_ieee.tex [IEEE] and ullap_cssp.tex [Springer/CSSP]).
+% Edit the paper here; \WT / \WF are table / figure environments that span both columns in the IEEE version;
+% \fitcol{} shrinks a tabular to the column width there, \fitwide{} shrinks a wide table to the text width
+% (both are no-ops in the CSSP version, whose sn-jnl tables do not take an adjustbox).
 %--------------------------------------------------------------------------------------------
 \section{Introduction}
 Unwanted sound is part of almost every working day: the hum of an air conditioner in an office, the
@@ -36,21 +37,22 @@ board (Intel Cyclone IV E) with its WM8731 audio codec, and uses it to answer bo
 contributions are:
 \begin{enumerate}
 \item A single serial core that implements LMS, NLMS (restoring divider) and NLMS-Shift with one
-shared multiplier, so the three are compared on identical datapath, word length and filter length.
+shared multiplier, so the three are compared on identical datapath, word length and filter length,
+inside a complete processor-free audio system that closes timing at 50~MHz on Cyclone IV E and is
+released with all scripts and data.
 \item A fair comparison: every algorithm's step size and regulariser are chosen on held-out seeds
 with the same criterion, and results are reported with 20-seed 95\% confidence intervals,
-on synthetic scenarios and on real recorded noise and speech.
+on synthetic scenarios and on real recorded noise and speech, together with a reproducible
+word-length study.
 \item A bit-exact verification chain from a Python integer model to the RTL and the board wrapper
 (86 regression tests including codec, freeze and reset behaviour), and on-board captures of real codec
 samples in which every output sample of all three algorithms equals the model's.
-\item An exact account of what the shift changes: NLMS-Shift is NLMS with a level-dependent step
-between 0.5 and 1 times the nominal one, and NLMS run with the mean of that step reproduces it within
-0.3~dB on broadband noise; on tonal input the step jumps at power-of-two boundaries of the window power.
-\item A measured account of the real-recording result: with the speech removed, the same filters remove
+\item Two exact accounts of the results. First, what the shift changes: NLMS-Shift is NLMS with a
+level-dependent step between 0.5 and 1 times the nominal one, and NLMS run with the mean of that step
+reproduces it within 0.3~dB on broadband noise; on tonal input the step jumps at power-of-two boundaries
+of the window power. Second, the real-recording result: with the speech removed, the same filters remove
 18.5--31.9~dB of the same real noise, so the lower noise reduction with speech comes from the speech
 disturbing the adaptation, not from the noise.
-\item A reproducible word-length study and a complete processor-free audio system that closes
-timing at 50~MHz on Cyclone IV E, released with all scripts and data.
 \end{enumerate}
 We do not claim the shift normaliser itself as new; Section~\ref{sec:related} places it among earlier
 division-free designs.
@@ -257,14 +259,21 @@ P[n] = P[n-1] + x^2[n] - x^2[n-L],
 \end{equation}
 which costs two squarings per sample instead of $L$. In NLMS-Shift the exponent $k[n]$ is the bit length
 of $P[n]+\epsilon$, so it follows from a leading-one detector, and the multiplication by $\mu[n]$ becomes
-an arithmetic right shift of $e[n]\,x[n-i]$ by $k[n]+K$ places. Since
-$2^{k[n]-1}\le P[n]+\epsilon<2^{k[n]}$, the step is bounded by
+an arithmetic right shift of $e[n]\,x[n-i]$ by $k[n]+K$ places.
+
+\begin{proposition}\label{prop:bound}
+For every $n$, the NLMS-Shift step \eqref{eq:mu_shift} satisfies
 \begin{equation}
 \frac{2^{-K}}{2\,(P[n]+\epsilon)} \;\le\; \mu_{\text{Shift}}[n] \;<\; \frac{2^{-K}}{P[n]+\epsilon},
 \label{eq:bound}
 \end{equation}
 so NLMS-Shift always lies within a factor of two below NLMS with $\tilde\mu=2^{-K}$ and keeps the NLMS
-stability bound. More exactly,
+stability bound $0<\tilde\mu<2$ for $K\ge0$.
+\end{proposition}
+\noindent\emph{Proof.} By \eqref{eq:k}, $2^{k[n]-1}\le P[n]+\epsilon<2^{k[n]}$. Taking reciprocals and
+multiplying by $2^{-K}$ gives \eqref{eq:bound}, since $\mu_{\text{Shift}}[n]=2^{-K}\,2^{-k[n]}$.\hfill$\square$
+
+\smallskip\noindent More exactly,
 \begin{equation}
 \mu[n]=\frac{r[n]\,2^{-K}}{P[n]+\epsilon},\qquad
 r[n]=\frac{P[n]+\epsilon}{2^{\lfloor\log_2(P[n]+\epsilon)\rfloor+1}}\in[0.5,1),
@@ -438,6 +447,9 @@ $\delta=0.5$~dB:
 H_{01}:\ \bar\Delta\le-\delta,\qquad H_{02}:\ \bar\Delta\ge\delta .
 \label{eq:tost}
 \end{equation}
+\emph{Use of generative AI.} \TBD{Authors: describe here, as CSSP requires in the Methods, which AI tools
+were used for code, analysis, literature search and writing, and state that the authors reviewed and take
+responsibility for the content.}
 
 For real recordings, four noise files (air conditioner, vacuum cleaner, copy machine, babble) and
 ten utterances from the public MS-SNSD corpus\footnote{\url{https://github.com/microsoft/MS-SNSD}} were resampled to 8~kHz; each seed draws a noise
@@ -470,7 +482,7 @@ algorithms over LMS on amplitude steps is significant ($p<10^{-7}$).
 
 \begin{\WT}[!htbp]\centering\scriptsize
 \caption{Paired differences in final NR over seeds 1--20 (\texttt{results/metrics/paired\_stats.csv}).}\label{tab:paired}
-\adjustbox{max width=\linewidth}{\input{tab_paired.tex}}
+\fitwide{\input{tab_paired.tex}}
 \end{\WT}
 
 \begin{\WF}[!htbp]\centering
@@ -502,7 +514,7 @@ normalised algorithms, consistent with Table~\ref{tab:nr}.
 \caption{Real recorded noise and speech (MS-SNSD), fixed point $W=12$, mean $\pm$ 95\% CI over 20 seeds, no
 speech leakage into the reference; STOI and PESQ of $e$ against $s$, with the unprocessed input in brackets
 (\texttt{results/metrics/real\_audio\_summary.csv}).}\label{tab:real}
-\adjustbox{max width=\linewidth}{\input{tab_real_audio.tex}}
+\fitwide{\input{tab_real_audio.tex}}
 \end{\WT}
 Table~\ref{tab:real} shows that on all four real noises the filter roughly doubles PESQ and brings STOI
 close to 1, and that the order of the algorithms is the same everywhere: NLMS 0.4--0.6~dB ahead of LMS,
@@ -735,11 +747,17 @@ data (724,459 samples) are bit-exact with the integer model, as are the freeze b
 word, and on stationary and path-switch noise the measured noise reduction equals the model's at the
 input level the board received within 0.2~dB.
 
-\section*{Data and code availability}
+\section*{Declarations}
+\noindent\textbf{Funding.} \TBD{Authors: funding sources, or ``No funding was received for this work.''}
+
+\noindent\textbf{Competing interests.} \TBD{Authors: competing interests, or ``The authors declare no
+competing interests.''}
+
+\noindent\textbf{Author contributions.} \TBD{Authors: who did what (free text or CRediT).}
+
+\noindent\textbf{Data and code availability.}
 All RTL, testbenches, scripts and result files are in the project repository
 \TBD{public URL and Zenodo DOI of the tagged release}. The real-audio study fetches its MS-SNSD files
 from a pinned commit and checks them by SHA-256.
 
-\section*{Declaration of generative AI use}
-\TBD{Authors: describe the AI tools used for code, analysis, literature search and writing, as required
-by the journal, and state that the authors reviewed and take responsibility for the content.}
+\noindent\textbf{Use of generative AI.} Documented in the experimental set-up (Section~\ref{sec:setup}).
