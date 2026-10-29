@@ -5,7 +5,7 @@ Date: 2026-10-26. Board: DE2-115 (EP4CE115F29C7), Quartus Prime Lite 25.1std, no
 ## Captured (all succeeded, first attempt per file after the test run)
 - 12 x cap_<shift|nlms|lms>_<stationary|amp_steps|path_switch|wav>.csv (instance cap, 65536 rows each)
 - 3 x timing_<shift|nlms|lms>.csv (instance uto_signaltap_1, GPIO[3:0] = {sample_strobe, busy, out_valid, in_valid}, 8192 rows)
-- Stimulus: board_evidence/stimulus_6s/*_noise_48k.wav, played to LINE IN via the Windows default device.
+- Stimulus: board/stimulus_6s/*_noise_48k.wav, played to LINE IN via the Windows default device.
 
 ## Qualifier mode
 Option 2: Transitional storage on out_valid only (file as provided, unchanged). out_valid alternates 1/0 on every stored row, so each CSV has 32768 samples (out_valid=1 rows) = ~4 s of audio, not 8 s. Trigger: rst_sync_2 rising (KEY0 release), position pre.

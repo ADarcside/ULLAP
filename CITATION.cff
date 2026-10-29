@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below. A journal reference will be added once the paper is published."
+title: "ULLAP: a bit-exact FPGA adaptive noise canceller with LMS, NLMS and divider-free NLMS-Shift"
+type: software
+authors:
+  - given-names: Satvik
+    family-names: Garg
+    affiliation: "Vellore Institute of Technology, Vellore"
+  - given-names: Aditya
+    family-names: Gupta
+    affiliation: "Vellore Institute of Technology, Vellore"
+  - name: "Jaffino G"
+    affiliation: "Vellore Institute of Technology, Vellore"
+repository-code: "https://github.com/ADarcside/ULLAP"
+license: MIT
+version: 0.1.0
+date-released: "2026-10-29"
+keywords:
+  - adaptive noise cancellation
+  - LMS
+  - NLMS
+  - FPGA
+  - fixed point
+  - DE2-115

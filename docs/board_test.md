@@ -31,7 +31,7 @@ the fitter report shows the four `GPIO` pins on PIN_AB22, PIN_AC15, PIN_AB21, PI
 | Switches | SW[0] = bypass (output = d[n]), SW[1] = freeze adaptation, KEY[0] = reset |
 | LEDs | LEDR[5:0] sticky saturation flags, LEDR[6] codec configured, LEDR[7] I2C NACK, LEDR[8] overrun, LEDR[9] bypass |
 
-Stimulus files: `python py/board_stimulus.py make --out board_evidence/stimulus --seconds 30`
+Stimulus files: `python py/board_stimulus.py make --out board/stimulus --seconds 30`
 writes `<scenario>_{noise,speech}_{8k,48k}.wav` for stationary, amp_steps, path_switch and wav.
 Each file starts with 1 s of silence and a 0.5 s 1 kHz tone on both channels for level
 calibration and alignment. Play the 48 kHz files from a PC (most sound cards do not run at
@@ -80,7 +80,7 @@ Qualifier only for out_valid. Any change to the `.stp` needs a full recompile, o
 reports "not compatible" and will not run. The exported CSV starts with a "Groups:" section and an
 all-X row; `py/analyze_board_capture.py` skips both and keeps the out_valid = 1 rows. Captures can be
 scripted with `quartus_stp -t` (`open_session`, `run -instance cap ... -data_log`,
-`export_data_log ... -format csv`); see `board_evidence/`.
+`export_data_log ... -format csv`); see `board/`.
 
 Per algorithm (one compile each, `quartus_sh -t build_quartus.tcl <args>` keeps the `.stp`):
 
@@ -88,11 +88,11 @@ Per algorithm (one compile each, `quartus_sh -t build_quartus.tcl <args>` keeps 
    is taken inside the FPGA).
 2. For each scenario: arm `cap` (Run Analysis), start the noise-only file, press KEY[0] during the
    calibration beep, wait for the buffer to fill, File > Export > CSV as
-   `board_evidence/signaltap/cap_<lms|nlms|shift>_<scenario>.csv`. Use the 6 s stimulus
+   `board/signaltap/cap_<lms|nlms|shift>_<scenario>.csv`. Use the 6 s stimulus
    (`board_stimulus.py make --seconds 6`) for `amp_steps` and `path_switch`, so their events fall
    inside the capture.
 3. Arm `timing` while audio plays and export `timing_<algo>.csv`.
-4. `python py/analyze_board_capture.py board_evidence/signaltap` reports, for every capture, the
+4. `python py/analyze_board_capture.py board/signaltap` reports, for every capture, the
    bit-exact result (T9), NR_final over the last 25 % of the post-reset samples (T11, measured on
    the codec's real ADC samples), the sample period and in_valid-to-out_valid latency (T7, T10),
    and writes figures and a summary to `results/board/`.
@@ -103,6 +103,6 @@ timing build (Signal Tap adds logic and changes slack), and note this in the bui
 
 ## 5. Record
 
-Keep everything in `board_evidence/` (photos, recordings, CSV exports, scope screenshots and a
+Keep everything in `board/` (photos, recordings, CSV exports, scope screenshots and a
 filled copy of the table above with PASS / FAIL and the date), and add the measured values to
-`claims.md` as RAW only after the files are committed.
+`docs/claims.md` as RAW only after the files are committed.

@@ -10,7 +10,7 @@ found by looking for column names containing "x_reg", "d_reg" and "e_out"; an
 "out_valid" column, if present, is used to keep only rows where it is 1 (for captures taken
 without a storage qualifier). Values may be hexadecimal (Signal Tap default) or decimal.
 
-    python py/check_board_capture.py --csv board_evidence/t9_nlms_shift.csv --algo 2
+    python py/check_board_capture.py --csv board/t9_nlms_shift.csv --algo 2
 
 Exit code 0 only if every captured e[n] equals the model output.
 """

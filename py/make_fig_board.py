@@ -3,7 +3,7 @@
 Reads the session-1 Signal Tap zip, checks each capture bit-exact from the reset, keeps the samples from
 the start of the scenario (after the calibration tone, found by correlation with the stimulus) and plots, per algorithm, d and e, then the running noise reduction and the output spectra of all three.
 
-    python py/make_fig_board.py board_evidence/signaltap_session1_20261026.zip
+    python py/make_fig_board.py board/signaltap_session1_20261026.zip
 """
 import argparse
 import os

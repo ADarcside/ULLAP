@@ -1,4 +1,4 @@
-"""Paired per-seed statistics for the headline comparison (closes claims.md known limit 7).
+"""Paired per-seed statistics for the headline comparison (closes docs/claims.md known limit 7).
 
 Re-runs the fair-tuned W = 12 fixed-point models on seeds 1-20 for every scenario, keeps the
 per-seed final NR, and for each algorithm pair reports the mean paired difference with a 95% CI,

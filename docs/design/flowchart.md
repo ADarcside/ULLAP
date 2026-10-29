@@ -42,7 +42,7 @@ flowchart TD
 
 ## 2. ANC Core Hardware FSM State Machine
 
-The core finite state machine in [`rtl/anc_core.v`](file:///c:/Users/Lenovo/OneDrive/Desktop/esa_proj/ULLAP/rtl/anc_core.v) orchestrates multi-cycle single-multiplier scheduling:
+The core finite state machine in [`rtl/anc_core.v`](../../rtl/anc_core.v) orchestrates multi-cycle single-multiplier scheduling:
 
 ```mermaid
 stateDiagram-v2

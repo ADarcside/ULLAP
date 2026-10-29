@@ -1,21 +1,34 @@
-# tb/
+# tb
 
-* `tb_anc_core.v` - self-checking testbench (Verilog-2001 + `$value$plusargs`, `$fscanf`). Reads `<prefix>.vec/.w[/.flg]`
-  (`+vec=<prefix>`), drives `anc_core` one sample at a time (waits for `busy=0`), compares `y_out`/`e_out` of every sample,
-  the out_valid count and latency, the final coefficients (hierarchical read of `dut.w[]`) and the sticky saturation flags.
-  Prints one `TB_RESULT PASS|FAIL ...` line.
-* `manifest.txt` - 19 configurations (6 shipped vector sets + 13 generated stress sets), written by `py/gen_rtl_vectors.py`.
-* `run_regression.sh [verilator|iverilog] [name-regex]` - builds and runs every manifest line; exit status 0 only if all pass.
-  Only the Verilator path has been run (`../docs/rtl_regression_log.txt`); the Icarus path is untested.
+Self-checking testbenches for the core and the board top level. Each one prints a
+`TB_RESULT PASS` or `TB_RESULT FAIL` line, which is what the regression runners look for.
 
+| File | What it checks |
+|---|---|
+| `tb_anc_core.v` | The core against golden vectors, sample by sample: y, e, latency, busy cycles, final weights and saturation flags |
+| `tb_anc_core_freeze_hold.v` | The adaptation freeze input under different hold and toggle patterns |
+| `tb_anc_protocol.v` | Handshake corner cases: strobes while busy, reset mid-update, back-to-back samples |
+| `tb_top.v` | The DE2-115 wrapper with the codec model, tests T1 to T10: I²C start-up and NACK handling, bypass, end-to-end ANC on golden vectors, freeze, reset, saturation LEDs, codec clocks, I²S skew sweep, sample rate and GPIO timing |
+| `codec_model.v` | Behavioural WM8731 used by `tb_top.v` |
+| `tb_power.v` | Streams vectors at the board rate and dumps a VCD for the power flow |
+| `mutants/` | Deliberately broken copies of the wrapper, used to prove the top-level tests catch faults |
+| `manifest.txt`, `manifest_hold.txt` | One line per test configuration (ALGO, W, L, MU_INT, K, ACC_W, vector prefix) |
+| `anc_sim.mpf` | An early Questa GUI project from the first import; it uses absolute paths from that machine and is kept for reference only |
+
+The usual way to run everything is from the repository root:
+
+```bash
+python py/run_iverilog_regression.py    # 86 tests, Icarus Verilog
+python py/run_questa_regression.py      # same tests on Questa
 ```
-python3 py/gen_rtl_vectors.py                 # (re)generate vectors/rtl/* and tb/manifest.txt, re-checks shipped vectors
-tb/run_regression.sh verilator                # needs Verilator >= 5 (--binary --timing), a C++ compiler, make
+
+The shell scripts are a lighter alternative that only cover the core:
+
+```bash
+tb/run_regression.sh iverilog            # every line of manifest.txt
+tb/run_protocol.sh iverilog              # the protocol testbench
 ```
-Single run by hand (example, NLMS W=11):
-```
-verilator --binary --timing -Wno-fatal -Wno-lint --top-module tb_anc_core -GW=11 -GL=32 -GALGO=1 -GMU_INT=48 -GK=4 \
-  -GACC_W=27 --Mdir build/x -o sim rtl/anc_core.v tb/tb_anc_core.v && build/x/sim +vec=vectors/nlms_W11_stationary
-```
-Parameters of the testbench must match the vector set (manifest columns: ALGO W L MU_INT K ACC_W).
-`$finish(n)` exit codes are not portable between simulators, so scripts must grep the `TB_RESULT` line.
+
+New vector sets and manifest lines come from `python py/gen_rtl_vectors.py`. Testbench
+parameters must match the vector set, and since `$finish` exit codes differ between
+simulators, scripts should always grep the `TB_RESULT` line rather than trust the exit status.

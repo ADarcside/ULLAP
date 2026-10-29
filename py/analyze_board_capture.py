@@ -19,7 +19,7 @@ For each capture:
     nr_final window of py/metrics.py; the stimulus is noise-only, so d is pure noise).
   * figure: d and e waveforms, running NR (0.25 s windows), and power spectra before/after.
 
-    python py/analyze_board_capture.py board_evidence/signaltap
+    python py/analyze_board_capture.py board/signaltap
 
 Writes results/board/board_capture_summary.csv and .md, and results/board/*.png / *.pdf.
 """

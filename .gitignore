@@ -1,55 +1,57 @@
-# Git
-.git/
-
 # Python
 __pycache__/
 *.py[cod]
 .venv/
 venv/
+.pytest_cache/
+.ipynb_checkpoints/
+*.egg-info/
 
-# Quartus generated files
+# Quartus build output (the reports we keep live in results/quartus_reports/)
 db/
 incremental_db/
 output_files/
+greybox_tmp/
 *.qdb
+*.qws
 *.rpt
 *.summary
 *.jdi
+*.jditmp
 *.sof
 *.pof
 *.smsg
 *.done
-*.fit.smsg
-*.map.smsg
-*.sta.smsg
 !results/quartus_reports/**
 
-# Questa / ModelSim generated files
+# Questa / ModelSim / Icarus / Verilator output
 work/
 transcript
-vsim.wlf
 *.wlf
 *.vcd
-
-# Temporary files
-*.tmp
-*.bak
-*.log
-.DS_Store
-Thumbs.db
-
-# Generated simulation/build directories
+*.cr.mti
 build/
 
-# Temporary Quartus programming file
-*.jditmp
-
-# Generated Questa session state
-*.cr.mti
-
-# Scratch and editor configs
-scratch/
-.vscode/
-data_cache/
+# LaTeX intermediates (see also paper/.gitignore)
 paper/*.bbl
 paper/*.blg
+*.synctex.gz
+*.toc
+
+# Logs: ignored everywhere except the archived regression logs
+*.log
+!results/logs/**
+
+# Node (presentation tooling)
+node_modules/
+
+# Editors, OS and scratch space
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+*~
+scratch/
+data_cache/

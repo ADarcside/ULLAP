@@ -11,7 +11,7 @@ analyze:  given two LINE OUT recordings of the same noise-only stimulus, one wit
           the calibration tone and reports NR = 10 log10(P_bypass / P_anc) over the final 25 %
           of the scenario, the same window as nr_final in py/metrics.py.
 
-    python py/board_stimulus.py make --out board_evidence/stimulus --seconds 30
+    python py/board_stimulus.py make --out board/stimulus --seconds 30
     python py/board_stimulus.py analyze --bypass bypass.wav --anc anc.wav --seconds 30
 """
 import argparse
@@ -113,7 +113,7 @@ def cmd_analyze(a):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
-    m = sub.add_parser("make"); m.add_argument("--out", default="board_evidence/stimulus")
+    m = sub.add_parser("make"); m.add_argument("--out", default="board/stimulus")
     m.add_argument("--seconds", type=float, default=30.0); m.add_argument("--seed", type=int, default=1)
     z = sub.add_parser("analyze"); z.add_argument("--bypass", required=True); z.add_argument("--anc", required=True)
     z.add_argument("--seconds", type=float, default=30.0)
