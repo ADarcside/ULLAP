@@ -172,55 +172,8 @@ written in plain Verilog, without any processor or vendor IP.
 
 \begin{\WF}[!htbp]\centering
 \adjustbox{max width=\linewidth}{%
-\begin{tikzpicture}[font=\footnotesize, >=Stealth,
-  blk/.style={draw, rounded corners=2pt, align=center, minimum height=8mm, inner sep=3pt, fill=white},
-  core/.style={blk, fill=gray!15, line width=0.8pt}]
-  % acoustic side
-  \node[blk] (src) at (0,0) {Noise\\source $v[n]$};
-  \node[blk] (path) at (2.6,0.9) {Acoustic\\path $h$};
-  \node[draw, circle, inner sep=1pt] (sum) at (4.3,0.9) {$+$};
-  \node[blk] (spk) at (4.3,2.1) {Speech $s[n]$};
-  \node[blk] (pmic) at (5.9,0.9) {Primary\\mic};
-  \node[blk] (rmic) at (5.9,-0.9) {Reference\\mic};
-  \draw[->] (src) |- (path);
-  \draw[->] (path) -- (sum);
-  \draw[->] (spk) -- (sum);
-  \draw[->] (sum) -- (pmic);
-  \draw[->] (src) |- (rmic);
-  % codec
-  \node[blk, minimum height=30mm, minimum width=14mm] (adc) at (7.9,0) {WM8731\\ADC};
-  \draw[->] (pmic) -- node[above]{$d$} (pmic -| adc.west);
-  \draw[->] (rmic) -- node[below]{$x$} (rmic -| adc.west);
-  % FPGA
-  \node[blk] (rx) at (10.0,0) {I$^2$S\\RX};
-  \node[core, minimum height=14mm] (anc) at (12.2,0) {ANC core\\LMS / NLMS /\\NLMS-Shift};
-  \node[blk] (mux) at (14.3,0) {Bypass\\mux};
-  \node[blk] (tx) at (16.0,0) {I$^2$S\\TX};
-  \node[blk] (i2c) at (10.0,-1.9) {I$^2$C\\config};
-  \node[blk] (gpio) at (11.8,-1.9) {GPIO\\test points};
-  \node[blk] (sync) at (14.3,-1.9) {Synchro-\\nizers};
-  \draw[->] (adc.east |- rx) -- (rx);
-  \draw[->] (rx) -- node[above]{$x,d$} (anc);
-  \draw[->] (anc) -- node[above]{$e$} (mux);
-  \draw[->] (mux) -- (tx);
-  \draw[->] (sync) -- node[right]{\scriptsize bypass} (mux);
-  \draw[->] (sync.north west) ++(0.15,0) |- (12.7,-1.15) -- node[right, pos=0.3]{\scriptsize freeze} (12.7,-0.7);
-  \draw[->] (11.8,-0.7) -- node[left]{\scriptsize strobes} (gpio.north);
-  \draw[->] (i2c.west) -| ([xshift=3mm]adc.south);
-  \draw[->] (rx.north) -- ++(0,0.5) -| (mux.north);
-  \node[font=\scriptsize, above] at (12.2,0.95) {$d$ (bypass path)};
-  \node[blk] (sw) at (14.3,-3.3) {SW[1:0], KEY0};
-  \draw[->] (sw) -- (sync);
-  \node[blk] (dac) at (17.8,0) {WM8731\\DAC};
-  \draw[->] (tx) -- (dac);
-  \node[blk] (out) at (17.8,-1.9) {LINE OUT\\$e[n]$};
-  \draw[->] (dac) -- (out);
-  \begin{scope}[on background layer]
-    \node[draw, dashed, rounded corners, fit=(rx)(anc)(mux)(tx)(i2c)(sync)(gpio), inner sep=6pt,
-      label={[font=\footnotesize, anchor=north west]south west:FPGA (Cyclone IV E, 50~MHz)}] {};
-  \end{scope}
-\end{tikzpicture}}
-\caption{Block diagram of the ULLAP system. The acoustic part on the left is simulated in the experiments
+\input{fig_system_tikz}}
+\caption{Block diagram of the ULLAP system. The acoustic part at the upper left is simulated in the experiments
 (Section~\ref{sec:setup}), and all the blocks from the codec onwards run on the DE2-115 board.}\label{fig:system}
 \end{\WF}
 
@@ -350,39 +303,7 @@ its place. A \texttt{freeze} input holds the weights while the filtering continu
 
 \begin{\WF}[!htbp]\centering
 \adjustbox{max width=\linewidth}{%
-\begin{tikzpicture}[font=\footnotesize, >=Stealth,
-  blk/.style={draw, rounded corners=2pt, align=center, minimum height=8mm, inner sep=3pt, fill=white},
-  reg/.style={draw, align=center, minimum height=7mm, inner sep=2pt, fill=gray!10}]
-  \node[reg, minimum width=26mm] (xv) at (0,1.6) {Tap delay line\\$x[n],\dots,x[n-L+1]$};
-  \node[reg, minimum width=26mm] (wv) at (0,0) {Weight registers\\$w_0,\dots,w_{L-1}$};
-  \node[blk] (opm) at (3.4,0.8) {Operand\\mux};
-  \node[blk, minimum width=18mm] (mul) at (5.6,0.8) {Multiplier\\(3-stage pipeline)};
-  \node[blk] (acc) at (8.2,1.9) {Accumulator\\$a[n]$};
-  \node[blk] (ye) at (10.5,1.9) {Round, saturate\\$y$, $e=d-y$};
-  \node[blk] (pw) at (8.2,0.8) {Power\\$P[n]$ \eqref{eq:prec}};
-  \node[blk, fill=gray!15] (norm) at (10.5,0.8) {Step unit:\\LMS: $M_\mu$\\NLMS: divider\\Shift: LOD $\to k$};
-  \node[blk] (upd) at (8.2,-0.5) {Update\\$\operatorname{rs}$, $\operatorname{sat}_W$};
-  \node[blk, minimum width=26mm] (fsm) at (5.6,-1.8) {Control FSM\\IDLE, P0, P1, MAC, YE,\\MU, DIV, UPD, WAIT};
-  \draw[->] (xv.east) -- ++(0.5,0) |- ([yshift=1.5mm]opm.west);
-  \draw[->] (wv.east) -- ++(0.5,0) |- ([yshift=-1.5mm]opm.west);
-  \draw[->] (opm) -- (mul);
-  \draw[->] (mul.east) -- ++(0.4,0) |- (acc.west);
-  \draw[->] (mul.east) -- ++(0.4,0) -- (pw.west);
-  \draw[->] (mul.east) -- ++(0.4,0) |- (upd.west);
-  \draw[->] (acc) -- (ye);
-  \draw[->] (pw) -- (norm);
-  \draw[->] (ye.south east) ++(0,0.15) -- ++(0.9,0) node[right]{$e[n]$};
-  \draw[->] (ye.north) -- ++(0,0.4) -| node[pos=0.2, above]{\scriptsize $e$, $M_\mu e$, $g$ to operand} (opm.north);
-  \draw[->] (norm.south) |- node[pos=0.7, below]{\scriptsize shift $k+K$} (upd.east);
-  \draw[->] (upd.west) -- ++(-0.3,0) |- (wv.south east);
-  \node[left] (xin) at (-1.9,1.6) {$x[n]$};
-  \draw[->] (xin) -- (xv.west);
-  \node[above] (din) at (12.4,2.9) {$d[n]$};
-  \draw[->] (din) |- (ye.east);
-  \draw[->, dashed] (fsm.north) -- (mul.south);
-  \draw[->, dashed] (fsm.east) -| (norm.south east);
-  \draw[->, dashed] (fsm.west) -| (opm.south);
-\end{tikzpicture}}
+\input{fig_core_tikz}}
 \caption{Datapath of the ANC core. A single multiplier is shared by the power update, the filter sum, the
 step computation and the weight updates, and only the step unit differs between the three algorithms.
 Dashed lines denote control signals.}\label{fig:core}

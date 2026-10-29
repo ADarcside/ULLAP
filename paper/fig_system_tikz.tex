@@ -1,0 +1,53 @@
+% Fig. (system block diagram), input by body.tex inside an adjustbox that scales it to the text width.
+\begin{tikzpicture}[font=\fontsize{8}{9.5}\selectfont, >=Stealth,
+  blk/.style={draw, rounded corners=2pt, align=center, minimum height=8mm, inner sep=3pt, fill=white},
+  core/.style={blk, fill=gray!15, line width=0.8pt, minimum width=25mm},
+  lab/.style={font=\fontsize{7}{8}\selectfont, inner sep=1.5pt}]
+  % acoustic part
+  \node[blk] (src)  at (0,-1.6)   {Noise\\source $v[n]$};
+  \node[blk] (path) at (2.0,-0.4) {Acoustic\\path $h$};
+  \node[draw, circle, inner sep=1pt] (sum) at (3.45,-0.4) {$+$};
+  \node[blk] (spk)  at (3.45,0.9) {Speech $s[n]$};
+  \node[blk] (pmic) at (4.95,-0.4) {Primary\\mic};
+  \node[blk] (rmic) at (4.95,-2.8) {Reference\\mic};
+  \draw[->] (src.north) |- (path.west);
+  \draw[->] (src.south) |- (rmic.west);
+  \draw[->] (path) -- (sum);
+  \draw[->] (spk) -- (sum);
+  \draw[->] (sum) -- (pmic);
+  % codec
+  \node[blk, minimum height=32mm, minimum width=15mm] (adc) at (7.0,-1.6) {WM8731\\ADC};
+  \draw[->] (pmic) -- node[lab, above]{$d$} (pmic -| adc.west);
+  \draw[->] (rmic) -- node[lab, above]{$x$} (rmic -| adc.west);
+  \node[blk, minimum width=15mm] (dac) at (7.0,-7.3) {WM8731\\DAC};
+  \node[blk] (out) at (4.95,-7.3) {LINE OUT\\$e[n]$};
+  % FPGA, main signal path top to bottom
+  \node[blk, minimum width=15mm] (rx)  at (10.3,-1.6) {I$^2$S RX};
+  \node[core] (anc) at (10.3,-3.6) {ANC core\\LMS / NLMS /\\NLMS-Shift};
+  \node[blk, minimum width=15mm] (mux) at (10.3,-5.6) {Bypass\\mux};
+  \node[blk, minimum width=15mm] (tx)  at (10.3,-7.3) {I$^2$S TX};
+  \draw[->] (adc.east |- rx) -- node[lab, above]{I$^2$S} (rx);
+  \draw[->] (rx) -- node[lab, right]{$x$, $d$} (anc);
+  \draw[->] (anc) -- node[lab, right]{$e$} (mux);
+  \draw[->] (mux) -- (tx);
+  \draw[->] (tx) -- (dac);
+  \draw[->] (dac) -- (out);
+  % bypass path on the left of the main column
+  \draw[->] ([xshift=-3mm]rx.south) -- ++(0,-0.35) -| (8.65,-4.9) |- ([yshift=1.5mm]mux.west);
+  \node[lab, rotate=90] at (8.85,-3.6) {$d$ (bypass)};
+  % side blocks
+  \node[blk, minimum width=18mm] (i2c)  at (13.9,-1.6) {I$^2$C\\config};
+  \node[blk, minimum width=18mm] (gpio) at (13.9,-3.6) {GPIO\\test points};
+  \node[blk, minimum width=18mm] (sync) at (13.9,-5.6) {Synchro-\\nizers};
+  \draw[->] (i2c.north) -- ++(0,1.65) -| (adc.north);
+  \draw[->] (anc.east) -- node[lab, above]{strobes} (gpio.west);
+  \draw[->] ([yshift=2mm]sync.west) -| node[lab, above, pos=0.25]{freeze} ([xshift=10.5mm]anc.south);
+  \draw[->] ([yshift=-2mm]sync.west) -- node[lab, below]{bypass} ([yshift=-2mm]sync.west -| mux.east);
+  \node[blk] (sw) at (13.9,-8.6) {SW[1:0], KEY0};
+  \draw[->] (sw) -- (sync);
+  \coordinate (bpl) at (8.55,-4.9);
+  \begin{scope}[on background layer]
+    \node[draw, dashed, rounded corners, fit=(rx)(anc)(mux)(tx)(i2c)(gpio)(sync)(bpl), inner sep=8pt,
+      label={[font=\fontsize{8}{9.5}\selectfont, anchor=south west, inner sep=2pt]north west:FPGA (Cyclone IV E, 50~MHz)}] (fpga) {};
+  \end{scope}
+\end{tikzpicture}

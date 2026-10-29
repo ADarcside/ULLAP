@@ -1,0 +1,44 @@
+% Fig. (ANC core datapath), input by body.tex inside an adjustbox that scales it to the text width.
+\begin{tikzpicture}[font=\fontsize{8}{9.5}\selectfont, >=Stealth,
+  blk/.style={draw, rounded corners=2pt, align=center, minimum height=8mm, inner sep=3pt, fill=white},
+  reg/.style={draw, align=center, minimum height=8mm, minimum width=27mm, inner sep=3pt, fill=gray!10},
+  lab/.style={font=\fontsize{7}{8}\selectfont, inner sep=1.5pt}]
+  % storage on the left
+  \node[reg] (xv) at (0,1.7)  {Tap delay line\\$x[n],\dots,x[n-L+1]$};
+  \node[reg] (wv) at (0,-0.5) {Weight registers\\$w_0,\dots,w_{L-1}$};
+  \node (xin) at (0,3.3) {$x[n]$};
+  \draw[->] (xin) -- (xv.north);
+  % shared arithmetic
+  \node[blk] (opm) at (3.05,0.6) {Operand\\mux};
+  \node[blk] (mul) at (5.6,0.6) {Multiplier\\(3-stage pipeline)};
+  \draw[->] (xv.east) -- ++(0.3,0) |- ([yshift=1.5mm]opm.west);
+  \draw[->] (wv.east) -- ++(0.65,0) |- ([yshift=-1.5mm]opm.west);
+  \draw[->] (opm) -- (mul);
+  % consumers of the product
+  \node[blk, minimum width=20mm] (acc) at (8.85,2.5)  {Accumulator\\$a[n]$};
+  \node[blk, minimum width=20mm] (pw)  at (8.85,0.6)  {Power\\$P[n]$ \eqref{eq:prec}};
+  \node[blk, minimum width=20mm] (upd) at (8.85,-1.3) {Update\\$\operatorname{rs}$, $\operatorname{sat}_W$};
+  \coordinate (bus) at (7.35,0.6);
+  \draw (mul.east) -- (bus);
+  \fill (bus) circle (1.2pt);
+  \draw[->] (bus) |- (acc.west);
+  \draw[->] (bus) -- (pw.west);
+  \draw[->] (bus) |- (upd.west);
+  % output stage and step unit
+  \node[blk, minimum width=25mm] (ye) at (11.75,2.5) {Round, saturate\\$y$, $e=d-y$};
+  \node[blk, minimum width=25mm, fill=gray!15] (norm) at (11.75,0.45) {Step unit\\LMS: $M_\mu$\\NLMS: divider\\Shift: LOD $\to k$};
+  \draw[->] (acc) -- (ye);
+  \draw[->] (pw) -- (pw -| norm.west);
+  \draw[->] (norm.south) |- node[lab, below, pos=0.75]{shift $k+K$} (upd.east);
+  \draw[->] ([yshift=-1.5mm]ye.east) -- ++(0.7,0) node[right, inner sep=1pt]{$e[n]$};
+  \node (din) at (12.4,4.0) {$d[n]$};
+  \draw[->] (din) -- (din |- ye.north);
+  \draw[->] ([xshift=-6.5mm]ye.north) -- ++(0,0.75) -| node[lab, above, pos=0.25]{$e$, $M_\mu e$, $g$ to operand mux} (opm.north);
+  % weight write-back
+  \draw[->] (upd.south) -- ++(0,-0.75) -| (wv.south);
+  % control
+  \node[blk, minimum width=31mm] (fsm) at (4.3,-1.05) {Control FSM\\IDLE, P0, P1, MAC, YE,\\MU, DIV, UPD, WAIT};
+  \draw[->, dashed] (fsm.north -| opm.south) -- (opm.south);
+  \draw[->, dashed] (fsm.north -| mul.south) -- (mul.south);
+  \draw[->, dashed] ([xshift=8mm]fsm.south) |- (13.55,-2.35) |- (norm.east);
+\end{tikzpicture}
