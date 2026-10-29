@@ -688,37 +688,41 @@ windows (bottom left; shaded: last 25~\% of the common window) and power spectra
 %--------------------------------------------------------------------------------------------
 \FloatBarrier % every figure and table is placed before the discussion
 \section{Discussion and limitations}\label{sec:disc}
-What the comparison supports is a fairly narrow statement. A divider-free normalization keeps the level
-independence of NLMS while costing roughly the cycles of LMS. That makes it the better option when the
-noise level varies and throughput or energy per sample is a concern; for a steady level, LMS is still the
-smallest design. Nothing here shows that NLMS-Shift cancels better than NLMS, and
-Section~\ref{sec:equiv} explains why. The shift changes only the step size, by a level-dependent factor
-between 0.5 and 1, so tuning $K$ and $\epsilon$ for the expected input level matters more than the shift
-itself. Tonal noise close to a power-of-two boundary of $P+\epsilon$ also brings a step jump that NLMS
-does not have. With real recordings, the speech at the primary input limits all three algorithms much more
-than the choice among them does (6.4--17.9~dB, against at most 0.6~dB between algorithms).
+We would state the main finding modestly. Replacing the divider with a shift keeps most of what makes NLMS
+useful, its insensitivity to the input level, and brings the cycle count down to about that of LMS (72
+against 73 busy cycles per sample). If the noise level moves around and throughput or energy per sample
+is the scarce resource, NLMS-Shift is the sensible pick; with a steady level, plain LMS is still the
+smallest circuit. What the data do not show is NLMS-Shift cancelling better than NLMS, and
+Section~\ref{sec:equiv} explains why not: the shift only rescales the step, by a factor somewhere between
+0.5 and 1 that depends on the input level. Getting $K$ and $\epsilon$ right for the level the system will
+actually see is worth more than the shift itself. The one quirk is tonal noise sitting near a power-of-two
+boundary of $P+\epsilon$, where the step can jump in a way NLMS never would. On real recordings the bigger
+story is the speech. It costs all three algorithms 6.4--17.9~dB, while the algorithms differ from one
+another by 0.6~dB at most.
 
-The study has limits that should be kept in mind. The acoustic paths are simulated, also in the tests
-with real recordings. Acoustic feedback (closed-loop howling) is not covered, and reference-based ANC
-would be the wrong structure for it in any case. Power is only a switching-activity proxy until a
-gate-level analysis has been done. On the board, the output was shown to equal the model up to the DAC
-word, but the analog LINE OUT signal was not recorded. Lastly, the absolute noise reduction depends on the
-input level: with the stimulus 3~dB below the simulation level, the board reached 14 to 17~dB on the
-synthetic scenarios instead of 19 to 28~dB, and for stationary and path-switch noise the model reproduces
-this at that level. A practical system should therefore set the codec input gain so that the reference
-fills most of the 12-bit range, or retune the step size for the level it expects.
+Some caveats. Every acoustic path in this study is simulated, even where the noise and speech are real
+recordings. Howling from closed-loop acoustic feedback is not addressed at all; a reference-based canceller
+is the wrong tool for that problem anyway. Our power numbers are a switching-activity proxy and will stay
+that way until a gate-level analysis is run. On the board we followed the samples as far as the DAC word
+but never recorded the analog LINE OUT signal. And the absolute noise reduction is sensitive to input
+level. With the stimulus 3~dB quieter than in simulation, the board managed 14 to 17~dB on the synthetic
+scenarios rather than 19 to 28~dB, a drop the model reproduces at that level for stationary and
+path-switch noise. Anyone building on this design should set the codec input gain so the reference uses
+most of the 12-bit range, or else retune the step size for the level they expect.
 
 \section{Conclusion}\label{sec:concl}
-ULLAP runs LMS, NLMS and NLMS-Shift on one serial 12-bit, 32-tap core on a low-cost Cyclone IV board, and
-this paper compared the three with equal tuning effort. NLMS-Shift matches NLMS within the 95\%
-confidence interval on stationary and amplitude-step noise, while needing 72 busy cycles per sample
-instead of 130. On real recorded noise all three remove 11.7 to 14.9~dB; once the speech is taken out of
-the primary input they remove 18.5 to 31.9~dB, so it is the speech, not the noise, that limits them.
-NLMS-Shift was also shown to be equivalent to NLMS with a level-dependent step between 0.5 and 1 times
-the nominal one. On the board, 25 Signal Tap captures of real codec data (724,459 samples) are bit-exact
-with the integer model, as are the freeze behavior and the DAC word. For stationary and path-switch
-noise, the measured noise reduction matches the model at the input level the board received, to within
-0.2~dB.
+The question behind ULLAP was a practical one: on a cheap FPGA with one shared multiplier and 12-bit
+words, what does a fair comparison of LMS, NLMS and NLMS-Shift look like, and does the chip really compute
+what the model predicts? Running all three on the same serial 32-tap core, tuned with equal effort, gives
+a fairly clear answer. NLMS-Shift stays within the 95\% confidence interval of NLMS on stationary and
+amplitude-step noise, and gets there in 72 busy cycles per sample where NLMS needs 130. Analytically it is
+NLMS with a step that wanders between 0.5 and 1 times the nominal value as the level changes, nothing
+more. Real recordings tell a second story. All three filters remove 11.7 to 14.9~dB of real noise when
+speech is present and 18.5 to 31.9~dB when it is not, so the speech, not the noise, is what holds them
+back. Finally, the hardware does what the model says. Twenty-five Signal Tap captures of real codec data,
+724,459 samples in all, match the integer model bit for bit, and so do the freeze behavior and the DAC
+word; on stationary and path-switch noise the measured noise reduction agrees with the model, at the level
+the board actually received, within 0.2~dB.
 
 \section*{Declarations}
 \noindent\textbf{Funding.} \TBD{Authors: funding sources, or ``No funding was received for this work.''}
