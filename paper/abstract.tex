@@ -1,16 +1,17 @@
 % Shared abstract (input by ullap_manuscript.tex, ullap_ieee.tex and ullap_cssp.tex); CSSP limit 150-250 words.
 % The longer 27 Oct version is kept in abstract_long.tex.
-Adaptive noise cancellation with a reference microphone is a classic use of the least-mean-square (LMS)
-family, and a small field-programmable gate array (FPGA) can run it at audio rates without a processor.
-This paper presents ULLAP, a 12-bit, 32-tap noise canceller for the DE2-115 board (Cyclone IV E) with a
-WM8731 codec. One serial core with a single shared multiplier implements LMS, normalised LMS (NLMS) with a
-restoring divider, and NLMS-Shift, which replaces the division by a leading-one detector and a shift. With
-step sizes tuned on held-out seeds, NLMS-Shift matches NLMS within the 95\% confidence interval on
-stationary and amplitude-step noise (22.37 and 24.33~dB over 20 seeds) and is about 2~dB better than LMS
-on amplitude steps, while needing 72 instead of 130 busy cycles per sample. NLMS-Shift is shown to equal
-NLMS with a level-dependent step between 0.5 and 1 times the nominal one. On real recorded noise and speech
-the filters remove 11.7--14.9~dB and raise the short-time objective intelligibility from 0.69--0.78 to
-0.95--0.98; without speech they remove 18.5--31.9~dB, so the speech, not the noise, limits them. A
-12-bit word keeps the quantisation loss below 0.4~dB on broadband noise. On the board, all 724,459 captured output samples
-of the three algorithms equal the integer model's, and the measured sample rate, latency and busy cycles
-match the register-transfer-level design.
+Cancelling noise with a reference microphone is one of the oldest applications of the least-mean-square
+(LMS) family, and a small field-programmable gate array (FPGA) can do it at audio rates with no processor
+at all. We present ULLAP, a 12-bit, 32-tap noise canceller built for the DE2-115 board (Cyclone IV E) and
+its WM8731 codec. A single serial core, sharing one multiplier, runs three algorithms: LMS, normalised LMS
+(NLMS) with a restoring divider, and NLMS-Shift, in which a leading-one detector and a shift take the place
+of the division. With step sizes tuned on held-out seeds, NLMS-Shift stays within the 95\% confidence
+interval of NLMS on stationary and amplitude-step noise (22.37 and 24.33~dB over 20 seeds), beats LMS by
+about 2~dB on amplitude steps, and needs 72 rather than 130 busy cycles per sample. We show that NLMS-Shift
+is exactly NLMS with a level-dependent step lying between 0.5 and 1 times the nominal value. On real
+recorded noise and speech the filters remove 11.7--14.9~dB and lift short-time objective intelligibility
+from 0.69--0.78 to 0.95--0.98; with the speech taken out they remove 18.5--31.9~dB, so it is the speech,
+not the noise, that sets the limit. A 12-bit word holds the quantisation loss under 0.4~dB on broadband
+noise. On the board, every one of the 724,459 captured output samples from the three algorithms matches
+the integer model, and the measured sample rate, latency and busy cycles agree with the
+register-transfer-level design.
