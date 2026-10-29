@@ -4,233 +4,222 @@
 % (both are no-ops in the CSSP version, whose sn-jnl tables do not take an adjustbox).
 %--------------------------------------------------------------------------------------------
 \section{Introduction}
-Noise is present in almost every place where people live and work, such as the hum of an office air
-conditioner, a compressor near a production line, road noise inside a vehicle cabin and the background
-chatter around a hearing-aid user. When a second microphone can be placed close to the noise source, the
-noise that reaches the main microphone can be predicted from this reference and subtracted from it. The
-predictor used for this purpose is an adaptive filter, which learns the acoustic path between the two
-microphones during operation and tracks the path whenever it changes. The least-mean-square (LMS)
-algorithm and its normalized form (NLMS) are still the most widely used algorithms for this filter, since
-they need only a few multiply--accumulate operations per tap and per sample, and their behavior has been
-analyzed for several decades~\cite{lu2021a}.
+Few places where people live or work are free of noise. An office air conditioner hums, a compressor runs
+beside a production line, road noise fills a car cabin, and a hearing-aid user is surrounded by the
+chatter of other people. If a second microphone can be placed near the noise source, the noise reaching
+the main microphone can be predicted from this reference signal and subtracted. The predictor is an
+adaptive filter: it learns the acoustic path between the two microphones while the system runs and
+follows the path when it changes. For this filter, the least-mean-square (LMS) algorithm and its
+normalized version (NLMS) remain the usual choice. Both cost only a few multiply--accumulate operations per
+tap and per sample, and their behavior has been studied for decades~\cite{lu2021a}.
 
-In a small embedded device, this filter must operate in real time with a short and fixed delay and with
-very low energy consumption. A field-programmable gate array (FPGA) is well suited to this requirement,
-because the datapath is built around the algorithm, the latency is known to the exact clock cycle, and no
-processor or operating system is required for scheduling. However, LMS and NLMS are not equally simple to
-realize in hardware. LMS needs only multipliers and adders, but its convergence speed depends on the level
-of the input signal. NLMS removes this dependence by dividing the step size by the input power, which
-requires one division in every sample. Since dividers are slow and occupy a large amount of logic, recent
-designs approximate the division instead, using an approximate Newton--Raphson
-iteration~\cite{guidotti2020}, canonical-signed-digit reciprocals~\cite{yao2024}, or a binary reciprocal
-formed from a leading-one detector and a shifter~\cite{huang2026}. The simplest option rounds the input
-power to a power of two, so that the division reduces to a plain shift. In this work, this variant is
-referred to as NLMS-Shift.
+A small embedded device has to run this filter in real time, with a short and fixed delay and on very
+little energy. A field-programmable gate array (FPGA) suits such a task well. The datapath can be shaped
+around the algorithm, the latency is known to the clock cycle, and no processor or operating system is
+needed for scheduling. In hardware, however, LMS and NLMS are not equally easy to build. LMS uses only
+multipliers and adders, but its convergence speed depends on the input level. NLMS removes this
+dependence by dividing the step size by the input power, at the price of one division per sample.
+Dividers are slow and large, so recent designs approximate the division instead, with an approximate
+Newton--Raphson iteration~\cite{guidotti2020}, with canonical-signed-digit reciprocals~\cite{yao2024}, or
+with a binary reciprocal built from a leading-one detector and a shifter~\cite{huang2026}. The crudest
+option is to round the input power to a power of two, after which the division is a plain shift. This
+variant is called NLMS-Shift in the rest of the paper.
 
-Two issues in the existing literature motivate this work. The first issue is tuning. The compared
-variants are rarely tuned with the same care, and hence a reported gain may come from a weak baseline
-rather than from the algorithm itself. An early version of this work suffered from the same problem:
-NLMS-Shift appeared 5.7~dB better than NLMS, and the gap disappeared once NLMS was given a suitable
-regularization constant. The second issue is the link between the model and the silicon. Hardware papers
-generally report area, clock rate and power. These figures prove that a design fits on the chip, but they
-do not prove that the chip produces the same samples as the model from which the accuracy results were
-obtained.
+Two issues in the published work motivated this study. The first concerns tuning. Competing variants are
+seldom tuned with equal care, so a reported gain can come from a weak baseline rather than from the
+algorithm. An early version of the present work made exactly this mistake: NLMS-Shift looked 5.7~dB
+better than NLMS until NLMS was given a sensible regularization constant, at which point the gap
+vanished. The second issue is the link between model and silicon. Hardware papers usually report area,
+clock rate and power. Such figures show that a design fits on the chip; they do not show that the chip
+produces the same samples as the model behind the accuracy results.
 
-In this paper, ULLAP, a 12-bit, 32-tap adaptive noise canceller, is presented for the low-cost Terasic
-DE2-115 board (Intel Cyclone IV E) with its WM8731 audio codec, and it is used to address both issues. The
-major contributions of this work are given below.
+This paper presents ULLAP, a 12-bit, 32-tap adaptive noise canceller for the low-cost Terasic DE2-115
+board (Intel Cyclone IV E) and its WM8731 audio codec, and uses it to address both issues. The main
+contributions are listed below.
 \begin{enumerate}
-\item \textbf{Single serial core for three algorithms:} A single serial core is designed to run LMS, NLMS
-(with a restoring divider) and NLMS-Shift on one shared multiplier, so that the three algorithms share the
-same datapath, word length and filter length. The core operates inside a complete processor-free audio
-system, closes timing at 50~MHz on Cyclone IV E, and is released along with all scripts and data.
-\item \textbf{Fair comparison:} The step size and the regularizer of each algorithm are selected on
-held-out seeds using the same rule, and every result is reported with a 20-seed 95\% confidence interval.
-The comparison covers synthetic scenarios as well as real recorded noise and speech, and includes a
-reproducible word-length study.
-\item \textbf{Bit-exact verification chain:} A bit-exact verification chain is built from a Python integer
-model through the RTL to the board wrapper (86 regression tests, including codec, freeze and reset
-behavior). On the board, captures of real codec samples show that every output sample of all three
-algorithms is equal to that of the model.
-\item \textbf{Two measured explanations:} The first explanation concerns the shift. NLMS-Shift is shown to
-be NLMS with a step that varies between 0.5 and 1 times the nominal step as the input level changes. NLMS
-operated with the average of this step reproduces NLMS-Shift within 0.3~dB on broadband noise, whereas on
-tonal input the step jumps whenever the window power crosses a power of two. The second explanation
-concerns the real recordings. When the speech is removed, the same filters remove 18.5--31.9~dB of the
-same real noise. Hence, the lower noise reduction obtained with speech is caused by the speech disturbing
-the adaptation and not by the noise.
+\item \textbf{One serial core for three algorithms:} LMS, NLMS (with a restoring divider) and NLMS-Shift
+run on the same serial core and share one multiplier, so the datapath, word length and filter length are
+identical for all three. The core sits inside a complete audio system with no processor, closes timing at
+50~MHz on Cyclone IV E, and is released together with all scripts and data.
+\item \textbf{A fair comparison:} The step size and regularizer of every algorithm are chosen on held-out
+seeds by one common rule, and each result carries a 20-seed 95\% confidence interval. Synthetic
+scenarios, real recorded noise and speech, and a reproducible word-length study are all covered.
+\item \textbf{A bit-exact verification chain:} The chain runs from a Python integer model through the RTL
+to the board wrapper (86 regression tests, codec, freeze and reset behavior included). Captures of real
+codec samples on the board show every output sample of all three algorithms to be identical to the model
+output.
+\item \textbf{Two explanations backed by measurement:} The first concerns the shift. NLMS-Shift turns out
+to be NLMS with a step that moves between 0.5 and 1 times the nominal value as the input level changes.
+Running NLMS with the average of that step reproduces NLMS-Shift within 0.3~dB on broadband noise; on
+tonal input, however, the step jumps each time the window power crosses a power of two. The second
+concerns the real recordings. Once the speech is taken out, the same filters remove 18.5--31.9~dB of the
+same real noise, which means that the lower noise reduction with speech comes from the speech disturbing
+the adaptation, not from the noise.
 \end{enumerate}
-The shift normalizer itself is not new and is not claimed as a contribution; Section~\ref{sec:related}
-places it among the earlier division-free designs.
+The shift normalizer is not new, and no claim is made to it; Section~\ref{sec:related} places it among
+earlier division-free designs.
 
-The rest of the paper is organized as follows. Section~\ref{sec:related} reviews the problem and the
-related works. Section~\ref{sec:system} gives an overview of the system, Section~\ref{sec:model}
-describes the algorithms and the fixed-point model, and Section~\ref{sec:hw} explains the hardware
-architecture. Sections~\ref{sec:verif} and~\ref{sec:setup} present the verification and the experimental
-set-up, and Section~\ref{sec:results} discusses the results. Finally, Sections~\ref{sec:disc}
-and~\ref{sec:concl} give the discussion and the concluding remarks.
+The remainder of the paper is organized as follows. Section~\ref{sec:related} reviews the problem and
+related work, and Section~\ref{sec:system} outlines the system. The algorithms and the fixed-point model
+are described in Section~\ref{sec:model} and the hardware in Section~\ref{sec:hw}.
+Sections~\ref{sec:verif} and~\ref{sec:setup} cover verification and the experimental set-up,
+Section~\ref{sec:results} reports the results, and Sections~\ref{sec:disc} and~\ref{sec:concl} close the
+paper with a discussion and conclusions.
 
 %--------------------------------------------------------------------------------------------
 \section{Literature review}\label{sec:related}
 \subsection{The problem: noise in daily life}
-At present, noise is regarded as an environmental health risk and not merely as a nuisance. In Europe,
-more than 113 million people are exposed to transport noise above 55~dB(A), and traffic noise alone is
-estimated to cause the loss of about 1.3 million healthy life-years every year through its effect on the
-heart and blood vessels~\cite{munzel2025}. Hahad et al.~\cite{hahad2025} reviewed the evidence that
-long-term noise exposure is also associated with mental-health disorders and discussed the biological
-mechanisms that may explain this association. Hearing loss forms the other side of the problem. According
-to the World Health Organization, about 1.5 billion people live with some degree of hearing loss, and this
-number is expected to reach 2.5 billion by 2050~\cite{chadha2021}. For these listeners, background noise
-is the main reason why speech remains difficult to follow, even with a hearing aid. Reducing the noise at
-the microphone or near the ear is therefore useful in many settings, such as beside roads, where urban
-traffic noise lies mostly below 2~kHz~\cite{yang2024}, inside vehicle cabins~\cite{jiang2023,zhu2024},
-in ventilation ducts and air conditioners~\cite{zhu2025}, and in hearing
-aids~\cite{yin2023,husstedt2023,tetteh2026}. Many of these devices are small, inexpensive and
-battery-powered, and hence the processing must run in real time at low cost and low energy.
+Noise is now recognized as an environmental health risk, not just a nuisance. More than 113 million
+people in Europe live with transport noise above 55~dB(A), and traffic noise alone is estimated to cost
+about 1.3 million healthy life-years each year through its effects on the heart and blood
+vessels~\cite{munzel2025}. Hahad et al.~\cite{hahad2025} reviewed the evidence linking long-term noise
+exposure to mental-health disorders and discussed the biological pathways that may be responsible.
+Hearing loss is the other half of the picture. The World Health Organization puts the number of people
+living with some degree of hearing loss at about 1.5 billion and expects it to reach 2.5 billion by
+2050~\cite{chadha2021}. For these listeners, background noise is the main reason speech stays hard to
+follow, even with a hearing aid. Reducing noise at the microphone, or close to the ear, is useful beside
+roads, where urban traffic noise lies mostly below 2~kHz~\cite{yang2024}; inside vehicle
+cabins~\cite{jiang2023,zhu2024}; in ventilation ducts and air conditioners~\cite{zhu2025}; and in hearing
+aids~\cite{yin2023,husstedt2023,tetteh2026}. Most of these devices are small, cheap and run on batteries,
+so the processing must work in real time at low cost and low energy.
 
 \subsection{Applications of adaptive noise control}
-Yang et al.~\cite{yang2024} recorded road traffic noise at five sites in Beijing and developed a
-feedforward LMS prototype, which removed close to 30~dB(A) of single- and dual-frequency noise below
-2~kHz. Jiang et al.~\cite{jiang2023} presented an in-car FxLMS system in which the step size depends on
-the reference norm, and the two parameters of this rule were tuned by particle-swarm optimization. On a
-dSPACE board, this system achieved up to 12~dB below 100~Hz and about 3~dB over 20--400~Hz in road tests,
-whereas plain FxLMS obtained between $-0.8$ and 0.3~dB. Zhu et al.~\cite{zhu2024} used the vehicle's own
-loudspeakers to control the first four engine orders. This system attained an average reduction of
-6.2~dB at 52 ear-level microphones, and in a jury test 93\% of the listeners felt more comfortable with
-the system switched on. For hearing aids, Yin and Chen~\cite{yin2023} introduced a weighted error into a
-variable-step adaptive feedback canceller, which converged 35\% faster than a PEM-IMLMS baseline and 60\%
-faster than PEM-NLMS on a real device. Husstedt et al.~\cite{husstedt2023} evaluated six commercial
-behind-the-ear devices and observed that impulse noise reduction lowers the C-weighted peak levels by up
-to 20~dB, or by about 9~dB on average. A recent systematic review of speech enhancement for hearing
-aids~\cite{tetteh2026} reported that deep networks perform best in complex acoustic scenes, while hybrid
-methods that retain an adaptive filter provide a better balance between latency and computation on
-wearable devices.
+Yang et al.~\cite{yang2024} recorded road traffic noise at five sites in Beijing and built a feedforward
+LMS prototype that removed close to 30~dB(A) of single- and dual-frequency noise below 2~kHz. For a
+passenger car, Jiang et al.~\cite{jiang2023} made the FxLMS step size depend on the reference norm and
+tuned the two parameters of this rule by particle-swarm optimization. Their system, running on a dSPACE
+board, reached up to 12~dB below 100~Hz and about 3~dB over 20--400~Hz in road tests, against $-0.8$ to
+0.3~dB for plain FxLMS. Zhu et al.~\cite{zhu2024} drove the car's own loudspeakers to control the first
+four engine orders; the average reduction at 52 ear-level microphones was 6.2~dB, and 93\% of the
+listeners in a jury test felt more comfortable with the system on. In hearing aids, Yin and
+Chen~\cite{yin2023} weighted the error of a variable-step adaptive feedback canceller, which on a real
+device converged 35\% faster than a PEM-IMLMS baseline and 60\% faster than PEM-NLMS. Husstedt et
+al.~\cite{husstedt2023} measured six commercial behind-the-ear devices and found that impulse noise
+reduction cuts C-weighted peak levels by up to 20~dB, about 9~dB on average. A recent systematic review of
+speech enhancement for hearing aids~\cite{tetteh2026} concluded that deep networks do best in complex
+acoustic scenes, while hybrids that keep an adaptive filter strike a better balance between latency and
+computation on wearable devices.
 
 \subsection{Adaptive algorithms}
-Lu et al.\ surveyed a decade of active noise control algorithms in two parts, the first on linear
-systems~\cite{lu2021a} and the second on nonlinear systems~\cite{lu2021b}. In both parts, LMS-type updates
-remain the base on which most of the newer methods are built. A popular approach is to run two filters at
-the same time, one fast and one accurate, and to combine their outputs. F\'elix et al.~\cite{felix2021}
-proposed a modified convex combination of FXLMS filters, which converged faster and attenuated more than
-FXLMS and the earlier convex scheme. Zhu et al.~\cite{zhu2025} combined an adaptive FxLMS filter and a
-CNN--GRU network through a convex weight for cancelling harmonic noise in a bent air-conditioner pipe. A
-different problem occurs when the loudspeaker output leaks back into the reference microphone and the
-loop becomes unstable. Li et al.~\cite{li2024} addressed this problem with a Youla-parameterized
-feedforward controller and an adaptive IIR update, which was tested on a duct. All these methods improve
-the cancellation, but they add extra operations, networks or complete filters to every sample, which is
-contrary to the requirements of a small FPGA design.
+Lu et al.\ surveyed a decade of active noise control algorithms in two parts, one on linear
+systems~\cite{lu2021a} and one on nonlinear systems~\cite{lu2021b}. In both, LMS-type updates are still
+the base on which most newer methods are built. One popular idea is to run a fast filter and an accurate
+filter side by side and combine them. F\'elix et al.~\cite{felix2021} proposed a modified convex
+combination of FXLMS filters that converged faster and attenuated more than both FXLMS and the earlier
+convex scheme. Zhu et al.~\cite{zhu2025} joined an adaptive FxLMS filter and a CNN--GRU network through a
+convex weight to cancel harmonic noise in a bent air-conditioner pipe. A different difficulty arises when
+the loudspeaker leaks back into the reference microphone and the loop turns unstable; Li et
+al.~\cite{li2024} handled this case with a Youla-parameterized feedforward controller and an adaptive IIR
+update, tested on a duct. Each of these methods cancels better, but each adds operations, a network or a
+whole extra filter to every sample, which runs against what a small FPGA design needs.
 
 \subsection{Hardware realizations}
-In terms of hardware, Thannoon and Hashim~\cite{thannoon2024} combined a fast retimed RLS filter and a
-slow LMS filter on an FPGA to remove power-line interference from ECG records of the MIT-BIH database.
-This design achieved 24.2\% higher SNR and 50\% faster convergence than conventional structures.
-Jagadeeswari et al.~\cite{jagadeeswari2026} applied cut-set retiming to delayed NLMS filters for audio on
-a Spartan-6 device and reduced the critical path from 29.96 to 13.39~ns. For underwater sonar, Karakaya
-and Aytar~\cite{karakaya2026} implemented semi-parallel 16-bit NLMS and variable-step LMS filters on an
-Artix-7 device, which raised the SNR from 8.85~dB to 29.36 and 28.57~dB using 2.51\% and 2.91\% of the
-LUTs, respectively. Park and Park~\cite{park2023} followed a different approach, in which a small CNN
-classifies the noise and selects one of several fixed filters; in simulation, this method obtained 2.3~dB
-more SNR than LMS with 53\% less dynamic power. Abdi et al.~\cite{abdi2024} developed a narrowband
-controller around a variable-step LMS notch filter on an FPGA to suppress microphonics in a
-superconducting accelerator cavity. Other works focused on the arithmetic itself. Nagabushanam et
-al.~\cite{nagabushanam2025} designed a multiplier-less LMS filter using distributed arithmetic with
-offset-binary coding, and da Rosa et al.~\cite{rosa2022} replaced the multipliers of an LMS power-line
-canceller with adders and shifters, which saved up to 4.98 times in power and 30.46\% in area.
+Thannoon and Hashim~\cite{thannoon2024} combined a fast retimed RLS filter with a slow LMS filter on an
+FPGA to remove power-line interference from ECG records of the MIT-BIH database, and reported 24.2\%
+higher SNR and 50\% faster convergence than conventional structures. Jagadeeswari et
+al.~\cite{jagadeeswari2026} applied cut-set retiming to delayed NLMS filters for audio on a Spartan-6 and
+shortened the critical path from 29.96 to 13.39~ns. For underwater sonar, Karakaya and
+Aytar~\cite{karakaya2026} built semi-parallel 16-bit NLMS and variable-step LMS filters on an Artix-7;
+the SNR rose from 8.85~dB to 29.36 and 28.57~dB, respectively, while using 2.51\% and 2.91\% of the LUTs.
+Park and Park~\cite{park2023} took another route, letting a small CNN classify the noise and pick one of
+several fixed filters, which in simulation gave 2.3~dB more SNR than LMS with 53\% less dynamic power.
+Abdi et al.~\cite{abdi2024} designed a narrowband controller around a variable-step LMS notch filter on an
+FPGA to suppress microphonics in a superconducting accelerator cavity. Other groups worked on the
+arithmetic. Nagabushanam et al.~\cite{nagabushanam2025} built a multiplier-less LMS filter from
+distributed arithmetic with offset-binary coding, and da Rosa et al.~\cite{rosa2022} replaced the
+multipliers of an LMS power-line canceller with adders and shifters, saving up to 4.98 times in power and
+30.46\% in area.
 
 \subsection{Removing the division from NLMS}
-The works closest to the present study are those that remove the NLMS division directly. Guidotti et
-al.~\cite{guidotti2020} reduced the power of an NLMS interference canceller with an approximate
-Newton--Raphson integer divider, and Coelho et al.~\cite{coelho2022} lowered the cost of adaptive
-filtering using sum-of-powers-of-two arithmetic. Yao and Huang~\cite{yao2024} approximated the reciprocal
-of the input power with canonical-signed-digit encoded divisors in a 16-tap NLMS FIR filter. Later, Huang
-and Yao~\cite{huang2026} proposed a binary reciprocal approximation for an NLMS IIR filter. On the same
-DE2-115 board used in this work, their design consumed 5.07~nJ per sample against 8.33~nJ with a 15-bit
-SRT divider, and it reduced the energy per sample by 39.1\%, 6.5\%, 14.4\% and 5.6\% relative to the SRT,
-Newton--Raphson, CSD and lookup-table methods~\cite{huang2026}. The same authors also noted that the older
-idea of rounding the divisor to a single power of two, which turns the division into a shift, has a large
-approximation error. This plain shift is exactly NLMS-Shift, and Section~\ref{sec:equiv} shows that its
-error acts only as a level-dependent step factor between 0.5 and 1.
+Closest to the present study are the papers that attack the NLMS division itself. Guidotti et
+al.~\cite{guidotti2020} saved power in an NLMS interference canceller with an approximate Newton--Raphson
+integer divider, and Coelho et al.~\cite{coelho2022} reduced the cost of adaptive filtering with
+sum-of-powers-of-two arithmetic. Yao and Huang~\cite{yao2024} approximated the reciprocal of the input
+power by canonical-signed-digit encoded divisors in a 16-tap NLMS FIR filter. Huang and
+Yao~\cite{huang2026} followed with a binary reciprocal approximation for an NLMS IIR filter. On the same
+DE2-115 board used here, their design needs 5.07~nJ per sample, compared with 8.33~nJ for a 15-bit SRT
+divider, and lowers the energy per sample by 39.1\%, 6.5\%, 14.4\% and 5.6\% relative to the SRT,
+Newton--Raphson, CSD and lookup-table methods~\cite{huang2026}. They also remark that the older idea of
+rounding the divisor to a single power of two, so that the division becomes a shift, suffers from a large
+approximation error. That plain shift is exactly NLMS-Shift. Section~\ref{sec:equiv} shows that its error
+acts only as a level-dependent step factor between 0.5 and 1.
 
-From the above review, no work was found that compares LMS, a true divider and a shift normalizer on
-one core with equal tuning and statistical tests, and only a few works test a complete audio system with
-a codec on a board. ULLAP adds this equal-effort three-way comparison, a bit-exact chain from the model
-to the hardware, and an evaluation on real recordings.
+No study was found that compares LMS, a true divider and a shift normalizer on a single core with equal
+tuning and statistical tests, and only a few test a complete audio system with a codec on a board. ULLAP
+contributes this equal-effort three-way comparison, a bit-exact chain from model to hardware, and an
+evaluation on real recordings.
 
 %--------------------------------------------------------------------------------------------
 \section{System overview}\label{sec:system}
-The overall system is shown in Fig.~\ref{fig:system}. The noise from the source $v$ travels to the
-primary microphone through an unknown acoustic path $h$ and is mixed there with the desired signal $s$. A
-reference microphone placed near the source picks up the noise $v$ itself. The two microphones are
-connected to the left and right LINE IN channels of the WM8731 codec, which digitizes the signals and
-passes them to the FPGA over an I$^2$S link. Inside the FPGA, the I$^2$S receiver delivers one pair
-$(x[n],d[n])$ in every sample period to the ANC core. The core returns the error $e[n]$, which is the
-cleaned signal, and the I$^2$S transmitter sends this signal back to the codec DAC and LINE OUT. An
-I$^2$C engine programs the codec once after reset. Two slide switches select the bypass mode and freeze
-the adaptation, a push button resets the system, and four GPIO test points bring out the sample strobe,
-the output strobe, the busy flag and the frame clock for timing measurement. The complete design is
-written in plain Verilog, without any processor or vendor IP.
+Fig.~\ref{fig:system} gives an overview of the system. Noise from the source $v$ reaches the primary
+microphone through an unknown acoustic path $h$ and mixes there with the wanted signal $s$, while a
+reference microphone close to the source picks up $v$ directly. The two microphones feed the left and
+right LINE IN channels of the WM8731 codec, which digitizes both signals and sends them to the FPGA over
+an I$^2$S link. Inside the FPGA, the I$^2$S receiver hands one pair $(x[n],d[n])$ to the ANC core in every
+sample period. The core returns the error $e[n]$, that is, the cleaned signal, and the I$^2$S transmitter
+passes it back to the codec DAC and LINE OUT. An I$^2$C engine programs the codec once after reset. Two
+slide switches select bypass and freeze the adaptation, a push button resets the system, and four GPIO
+test points bring out the sample strobe, the output strobe, the busy flag and the frame clock so that the
+timing can be measured. The whole design is plain Verilog, with no processor and no vendor IP.
 
 \begin{\WF}[!htbp]\centering
 \adjustbox{max width=\linewidth}{%
 \input{fig_system_tikz}}
-\caption{Block diagram of the ULLAP system. The acoustic part at the upper left is simulated in the experiments
-(Section~\ref{sec:setup}), and all the blocks from the codec onwards run on the DE2-115 board.}\label{fig:system}
+\caption{Block diagram of the ULLAP system. In the experiments the acoustic part (upper left) is
+simulated (Section~\ref{sec:setup}); everything from the codec onwards runs on the DE2-115 board.}\label{fig:system}
 \end{\WF}
 
 %--------------------------------------------------------------------------------------------
 \section{Algorithms and fixed-point model}\label{sec:model}
 \subsection{Signal model and cost function}
-The reference microphone receives only the noise, whereas the primary microphone receives the speech,
-the noise filtered by the acoustic path, and a small sensor noise $n_s$. The two inputs are expressed
-as,
+The reference microphone hears only the noise. The primary microphone hears the speech, the noise after
+the acoustic path, and a little sensor noise $n_s$:
 \begin{align}
 x[n] &= v[n], \label{eq:x}\\
 d[n] &= s[n] + \sum_{j=0}^{M-1} h_j\, v[n-j] + n_s[n]. \label{eq:d}
 \end{align}
-Let the last $L$ reference samples be collected in $\mathbf{x}[n]=[x[n],\dots,x[n-L+1]]^T$ and the
-weights in $\mathbf{w}[n]=[w_0[n],\dots,w_{L-1}[n]]^T$. The filter estimates the noise component of
-$d[n]$, and the remaining part forms the system output, which is given by,
+With the last $L$ reference samples collected in $\mathbf{x}[n]=[x[n],\dots,x[n-L+1]]^T$ and the weights
+in $\mathbf{w}[n]=[w_0[n],\dots,w_{L-1}[n]]^T$, the filter estimates the noise part of $d[n]$, and
+whatever remains is the system output:
 \begin{align}
 y[n] &= \mathbf{w}^T[n]\,\mathbf{x}[n] = \sum_{i=0}^{L-1} w_i[n]\,x[n-i], \label{eq:y}\\
 e[n] &= d[n]-y[n]. \label{eq:e}
 \end{align}
-Since $s$ is uncorrelated with $v$, minimizing the mean-square error, which is formulated as,
+Because $s$ is uncorrelated with $v$, minimizing the mean-square error
 \begin{align}
 J(\mathbf{w}) &= E\{e^2[n]\} = E\{d^2[n]\} - 2\,\mathbf{w}^T\mathbf{p} + \mathbf{w}^T\mathbf{R}\,\mathbf{w}, \label{eq:J}\\
 \mathbf{R} &= E\{\mathbf{x}[n]\,\mathbf{x}^T[n]\},\qquad \mathbf{p}=E\{d[n]\,\mathbf{x}[n]\}, \label{eq:Rp}
 \end{align}
-removes the noise and leaves the speech unaffected. Here, $\mathbf{R}$ denotes the autocorrelation
-matrix of the reference vector and $\mathbf{p}$ denotes the cross-correlation vector between $d[n]$ and
-$\mathbf{x}[n]$. The minimum of this cost is the Wiener solution $\mathbf{w}_o=\mathbf{R}^{-1}\mathbf{p}$,
-which equals the acoustic path when $L\ge M$ and $n_s$ is white.
+removes the noise and leaves the speech untouched. Here $\mathbf{R}$ is the autocorrelation matrix of the
+reference vector and $\mathbf{p}$ the cross-correlation between $d[n]$ and $\mathbf{x}[n]$. The minimum
+lies at the Wiener solution $\mathbf{w}_o=\mathbf{R}^{-1}\mathbf{p}$, which coincides with the acoustic
+path when $L\ge M$ and $n_s$ is white.
 
 \subsection{LMS, NLMS and NLMS-Shift}
-In LMS, the gradient $\nabla J=-2(\mathbf{p}-\mathbf{R}\mathbf{w})$ is replaced with its instantaneous
-estimate $-2e[n]\mathbf{x}[n]$. All the three algorithms use the resulting update, which is expressed
-as,
+LMS replaces the gradient $\nabla J=-2(\mathbf{p}-\mathbf{R}\mathbf{w})$ by its instantaneous estimate
+$-2e[n]\mathbf{x}[n]$, which leads to the update shared by all three algorithms:
 \begin{equation}
 \mathbf{w}[n+1]=\mathbf{w}[n]+\mu[n]\,e[n]\,\mathbf{x}[n].
 \label{eq:upd}
 \end{equation}
-The three algorithms differ only in the step $\mu[n]$. With the window power $P[n]=\|\mathbf{x}[n]\|^2$,
-the step sizes of LMS, NLMS and NLMS-Shift are given by,
+Only the step $\mu[n]$ differs. Writing the window power as $P[n]=\|\mathbf{x}[n]\|^2$, the steps of LMS,
+NLMS and NLMS-Shift are
 \begin{align}
 \mu_{\text{LMS}}[n] &= \mu, & 0<\mu&<\frac{2}{L\,\sigma_x^2}, \label{eq:mu_lms}\\
 \mu_{\text{NLMS}}[n] &= \frac{\tilde\mu}{P[n]+\epsilon}, & 0<\tilde\mu&<2, \label{eq:mu_nlms}\\
 \mu_{\text{Shift}}[n] &= 2^{-(k[n]+K)}, && \label{eq:mu_shift}\\
 k[n] &= \lfloor\log_2(P[n]+\epsilon)\rfloor+1, && \label{eq:k}
 \end{align}
-where $\sigma_x^2$ denotes the reference variance and $\epsilon>0$ represents a small regularizer. The
-LMS bound varies with the input level, and hence a fixed $\mu$ becomes either too slow for quiet inputs
-or unstable for loud inputs. In contrast, the NLMS bound does not vary. In the hardware, the power is
-updated with the exact recursion,
+where $\sigma_x^2$ is the reference variance and $\epsilon>0$ a small regularizer. The LMS bound moves
+with the input level, which is why a fixed $\mu$ ends up too slow for quiet inputs or unstable for loud
+ones. The NLMS bound stays put. The hardware keeps the power up to date through the exact recursion
 \begin{equation}
 P[n] = P[n-1] + x^2[n] - x^2[n-L],
 \label{eq:prec}
 \end{equation}
-which needs two squaring operations per sample instead of $L$. In NLMS-Shift, the exponent $k[n]$ is
-simply the bit length of $P[n]+\epsilon$. This exponent is found by a leading-one detector, and the
-multiplication by $\mu[n]$ becomes an arithmetic right shift of $e[n]\,x[n-i]$ by $k[n]+K$ places.
+which costs two squarings per sample instead of $L$. In NLMS-Shift the exponent $k[n]$ is just the bit
+length of $P[n]+\epsilon$. A leading-one detector finds it, and multiplying by $\mu[n]$ reduces to an
+arithmetic right shift of $e[n]\,x[n-i]$ by $k[n]+K$ places.
 
 \begin{proposition}\label{prop:bound}
 For every $n$, the NLMS-Shift step \eqref{eq:mu_shift} satisfies
@@ -238,36 +227,35 @@ For every $n$, the NLMS-Shift step \eqref{eq:mu_shift} satisfies
 \frac{2^{-K}}{2\,(P[n]+\epsilon)} \;\le\; \mu_{\text{Shift}}[n] \;<\; \frac{2^{-K}}{P[n]+\epsilon},
 \label{eq:bound}
 \end{equation}
-In other words, the NLMS-Shift step never falls more than a factor of two below the NLMS step with
-$\tilde\mu=2^{-K}$, and it satisfies the NLMS stability bound $0<\tilde\mu<2$ for $K\ge0$.
+Put differently, the NLMS-Shift step is never more than a factor of two below the NLMS step with
+$\tilde\mu=2^{-K}$, and it stays inside the NLMS stability bound $0<\tilde\mu<2$ whenever $K\ge0$.
 \end{proposition}
 \noindent\emph{Proof.} By \eqref{eq:k}, $2^{k[n]-1}\le P[n]+\epsilon<2^{k[n]}$. Taking reciprocals and
 multiplying by $2^{-K}$ gives \eqref{eq:bound}, since $\mu_{\text{Shift}}[n]=2^{-K}\,2^{-k[n]}$.\hfill$\square$
 
-\smallskip\noindent The exact relation between the two steps is expressed as,
+\smallskip\noindent More precisely, the two steps are related by
 \begin{equation}
 \mu[n]=\frac{r[n]\,2^{-K}}{P[n]+\epsilon},\qquad
 r[n]=\frac{P[n]+\epsilon}{2^{\lfloor\log_2(P[n]+\epsilon)\rfloor+1}}\in[0.5,1),
 \label{eq:ratio}
 \end{equation}
-Hence, NLMS-Shift is NLMS with the time-varying step $2^{-K}r[n]$ (Section~\ref{sec:equiv}). When the
+so NLMS-Shift is simply NLMS with the time-varying step $2^{-K}r[n]$ (Section~\ref{sec:equiv}). When the
 input level is unknown over several octaves, the fractional part
-$u=\log_2(P+\epsilon)-\lfloor\log_2(P+\epsilon)\rfloor$ is spread uniformly over $[0,1)$, and the mean
-ratio is given by,
+$u=\log_2(P+\epsilon)-\lfloor\log_2(P+\epsilon)\rfloor$ is spread evenly over $[0,1)$, and the ratio
+averages to
 \begin{equation}
 E\{r\}=\int_0^1 2^{u-1}\,du=\frac{1}{2\ln 2}\approx 0.72 .
 \label{eq:er}
 \end{equation}
 
 \subsection{Fixed-point model}
-The signals and the weights are represented as signed $Q1.F$ numbers with $W=12$ bits and $F=W-1$
-fraction bits. Using the rounding shift and the saturation functions defined as,
+Signals and weights are signed $Q1.F$ numbers with $W=12$ bits and $F=W-1$ fraction bits. With the
+rounding shift and the saturation
 \begin{align}
 \operatorname{rs}(a,m) &= \left\lfloor \frac{a+2^{m-1}}{2^m}\right\rfloor, \label{eq:rs}\\
 \operatorname{sat}_B(a) &= \min\!\left(\max\!\left(a,-2^{B-1}\right),\,2^{B-1}-1\right), \label{eq:sat}
 \end{align}
-the integer datapath operates on the integer samples $x_i=x[n-i]\cdot2^F$ and the weights $w_i$ as
-follows,
+the integer datapath processes the samples $x_i=x[n-i]\cdot2^F$ and weights $w_i$ as
 \begin{align}
 a[n] &= \operatorname{sat}_{B_a}\Big(\sum_{i=0}^{L-1} w_i\,x_i\Big), \label{eq:acc}\\
 B_a &= 2W+\lceil\log_2 L\rceil, \label{eq:ba}\\
@@ -275,87 +263,82 @@ y[n] &= \operatorname{sat}_W\big(\operatorname{rs}(a[n],F)\big), \label{eq:yq}\\
 e[n] &= \operatorname{sat}_W\big(d[n]-y[n]\big), \label{eq:ye}\\
 w_i &\leftarrow \operatorname{sat}_W\big(w_i+\Delta w_i\big), \label{eq:wupd}
 \end{align}
-where the weight increments of LMS, NLMS and NLMS-Shift are given by,
+and the weight increments of LMS, NLMS and NLMS-Shift are
 \begin{align}
 \Delta w_i^{\text{LMS}} &= \operatorname{rs}\big((M_\mu\,e[n])\,x_i,\;F+10\big), \label{eq:dw_lms}\\
 \Delta w_i^{\text{NLMS}} &= \operatorname{rs}\big(g[n]\,x_i,\;F\big), \label{eq:dw_nlms}\\
 g[n] &= \operatorname{sat}_{W+4}\!\left(\left\lfloor\frac{2N[n]+Q[n]}{2Q[n]}\right\rfloor\right), \label{eq:g}\\
 \Delta w_i^{\text{Shift}} &= \operatorname{rs}\big(e[n]\,x_i,\;b(Q[n])-F+K\big), \label{eq:dw_shift}
 \end{align}
-Here, $\mu=M_\mu\,2^{-10}$, $N[n]=M_\mu\,e[n]\,2^{2F-10}$, $Q[n]=P[n]+2^{2F-E}$ for $\epsilon=2^{-E}$,
-and $b(\cdot)$ denotes the bit length of a positive integer. Every point at which a value is narrowed
-saturates and sets a sticky flag, so that an overflow is never left unnoticed. The integer model
-(\texttt{py/fixedpoint.py}, \texttt{py/rtl\_model.py}) uses exactly these widths and generates the golden
-vectors.
+Here $\mu=M_\mu\,2^{-10}$, $N[n]=M_\mu\,e[n]\,2^{2F-10}$, $Q[n]=P[n]+2^{2F-E}$ for $\epsilon=2^{-E}$, and
+$b(\cdot)$ is the bit length of a positive integer. Wherever a value is narrowed, it saturates and sets a
+sticky flag, so no overflow can pass unnoticed. The integer model (\texttt{py/fixedpoint.py},
+\texttt{py/rtl\_model.py}) uses exactly these widths and produces the golden vectors.
 
 %--------------------------------------------------------------------------------------------
 \section{Hardware architecture}\label{sec:hw}
 \subsection{Core}\label{sec:core}
-The datapath of the core (\texttt{rtl/anc\_core.v}, vendor-neutral Verilog) is shown in
-Fig.~\ref{fig:core}. The core accepts one sample pair per \texttt{in\_valid} strobe and performs all its
-arithmetic on a single multiplier with a three-stage pipeline (operand registers, product register and
-consume stage). A finite-state machine steps through each sample. It spends two cycles on squaring the
-new and the dropped reference samples for \eqref{eq:prec} (NLMS and NLMS-Shift only), $L$ cycles on the
-filter sum \eqref{eq:acc} and one cycle on $y$ and $e$ \eqref{eq:ye}. Thereafter, the step computation is
-carried out, followed by $L$ cycles of weight updates \eqref{eq:wupd}. NLMS adds a sequential restoring
-divider for the gain $g[n]$, whereas NLMS-Shift uses a leading-one detector and a shift-amount register in
-its place. A \texttt{freeze} input holds the weights while the filtering continues.
+Fig.~\ref{fig:core} shows the core datapath (\texttt{rtl/anc\_core.v}, vendor-neutral Verilog). The core
+takes one sample pair per \texttt{in\_valid} strobe and does all of its arithmetic on one multiplier with a
+three-stage pipeline (operand registers, product register, consume stage). A finite-state machine walks
+through each sample: two cycles square the new and the dropped reference samples for \eqref{eq:prec}
+(NLMS and NLMS-Shift only), $L$ cycles form the filter sum \eqref{eq:acc}, and one cycle produces $y$ and
+$e$ \eqref{eq:ye}. The step computation comes next, followed by $L$ cycles of weight updates
+\eqref{eq:wupd}. For the gain $g[n]$, NLMS adds a sequential restoring divider; NLMS-Shift has a
+leading-one detector and a shift-amount register instead. A \texttt{freeze} input holds the weights while
+filtering continues.
 
 \begin{\WF}[!htbp]\centering
 \adjustbox{max width=\linewidth}{%
 \input{fig_core_tikz}}
-\caption{Datapath of the ANC core. A single multiplier is shared by the power update, the filter sum, the
-step computation and the weight updates, and only the step unit differs between the three algorithms.
-Dashed lines denote control signals.}\label{fig:core}
+\caption{Datapath of the ANC core. The power update, filter sum, step computation and weight updates all
+share one multiplier; the three algorithms differ only in the step unit. Dashed lines are control
+signals.}\label{fig:core}
 \end{\WF}
 
-This schedule fixes both the input-to-output latency and the number of busy cycles per sample, which
-are expressed as,
+With this schedule, the input-to-output latency and the number of busy cycles per sample are fixed:
 \begin{align}
 N_{\text{lat}} &= \begin{cases} L+3 & \text{LMS},\\ L+5 & \text{NLMS, NLMS-Shift},\end{cases} \label{eq:lat}\\
 N_{\text{busy}} &= \begin{cases} 2L+9 & \text{LMS},\\ 2L+13+N_{\text{div}} & \text{NLMS},\\ 2L+8 & \text{NLMS-Shift},\end{cases} \label{eq:busy}
 \end{align}
-The restoring divider performs one iteration per dividend bit,
-$N_{\text{div}}=W+B_\mu+2F+4+\lceil\log_2 L\rceil$, where $B_\mu$ denotes the signed width of $M_\mu$, and
-hence the NLMS cycle count increases with the step-size constant. For $L=32$ and the tuned settings, the
-above formulas give latencies of 35, 37 and 37 cycles and busy times of 73, 130 ($N_{\text{div}}=53$) and
-72 cycles, which are the same values measured on the board (Section~\ref{sec:board}).
+The restoring divider takes one iteration per dividend bit,
+$N_{\text{div}}=W+B_\mu+2F+4+\lceil\log_2 L\rceil$, with $B_\mu$ the signed width of $M_\mu$, so the NLMS
+cycle count grows with the step-size constant. For $L=32$ and the tuned settings, the formulas give
+latencies of 35, 37 and 37 cycles and busy times of 73, 130 ($N_{\text{div}}=53$) and 72 cycles, exactly
+the values measured on the board (Section~\ref{sec:board}).
 
 \subsection{Board wrapper}
-The DE2-115 wrapper around the core contains an I$^2$C engine that configures the WM8731 at reset (11
-registers, each write being acknowledge-checked), an I$^2$S receiver and transmitter, two-flop
-synchronizers on the reset and the switches, a frame-latched bypass multiplexer, an overrun flag, and four
-registered test points on the GPIO header. The I$^2$S blocks run on the 50~MHz system clock and sample the
-bit and word clocks of the codec as data. The codec acts as the clock master and is driven from a
-12.5~MHz clock with its sample-rate register set to 1536~fs. Therefore, the sample rate and the number of
-clock cycles per sample are given by,
+Around the core, the DE2-115 wrapper holds an I$^2$C engine that configures the WM8731 at reset (11
+registers, every write acknowledge-checked), an I$^2$S receiver and transmitter, two-flop synchronizers on
+the reset and switches, a frame-latched bypass multiplexer, an overrun flag, and four registered test
+points on the GPIO header. The I$^2$S blocks run on the 50~MHz system clock and treat the codec's bit and
+word clocks as data. The codec is the clock master. It is driven from a 12.5~MHz clock with its
+sample-rate register at 1536~fs, which sets the sample rate and the number of clock cycles per sample to
 \begin{align}
 f_s &= \frac{f_{\text{MCLK}}}{1536}=\frac{12.5~\text{MHz}}{1536}=8.138~\text{kHz}, \label{eq:fs}\\
 N_s &= \frac{f_{\text{clk}}}{f_s}=\frac{50~\text{MHz}}{8.138~\text{kHz}}=6144, \label{eq:ns}
 \end{align}
-where $f_s$ is the rate used in the simulations and $N_s$ is the number of clock cycles per sample. The
-fraction of each sample period during which the core is busy is expressed as,
+where $f_s$ is also the rate used in the simulations. The core is busy for the fraction
 \begin{equation}
 U=\frac{N_{\text{busy}}}{N_s}
 \label{eq:util}
 \end{equation}
-From \eqref{eq:busy}, this fraction is 1.19\%, 2.12\% and 1.17\% for LMS, NLMS and NLMS-Shift,
-respectively. As mentioned earlier, no processor or vendor IP is involved.
+of every sample period; by \eqref{eq:busy} that is 1.19\%, 2.12\% and 1.17\% for LMS, NLMS and
+NLMS-Shift. Again, no processor or vendor IP is involved.
 
 %--------------------------------------------------------------------------------------------
 \section{Verification}\label{sec:verif}
-The verification steps are listed in Table~\ref{tab:verif}. The core testbench checks every $y[n]$ and
-$e[n]$, the final weights, the sticky flags and the latency against golden vectors for 68 configurations
-($W$ from 8 to 31, $L$ from 2 to 32, saturation corner cases and freeze patterns). The top-level testbench
-adds a behavioral WM8731 model, which checks every I$^2$C write and follows the programmed sample rate.
-This testbench runs the tests T1--T10, namely configuration, NACK handling, bypass, end-to-end
-cancellation against golden vectors, freeze, reset, flags, clocks, a 45-point skew sweep, the 8~kHz rate
-and the GPIO timing. To confirm that the testbenches are actually able to fail, faults were injected
-deliberately (mutation tests), and all of them were detected. The Verilator \texttt{-Wall} lint reports
-no unwaived warning.
+Table~\ref{tab:verif} summarizes the verification. For 68 configurations ($W$ from 8 to 31, $L$ from 2 to
+32, saturation corner cases, freeze patterns), the core testbench compares every $y[n]$ and $e[n]$, the
+final weights, the sticky flags and the latency with golden vectors. The top-level testbench adds a
+behavioral WM8731 model that checks each I$^2$C write and follows the programmed sample rate. It runs
+tests T1--T10: configuration, NACK handling, bypass, end-to-end cancellation against golden vectors,
+freeze, reset, flags, clocks, a 45-point skew sweep, the 8~kHz rate and the GPIO timing. Faults were also
+injected on purpose (mutation tests) to make sure the testbenches can actually fail, and every one was
+caught. Verilator lint with \texttt{-Wall} reports no unwaived warning.
 
 \begin{table}[!htbp]\centering\small
-\caption{Verification summary. RTL suites pass in both Icarus Verilog and Questa
+\caption{Verification summary. All RTL suites pass in both Icarus Verilog and Questa
 (\texttt{results/metrics/iverilog\_regression\_summary.txt}, \texttt{results/local\_run\_da0b6f4/}).}\label{tab:verif}
 \fitcol{\begin{tabular}{lrl}\toprule
 Suite & Tests & Result\\\midrule
@@ -372,46 +355,46 @@ On-board freeze, DAC word, 10-min soak & 4 & pass\\\bottomrule
 
 %--------------------------------------------------------------------------------------------
 \section{Experimental set-up}\label{sec:setup}
-The synthetic scenarios follow the reference model $x=v$, $d=s+h*v+n_s$ at 8~kHz with 16,000 samples.
-Four scenarios are considered, namely stationary colored noise, amplitude steps ($\times3$ followed by
-$\times0.25$), an abrupt path switch at the midpoint, and a recorded chord as the noise source. The step
-sizes and the regularizers were selected on seeds 101--103 by maximizing the mean final noise reduction
-over the stationary, amplitude-step and path-switch scenarios, with no overflow allowed. This selection
-gave $\mu=0.25$ for LMS; $\mu=0.25$ and $\epsilon=1$ for NLMS; and $K=3$ and $\epsilon=0.25$ for
-NLMS-Shift. All the reported results use seeds 1--20. The final noise reduction is computed over the last
-quarter $\mathcal{N}$ of the samples as,
+The synthetic scenarios use the reference model $x=v$, $d=s+h*v+n_s$ at 8~kHz with 16,000 samples. There
+are four of them: stationary colored noise, amplitude steps ($\times3$ and then $\times0.25$), an abrupt
+path switch halfway through, and a recorded chord as the noise source. Step sizes and regularizers were
+chosen on seeds 101--103 to maximize the mean final noise reduction over the stationary, amplitude-step and
+path-switch scenarios, with no overflow allowed. The resulting settings are $\mu=0.25$ for LMS;
+$\mu=0.25$ and $\epsilon=1$ for NLMS; and $K=3$ and $\epsilon=0.25$ for NLMS-Shift. Every reported result
+uses seeds 1--20. The final noise reduction is measured over the last quarter $\mathcal{N}$ of the
+samples,
 \begin{equation}
 \mathrm{NR}=10\log_{10}\frac{\sum_{n\in\mathcal{N}}\big(d[n]-s[n]\big)^2}{\sum_{n\in\mathcal{N}}\big(e[n]-s[n]\big)^2}\ \text{dB},
 \label{eq:nr}
 \end{equation}
-and each table entry gives the mean over the $S=20$ seeds along with its 95\% confidence interval,
-which is given by,
+and each table entry is the mean over the $S=20$ seeds with its 95\% confidence interval,
 \begin{equation}
 \overline{\mathrm{NR}}\pm t_{0.975,\,S-1}\,\frac{\sigma_{\mathrm{NR}}}{\sqrt{S}},\qquad t_{0.975,19}=2.093 .
 \label{eq:ci}
 \end{equation}
-For comparing two algorithms A and B, the paired per-seed differences
-$\Delta_k=\mathrm{NR}_{\mathrm{A},k}-\mathrm{NR}_{\mathrm{B},k}$ are used. The two algorithms are
-considered equivalent when two one-sided tests (TOST) both reject, at $p<0.05$, the hypothesis that the
-mean difference lies outside a margin $\pm\delta$ with $\delta=0.5$~dB, where the two null hypotheses are
-expressed as,
+Two algorithms A and B are compared through the paired per-seed differences
+$\Delta_k=\mathrm{NR}_{\mathrm{A},k}-\mathrm{NR}_{\mathrm{B},k}$. They are called equivalent when two
+one-sided tests (TOST) both reject, at $p<0.05$, that the mean difference lies outside a margin
+$\pm\delta$ with $\delta=0.5$~dB, i.e.\ when both null hypotheses
 \begin{equation}
 H_{01}:\ \bar\Delta\le-\delta,\qquad H_{02}:\ \bar\Delta\ge\delta .
 \label{eq:tost}
 \end{equation}
-\emph{Use of generative AI.} During this work, the authors used Claude (Anthropic) as an assistant to
-write and debug the analysis scripts and testbench code, to search for and summarize the literature, and
-to draft and edit the text of this manuscript. \TBD{Authors: add any other AI tools you used (for example
-for local runs or literature searches) and adjust the list above if needed.} The authors checked every
-reported number against the committed result files and board captures, verified each reference against
-its source, and take full responsibility for the content of this article.
+are rejected.
 
-For the real recordings, four noise files (air conditioner, vacuum cleaner, copy machine and babble)
-and ten utterances were taken from the public MS-SNSD
-corpus\footnote{\url{https://github.com/microsoft/MS-SNSD}} and resampled to 8~kHz. In each seed, a noise
-segment, an utterance and a random 16-tap acoustic path are drawn at 0~dB input SNR, both with and without
-speech leaking into the reference at $-20$~dB. The noise reduction, the short-time objective
-intelligibility (STOI) measure and the narrow-band perceptual evaluation of speech quality (PESQ, ITU-T
+\emph{Use of generative AI.} The authors used Claude (Anthropic) as an assistant during this work: for
+writing and debugging the analysis scripts and testbench code, for searching and summarizing the
+literature, and for drafting and editing the manuscript text. \TBD{Authors: add any other AI tools you used (for example
+for local runs or literature searches) and adjust the list above if needed.} Every reported number was
+checked by the authors against the committed result files and board captures, each reference was checked
+against its source, and the authors take full responsibility for the content of this article.
+
+For the real recordings, four noise files (air conditioner, vacuum cleaner, copy machine, babble) and ten
+utterances were taken from the public MS-SNSD
+corpus\footnote{\url{https://github.com/microsoft/MS-SNSD}} and resampled to 8~kHz. Each seed draws a
+noise segment, an utterance and a random 16-tap acoustic path at 0~dB input SNR, once without and once
+with speech leaking into the reference at $-20$~dB. Noise reduction, short-time objective
+intelligibility (STOI) and narrow-band perceptual evaluation of speech quality (PESQ, ITU-T
 Recommendation P.862) are computed after a 2~s convergence window.
 
 %--------------------------------------------------------------------------------------------
@@ -427,16 +410,15 @@ Path switch  & 18.95 [18.81, 19.09] & 18.53 [18.39, 18.67] & 18.91 [18.76, 19.06
 Recorded chord & 5.69 [5.66, 5.73] & 5.73 [5.69, 5.76] & 5.46 [5.42, 5.50]\\\bottomrule
 \end{tabular}
 \end{\WT}
-Table~\ref{tab:nr} shows that NLMS-Shift ties with NLMS on stationary noise and amplitude steps, and
-ties with LMS on stationary noise and the path switch. On amplitude steps, both normalized algorithms
-outperform LMS by about 2~dB. In this scenario, the fixed LMS step is either too slow after the drop or too
-noisy before it: no LMS step size reaches 22~dB on stationary noise and 24~dB on amplitude steps at the
-same time, whereas both NLMS variants reach both values (Fig.~\ref{fig:pareto}). On the recorded chord,
-NLMS-Shift loses 0.2--0.3~dB. The paired per-seed tests in Table~\ref{tab:paired} quantify the term
-``tie''. Every difference between NLMS-Shift and NLMS falls inside a $\pm0.5$~dB equivalence margin
-(TOST, $p<0.05$), even though some differences are statistically non-zero, such as $+0.38$~dB on the path
-switch. The 1.8--2.0~dB advantage of the normalized algorithms over LMS on amplitude steps is significant
-($p<10^{-7}$).
+As Table~\ref{tab:nr} shows, NLMS-Shift ties with NLMS on stationary noise and amplitude steps, and with
+LMS on stationary noise and the path switch. On amplitude steps both normalized algorithms beat LMS by
+about 2~dB. The fixed LMS step is the problem there: it is either too slow after the drop or too noisy
+before it, and no LMS step size reaches 22~dB on stationary noise and 24~dB on amplitude steps at once,
+whereas both NLMS variants do (Fig.~\ref{fig:pareto}). On the recorded chord NLMS-Shift gives up
+0.2--0.3~dB. The paired per-seed tests in Table~\ref{tab:paired} put a number on ``tie''. All NLMS-Shift
+versus NLMS differences fall inside the $\pm0.5$~dB equivalence margin (TOST, $p<0.05$), although some are
+statistically non-zero, for example $+0.38$~dB on the path switch. The 1.8--2.0~dB lead of the normalized
+algorithms over LMS on amplitude steps is significant ($p<10^{-7}$).
 
 \begin{\WT}[!htbp]\centering\scriptsize
 \caption{Paired differences in final NR over seeds 1--20 (\texttt{results/metrics/paired\_stats.csv}).}\label{tab:paired}
@@ -445,14 +427,14 @@ switch. The 1.8--2.0~dB advantage of the normalized algorithms over LMS on ampli
 
 \begin{\WF}[!htbp]\centering
 \includegraphics[width=0.75\linewidth]{fig12_pareto_stationary_amp_steps.pdf}
-\caption{Stationary versus amplitude-step noise reduction across step sizes (seeds 1--20).}\label{fig:pareto}
+\caption{Noise reduction on stationary noise against that on amplitude steps over a range of step sizes (seeds 1--20).}\label{fig:pareto}
 \end{\WF}
 
-Figs.~\ref{fig:conv}--\ref{fig:track} show single runs (seed~1) at the fair-tuned settings.
-Fig.~\ref{fig:conv} illustrates the running noise reduction in each scenario, Fig.~\ref{fig:resid} shows
-the residual error power against the input noise power for stationary noise, and Fig.~\ref{fig:track}
-depicts the response to the amplitude steps. After the drop at 1.2~s, LMS settles about 3~dB below both
-normalized algorithms, which agrees with Table~\ref{tab:nr}.
+Single runs (seed~1) at the fair-tuned settings appear in Figs.~\ref{fig:conv}--\ref{fig:track}: the
+running noise reduction in each scenario (Fig.~\ref{fig:conv}), the residual error power against the
+input noise power for stationary noise (Fig.~\ref{fig:resid}), and the response to the amplitude steps
+(Fig.~\ref{fig:track}). After the drop at 1.2~s, LMS settles roughly 3~dB below both normalized
+algorithms, in line with Table~\ref{tab:nr}.
 
 \begin{\WF}[!htbp]\centering
 \includegraphics[width=0.9\linewidth]{fig1_convergence_paper.pdf}
@@ -460,11 +442,11 @@ normalized algorithms, which agrees with Table~\ref{tab:nr}.
 \end{\WF}
 \begin{figure}[!htbp]\centering
 \includegraphics[width=\linewidth]{fig3_residual_error.pdf}
-\caption{Residual error power over time against the input noise power, stationary scenario (seed 1).}\label{fig:resid}
+\caption{Residual error power over time compared with the input noise power in the stationary scenario (seed 1).}\label{fig:resid}
 \end{figure}
 \begin{figure}[!htbp]\centering
 \includegraphics[width=\linewidth]{fig4_tracking_response.pdf}
-\caption{Tracking of the amplitude-step disturbance (seed 1): noise reduction and coefficient misalignment.}\label{fig:track}
+\caption{Response to the amplitude-step disturbance (seed 1), shown as noise reduction and coefficient misalignment.}\label{fig:track}
 \end{figure}
 
 \subsection{Real noise and speech}
@@ -474,33 +456,32 @@ speech leakage into the reference; STOI and PESQ of $e$ against $s$, with the un
 (\texttt{results/metrics/real\_audio\_summary.csv}).}\label{tab:real}
 \fitwide{\input{tab_real_audio.tex}}
 \end{\WT}
-For all four real noises (Table~\ref{tab:real}), the filter roughly doubles the PESQ and brings the
-STOI close to 1. The ranking of the algorithms remains the same in every case: NLMS leads LMS by
-0.4--0.6~dB, and NLMS-Shift trails NLMS by 0.15--0.35~dB. The noise reduction is lower than that in
-Table~\ref{tab:nr}, but this is not because the real noise is harder to predict. When the speech was
-removed from the primary input, the same filters on the same noise segments and paths achieved
-18.5--19.2~dB on the air conditioner and 22.4--31.9~dB on the other three noises, which is equal to or
-higher than the reduction on synthetic stationary noise
+On all four real noises (Table~\ref{tab:real}) the filter roughly doubles PESQ and pushes STOI close to 1.
+The ranking of the algorithms never changes: NLMS is 0.4--0.6~dB ahead of LMS, and NLMS-Shift
+0.15--0.35~dB behind NLMS. The noise reduction is lower than in Table~\ref{tab:nr}, yet the real noise is
+not harder to predict. With the speech removed from the primary input, the same filters on the same noise
+segments and paths reached 18.5--19.2~dB on the air conditioner and 22.4--31.9~dB on the other three
+noises, as much as on synthetic stationary noise or more
 (\texttt{py/\allowbreak exp\_real\_audio\_nospeech.py}, \texttt{results/\allowbreak metrics/\allowbreak real\_audio\_nospeech.csv}).
-Although the speech is uncorrelated with the reference, it still enters the error $e[n]$ that drives the
-weight update, and it costs 6.4--17.9~dB. Without speech, LMS is ahead of both normalized variants on all
-four noises, whereas with speech it loses the most (7.6--17.9~dB against 6.4--14.8~dB for NLMS), and hence
-the order is reversed. The usual remedy is to slow down or stop the adaptation while speech is present.
-The \texttt{freeze} input of the core (Section~\ref{sec:core}) could be driven by a voice-activity
-detector for this purpose, but this has not been evaluated in this work. When $-20$~dB of the speech
-leaks into the reference, the filter also cancels a part of the speech. In this case, the noise reduction
-drops by 2.3--4.6~dB and the PESQ by 0.25--0.6, and saturation events appear (18,500 over 19.2 million
-processed samples, mostly for the air conditioner). Therefore, the position of the reference microphone
-matters more than the choice of the algorithm (\texttt{paper/tab\_real\_audio\_xt.tex}).
+The speech is uncorrelated with the reference, but it still enters the error $e[n]$ that drives the
+weight update, and this costs 6.4--17.9~dB. Without speech LMS leads both normalized variants on all four
+noises; with speech it loses the most (7.6--17.9~dB against 6.4--14.8~dB for NLMS), so the order flips.
+The usual remedy is to slow down or stop adaptation while someone is talking. The core's \texttt{freeze}
+input (Section~\ref{sec:core}) could be driven by a voice-activity detector for this purpose, although
+that has not been evaluated here. When $-20$~dB of the speech leaks into the reference, the filter cancels
+part of the speech as well: noise reduction falls by 2.3--4.6~dB, PESQ by 0.25--0.6, and saturation
+events appear (18,500 over 19.2 million processed samples, mostly for the air conditioner). Where the
+reference microphone sits thus matters more than which algorithm is used
+(\texttt{paper/tab\_real\_audio\_xt.tex}).
 
 \subsection{Word length}
-At the tuned settings, the worst-scenario loss against a floating-point run of the same algorithm is
+At the tuned settings, the worst-scenario loss relative to a floating-point run of the same algorithm is
 4.1--5.9~dB at $W=10$, 0.9--1.2~dB at $W=11$ and 0.3--0.4~dB at $W=12$ (Fig.~\ref{fig:wl}). Eleven bits
-is the shortest word length that stays within the 3~dB criterion, and 12 bits were retained for margin.
-The tonal chord recording shows an unusual behavior, in which the fixed-point filter outperforms floating
-point by up to 3.4~dB at $W=11$ and loses 1.3~dB at $W=13$. On such a narrow-band signal, the
-quantization changes the effective adaptation, and hence the chord result varies with the word length and
-should not be used to select it.
+is the shortest word that meets the 3~dB criterion; 12 bits were kept for margin. The tonal chord
+recording behaves oddly. There the fixed-point filter beats floating point by up to 3.4~dB at $W=11$ but
+loses 1.3~dB at $W=13$, because on such a narrow-band signal quantization alters the effective
+adaptation. The chord result therefore swings with the word length and is not a sound basis for choosing
+it.
 
 \begin{\WF}[!htbp]\centering
 \includegraphics[width=\linewidth]{fig13_wordlength_fair.pdf}
@@ -508,26 +489,26 @@ should not be used to select it.
 \end{\WF}
 
 \subsection{Equivalent step size of NLMS-Shift}\label{sec:equiv}
-From \eqref{eq:ratio}, NLMS-Shift and NLMS differ only in the factor $r[n]$. When averaged over input
-levels spread uniformly on a logarithmic scale, $E[r]=\int_0^1 2^{u-1}\,du=1/(2\ln 2)\approx0.72$. At any
-single level, however, $r$ depends on the position of $P+\epsilon$ inside its octave: it increases with
-the level and halves when $P+\epsilon$ crosses a power of two. With $L=32$ and $\epsilon=2^{-2}$, the
-crossing $P+\epsilon=1/2$ occurs at a reference RMS of $-21.1$~dBFS, which is 3~dB above the level used in
-the simulations. To examine this effect, the input level was swept over 12~dB in 0.75~dB steps in the
-integer model (\texttt{py/exp\_equiv\_step.py}), on the stationary scenario (seeds 1--5) and on a two-tone
-reference (Fig.~\ref{fig:equiv}). On broadband noise, the window power varies enough to smooth out the
-sawtooth, and the mean ratio $\bar r$ changes gradually between 0.56 and 0.78. On the tonal reference,
-$P$ is almost constant, and $\bar r$ drops from 0.87 to 0.62 within 0.75~dB of level. In both cases, NLMS
-with the constant step $\bar r\,2^{-K}$ reproduces NLMS-Shift. The final noise reduction agrees within
-0.27~dB at all 17 broadband levels, and within 0.55~dB at every tonal level except the one that straddles
-the crossing (1.7~dB), while the convergence time agrees within 8\%. In contrast, NLMS with the nominal
-step $2^{-K}$ deviates by up to 3.5~dB and 48\%.
+According to \eqref{eq:ratio}, NLMS-Shift and NLMS differ only by the factor $r[n]$. Averaged over input
+levels spread evenly on a logarithmic scale, $E[r]=\int_0^1 2^{u-1}\,du=1/(2\ln 2)\approx0.72$. At a
+fixed level, though, $r$ depends on where $P+\epsilon$ falls inside its octave: it rises with the level
+and halves as $P+\epsilon$ crosses a power of two. With $L=32$ and $\epsilon=2^{-2}$, the crossing
+$P+\epsilon=1/2$ lies at a reference RMS of $-21.1$~dBFS, 3~dB above the simulation level. To observe the
+effect, the input level was swept over 12~dB in 0.75~dB steps in the integer model
+(\texttt{py/exp\_equiv\_step.py}), both on the stationary scenario (seeds 1--5) and on a two-tone
+reference (Fig.~\ref{fig:equiv}). With broadband noise the window power fluctuates enough to smooth out
+the sawtooth, and the mean ratio $\bar r$ moves gradually between 0.56 and 0.78. With the tonal reference
+$P$ is nearly constant, and $\bar r$ falls from 0.87 to 0.62 within 0.75~dB of level. In both cases NLMS
+with the constant step $\bar r\,2^{-K}$ reproduces NLMS-Shift: the final noise reduction agrees within
+0.27~dB at all 17 broadband levels and within 0.55~dB at every tonal level except the one straddling the
+crossing (1.7~dB), and the convergence time agrees within 8\%. NLMS with the nominal step $2^{-K}$ misses
+by up to 3.5~dB and 48\%.
 
-Hence, the shift changes nothing in the adaptation except the step size. It converts the fixed NLMS
-step into a step between $0.5$ and $1$ times the nominal step, which is set by the input level. On
-broadband input, this is a smooth change of gain, and selecting $K$ (and $\epsilon$) for the expected
-level absorbs it. On tonal input, the step changes by up to a factor of about 0.7 when the level crosses a
-power-of-two boundary of $P+\epsilon$, which never happens in a fixed-step NLMS.
+The shift, then, alters nothing in the adaptation apart from the step size. It turns the fixed NLMS step
+into one that lies between $0.5$ and $1$ times the nominal value, set by the input level. For broadband
+input this is a smooth gain change, and choosing $K$ (and $\epsilon$) for the expected level absorbs it.
+For tonal input the step changes by up to a factor of about 0.7 whenever the level crosses a
+power-of-two boundary of $P+\epsilon$, something that never happens with fixed-step NLMS.
 \begin{figure}[!htbp]\centering
 \includegraphics[width=\linewidth]{fig16_equiv_step.pdf}
 \caption{Equivalent step of NLMS-Shift versus reference level (integer model, $W=12$, $L=32$, $K=3$,
@@ -554,83 +535,78 @@ RTL bit toggles per sample & 5,668 & 7,146 & 6,012\\
 Core dynamic power, vectorless (mW) & 20.79 & 24.36 & 23.77\\\bottomrule
 \end{tabular}}
 \end{table}
-LMS is about 31\% smaller than either of the normalized variants. NLMS-Shift and NLMS require almost the
-same logic (2,610 and 2,626 logic elements), since the area saved on the divider is consumed by the
-leading-one detector, the shifter and the wider update path. However, NLMS-Shift has 15\% fewer
-registers, needs 45\% fewer busy cycles per sample and toggles 16\% fewer bits per sample. All three
-designs meet the 50~MHz constraint with a setup slack of at least +2.953~ns and a hold slack of
-+0.401~ns, without any critical warnings. At 8.138~kHz, even the busiest variant uses only 2\% of the
-6,144-cycle sample period, and hence a single core could serve many channels or much longer filters.
+LMS is about 31\% smaller than either normalized variant. NLMS-Shift and NLMS need practically the same
+logic (2,610 and 2,626 logic elements), because the area saved on the divider is spent on the leading-one
+detector, the shifter and the wider update path. NLMS-Shift does have 15\% fewer registers, needs 45\%
+fewer busy cycles per sample and toggles 16\% fewer bits per sample. All three designs meet the 50~MHz
+constraint with at least +2.953~ns setup slack and +0.401~ns hold slack and raise no critical warnings.
+At 8.138~kHz even the busiest variant occupies only 2\% of the 6,144-cycle sample period, which leaves
+room for many channels or much longer filters on one core.
 
-The power values are Quartus vectorless estimates with the default toggle rate of 12.5\%, which Quartus
-itself rates as low confidence. The core static power (about 98.7~mW) dominates the total power of 169
-to 173~mW. The dynamic estimates rank the designs as LMS $<$ NLMS-Shift $<$ NLMS, which is the same order
-as the toggle counts. However, a fixed toggle rate mostly tracks the area and ignores the fact that the
-datapath remains idle for 98\% of each sample period, and hence these values are upper bounds and not the
-energy per sample. A gate-level, activity-annotated estimate is left for future work, because the
-post-fit netlist flattens the hierarchy observed by the top-level testbench, and a netlist-only testbench
-is therefore required. A fair comparison with Huang and Yao~\cite{huang2026}, who used the same board,
-would report the energy per sample as the dynamic power divided by the sample rate from an
-activity-annotated Power Analyzer run. Since this result is not yet available, no energy comparison with
-their design is claimed. Moreover, their design is fully parallel and runs at megasamples per second,
-whereas ULLAP shares one multiplier and runs at 8.138~kHz, so the area and energy have to be compared per
-tap and per sample rather than as raw totals.
+The power figures are vectorless Quartus estimates at the default 12.5\% toggle rate, which Quartus
+itself rates as low confidence. Core static power (about 98.7~mW) dominates the 169 to 173~mW total. The
+dynamic estimates order the designs LMS $<$ NLMS-Shift $<$ NLMS, the same order as the toggle counts. A
+fixed toggle rate, however, mostly follows area and ignores that the datapath is idle for 98\% of every
+sample period, so these numbers are upper bounds rather than energy per sample. A gate-level,
+activity-annotated estimate is left for future work: the post-fit netlist flattens the hierarchy that the
+top-level testbench observes, and a netlist-only testbench is needed first. A fair comparison with Huang
+and Yao~\cite{huang2026}, who used the same board, would report energy per sample as dynamic power divided
+by sample rate from an activity-annotated Power Analyzer run. That result is not yet available, so no
+energy comparison with their design is claimed. Their design is also fully parallel and runs at
+megasamples per second, while ULLAP shares one multiplier and runs at 8.138~kHz; area and energy must
+therefore be compared per tap and per sample, not as raw totals.
 
 
 
 \subsection{On-board results}\label{sec:board}
-The board evidence was recorded with Signal Tap on the FPGA itself, and hence no external recorder or
-oscilloscope was required. One logic-analyzer instance stores, once per sample, the two codec samples
-entering the core ($x$ and $d$, register outputs \texttt{x\_reg} and \texttt{d\_reg}) and the core output
-$e$. This instance uses a transitional storage qualifier on \texttt{out\_valid}, triggers when the reset
-button is released, and holds 32,768 samples (4.0~s). A second instance samples the four GPIO test points
-at 50~MHz. The stimuli were the noise-only versions of the four scenarios, which were played from a laptop
-into LINE IN after a 1~kHz calibration tone. The reset was pressed during the tone, so that every capture
-starts from zero weights on real codec data at about $-25$~dBFS, and no sample in any capture reaches
-full scale. The analysis script and the raw exports are available in the repository
-(\texttt{py/analyze\_board\_capture.py}, \texttt{board\_evidence/}).
+The board evidence comes from Signal Tap on the FPGA itself, so no external recorder or oscilloscope was
+needed. One logic-analyzer instance stores, once per sample, the two codec samples entering the core ($x$
+and $d$, register outputs \texttt{x\_reg} and \texttt{d\_reg}) together with the core output $e$. It uses
+a transitional storage qualifier on \texttt{out\_valid}, triggers on the release of the reset button and
+holds 32,768 samples (4.0~s). A second instance samples the four GPIO test points at 50~MHz. The stimuli,
+the noise-only versions of the four scenarios, were played from a laptop into LINE IN after a 1~kHz
+calibration tone. Reset was pressed during the tone, so each capture starts from zero weights on real
+codec data at about $-25$~dBFS, and no captured sample reaches full scale. The analysis script and raw
+exports are in the repository (\texttt{py/analyze\_board\_capture.py}, \texttt{board\_evidence/}).
 
-\emph{Bit-exactness.} For each of the 12 captures (three algorithms and four scenarios), the integer
-model of Section~\ref{sec:model} was started from zero state at the first sample after the reset and was
-fed with the captured $x$ and $d$. The model reproduced every captured $e[n]$, i.e., 351,723 samples in
-total and 28,672 to 32,768 (3.5 to 4.0~s) per capture, without a single mismatch. Therefore, the
-fixed-point arithmetic on the chip is exactly the arithmetic evaluated in simulation, even with an analog
-input that carries the noise and offsets of the codec.
+\emph{Bit-exactness.} For each of the 12 captures (three algorithms, four scenarios), the integer model of
+Section~\ref{sec:model} was started from zero state at the first sample after reset and fed with the
+captured $x$ and $d$. It reproduced every captured $e[n]$ without a single mismatch: 351,723 samples in
+total, 28,672 to 32,768 (3.5 to 4.0~s) per capture. The fixed-point arithmetic on the chip is thus exactly
+the arithmetic evaluated in simulation, even with analog input carrying the codec's noise and offsets.
 
-\emph{Timing.} The GPIO capture shows an \texttt{in\_valid} period of 6,144 clock cycles
-(8,138.02~Hz), an \texttt{in\_valid} to \texttt{out\_valid} spacing of 38, 36 and 38 cycles for
-NLMS-Shift, LMS and NLMS (the core latency plus one accept cycle, i.e., 0.76, 0.72 and 0.76~$\mu$s), and
-busy times of 72, 73 and 130 cycles. All these values are equal to those of the RTL simulation with the
-same parameters. The builds with Signal Tap still meet the 50~MHz constraint (setup slack of $+2.65$,
-$+5.68$ and $+3.78$~ns), while Table~\ref{tab:hw} refers to the builds without the logic analyzer.
+\emph{Timing.} In the GPIO capture, the \texttt{in\_valid} period is 6,144 clock cycles (8,138.02~Hz), the
+spacing from \texttt{in\_valid} to \texttt{out\_valid} is 38, 36 and 38 cycles for NLMS-Shift, LMS and
+NLMS (core latency plus one accept cycle, or 0.76, 0.72 and 0.76~$\mu$s), and the busy times are 72, 73
+and 130 cycles. Each value equals the RTL simulation with the same parameters. The builds containing
+Signal Tap still meet the 50~MHz constraint (setup slack $+2.65$, $+5.68$ and $+3.78$~ns);
+Table~\ref{tab:hw} refers to the builds without the logic analyzer.
 
-Fig.~\ref{fig:board} shows the three algorithms on the same amplitude-step stimulus, aligned to the
-start of the scenario. (Since KEY0 was pressed by hand during the calibration tone, the reset occurs at a
-slightly different point of the stimulus in each capture.) All three algorithms settle to about 15~dB in
-the first 1.5~s. At 2.1~s, the level of $d$ rises by 7.4~dB, and the algorithms follow the step with only
-a short burst in $e$. The residual power after the step ($-47$ to $-52$~dBFS) is lower than that before
-the step ($-44$~dBFS), and hence the noise reduction rises to 25 to 30~dB. Over the last quarter of the
-window, the reduction is about 40~dB below 1.5~kHz and 11 to 15~dB near the band edge (3.5 to
-3.9~kHz).
+Fig.~\ref{fig:board} compares the three algorithms on the same amplitude-step stimulus, aligned to the
+start of the scenario. (KEY0 was pressed by hand during the calibration tone, so the reset lands at a
+slightly different point of the stimulus in each capture.) All three settle to about 15~dB within the
+first 1.5~s. At 2.1~s the level of $d$ rises by 7.4~dB, and the filters follow the step with only a short
+burst in $e$. The residual power after the step ($-47$ to $-52$~dBFS) is below that before it
+($-44$~dBFS), so the noise reduction climbs to 25 to 30~dB. Over the last quarter of the window the
+reduction is about 40~dB below 1.5~kHz and 11 to 15~dB near the band edge (3.5 to 3.9~kHz).
 
-\emph{Noise reduction on the simulation signal.} In a second session, the 2~s, seed-1 noise-only signal
-of each scenario, i.e., exactly the 16,000-sample signal used in the simulations, was played once after
-the calibration tone, so that the complete scenario fits inside the capture. Its start was located by
-correlating the captured $x$ with the stimulus (correlation of 0.95 to 0.99), and
-$\mathrm{NR}_\mathrm{final}$ was computed over the same last 25~\% as in the simulation. All 12 captures
-(28,672 samples after the reset each) are again bit-exact. Table~\ref{tab:board} compares the board with
-the integer model on the same signal. The board results are 2.9 to 10.6~dB below the simulation, by
-similar amounts for all three algorithms. The cause of this difference is the input level and not the
-hardware. The codec delivered $x$ and $d$ at about $-27$~dBFS, which is 3~dB below the simulation level,
-and at the tuned step sizes a lower input power slows down the adaptation within the 2~s. When the model
-is run at the level actually received by the board, it matches the board within 0.2~dB on stationary and
-path-switch noise (Fig.~\ref{fig:boardlevel}). The amplitude-step and recorded-noise scenarios end with a
-quiet final quarter ($d$ at about $-41$ and $-57$~dBFS), and in these cases the board stays 1.7 to
-8.1~dB below the level-matched model. At these levels, two analog effects are no longer small compared
-with $d$: the noise of the playback and codec path ($-70$~dBFS, measured in the silence after the
-stimulus) and an ADC offset that decays during the first second after the reset. For amplitude steps,
-even the best 32-tap least-squares filter fitted to the board samples of that window reaches only 24~dB,
-against 28~dB on the ideal signal. On the board, the three algorithms remain within 0.7~dB of one another
+\emph{Noise reduction on the simulation signal.} In a second session, the 2~s seed-1 noise-only signal of
+each scenario (exactly the 16,000-sample signal of the simulations) was played once after the
+calibration tone, so the whole scenario fits in the capture. Its start was found by correlating the
+captured $x$ with the stimulus (correlation 0.95 to 0.99), and $\mathrm{NR}_\mathrm{final}$ was taken over
+the same last 25~\% as in simulation. All 12 captures (28,672 samples after reset each) are again
+bit-exact. Table~\ref{tab:board} sets the board against the integer model on the same signal. The board
+falls 2.9 to 10.6~dB short of the simulation, by similar amounts for all three algorithms, and the reason
+is the input level rather than the hardware. The codec delivered $x$ and $d$ at about $-27$~dBFS, 3~dB
+below the simulation level, and at the tuned step sizes a lower input power slows adaptation within the
+2~s. Run at the level the board actually received, the model matches the board within 0.2~dB on
+stationary and path-switch noise (Fig.~\ref{fig:boardlevel}). The amplitude-step and recorded-noise
+scenarios end with a quiet final quarter ($d$ at about $-41$ and $-57$~dBFS), and there the board remains
+1.7 to 8.1~dB below the level-matched model. At such levels two analog effects are no longer negligible
+next to $d$: the noise of the playback and codec path ($-70$~dBFS, measured in the silence after the
+stimulus) and an ADC offset that decays during the first second after reset. For amplitude steps, even
+the best 32-tap least-squares filter fitted to the board samples of that window reaches only 24~dB,
+against 28~dB on the ideal signal. On the board, the three algorithms stay within 0.7~dB of one another
 in every scenario.
 
 \begin{table}[!htbp]\centering\small
@@ -661,17 +637,17 @@ model at the simulation level, and integer model with the stimulus scaled to the
 received. Shaded: the $\mathrm{NR}_\mathrm{final}$ window.}\label{fig:boardlevel}
 \end{\WF}
 
-\emph{Freeze, DAC word and endurance.} With NLMS-Shift running on stationary noise, SW[1] was flipped
-by hand 1.44~s into the scenario. The captured output is equal to the model with the adaptation stopped
-from that sample onwards (28,672 samples, no mismatch). From the switch to the end of the scenario, the
-noise reduction holds at 15.2~dB, against 15.4~dB just before the switch and 15.9~dB if the adaptation
-had continued. A third Signal Tap instance recorded the word sent to the DAC. In ANC mode, this word
-equals $\{e, 0000\}$, and in bypass mode ($\mathrm{SW}[0]=1$) its upper 12 bits equal $d$, in all 1,792
-samples of each capture. The LINE OUT signal could not be recorded with the available equipment, and
-hence this check covers the chain only up to the DAC interface. After 10~minutes of continuous operation
-on looped noise, the GPIO timing remained unchanged (6,144 cycles per sample, 38 cycles from
-\texttt{in\_valid} to \texttt{out\_valid} and 72 busy cycles), and no saturation, NACK or overrun flag was
-set. The build with all three logic-analyzer instances still met timing (slack of $+2.93$~ns).
+\emph{Freeze, DAC word and endurance.} With NLMS-Shift running on stationary noise, SW[1] was flipped by
+hand 1.44~s into the scenario. The captured output equals the model with adaptation stopped from that
+sample on (28,672 samples, no mismatch). From the switch to the end of the scenario the noise reduction
+holds at 15.2~dB, compared with 15.4~dB just before the switch and 15.9~dB had adaptation continued. A
+third Signal Tap instance recorded the word sent to the DAC. In ANC mode it equals $\{e, 0000\}$; in
+bypass ($\mathrm{SW}[0]=1$) its upper 12 bits equal $d$, in all 1,792 samples of each capture. The LINE
+OUT signal could not be recorded with the equipment at hand, so this check follows the chain as far as
+the DAC interface. After 10~minutes of continuous operation on looped noise, the GPIO timing was unchanged
+(6,144 cycles per sample, 38 cycles from \texttt{in\_valid} to \texttt{out\_valid}, 72 busy cycles) and no
+saturation, NACK or overrun flag had been set. The build with all three logic-analyzer instances still met
+timing (slack $+2.93$~ns).
 
 \begin{\WF}[!htbp]\centering
 \includegraphics[width=\linewidth]{fig14_board_capture_amp_steps.pdf}
@@ -684,39 +660,37 @@ windows (bottom left; shaded: last 25~\% of the common window) and power spectra
 %--------------------------------------------------------------------------------------------
 \FloatBarrier % every figure and table is placed before the discussion
 \section{Discussion and limitations}\label{sec:disc}
-The comparison in this work supports a narrow conclusion. The divider-free normalization retains the
-level independence of NLMS at roughly the cycle count of LMS. Therefore, it is the better choice when the
-noise level changes and when throughput or energy per sample is important, whereas LMS remains the
-smallest design when the level is steady. The comparison does not show that NLMS-Shift cancels better
-than NLMS, and Section~\ref{sec:equiv} explains the reason. The shift changes only the step size, by a
-level-dependent factor between 0.5 and 1, and hence selecting $K$ and $\epsilon$ for the expected input
-level matters more than the shift itself. In addition, tonal noise near a power-of-two boundary of
-$P+\epsilon$ experiences a step jump that is absent in NLMS. On real recordings, the speech at the primary
-input limits all three algorithms much more than the choice of the algorithm does (6.4--17.9~dB, against
-at most 0.6~dB between the algorithms).
+The comparison supports a fairly narrow conclusion. Divider-free normalization keeps the level
+independence of NLMS at roughly the cycle count of LMS. It is therefore the better choice when the noise
+level varies and throughput or energy per sample matters, while LMS remains the smallest design for a
+steady level. The results do not show that NLMS-Shift cancels better than NLMS, and
+Section~\ref{sec:equiv} explains why: the shift changes only the step size, by a level-dependent factor
+between 0.5 and 1, so tuning $K$ and $\epsilon$ for the expected input level matters more than the shift
+itself. Tonal noise near a power-of-two boundary of $P+\epsilon$ also sees a step jump that NLMS does not
+have. On real recordings, the speech at the primary input limits all three algorithms far more than the
+choice of algorithm does (6.4--17.9~dB, against at most 0.6~dB between algorithms).
 
-The present study has certain limitations. The acoustic paths are simulated, including those used for
-the real recordings. Acoustic feedback (closed-loop howling) is not covered, and reference-based ANC is
-not a suitable structure for this problem in any case. The power is only a switching-activity proxy until
-a gate-level analysis is carried out. On the board, the output is shown to be equal to the model up to the
-DAC word, but the analog LINE OUT signal was not recorded. Finally, the absolute noise reduction depends on
-the input level. With the stimulus 3~dB below the simulation level, the board achieved 14 to 17~dB instead
-of 19 to 28~dB on the synthetic scenarios, and on stationary and path-switch noise the model reproduces
-this result at that level. Therefore, in a practical deployment, the codec input gain should be set such
-that the reference uses most of the 12-bit range, or the step size should be retuned for the expected
-level.
+Several limitations remain. The acoustic paths are simulated, including those used with the real
+recordings. Acoustic feedback (closed-loop howling) is outside the scope, and reference-based ANC would
+not be the right structure for it anyway. Power is represented by a switching-activity proxy until a
+gate-level analysis is done. On the board, the output is shown to match the model up to the DAC word,
+but the analog LINE OUT signal was not recorded. Finally, the absolute noise reduction depends on the
+input level. With the stimulus 3~dB below the simulation level, the board reached 14 to 17~dB rather than
+19 to 28~dB on the synthetic scenarios, and on stationary and path-switch noise the model reproduces this
+at that level. In a deployment, the codec input gain should be set so that the reference uses most of the
+12-bit range, or the step size should be retuned for the expected level.
 
 \section{Conclusion}\label{sec:concl}
-In this research, ULLAP is presented, which runs LMS, NLMS and NLMS-Shift on a single serial 12-bit,
-32-tap core on a low-cost Cyclone IV board and compares the three algorithms with equal tuning effort.
-NLMS-Shift matches NLMS within the 95\% confidence interval on stationary and amplitude-step noise, while
-needing 72 instead of 130 busy cycles per sample. All three algorithms remove 11.7 to 14.9~dB of real
-recorded noise, and 18.5 to 31.9~dB when the speech is removed from the primary input, which shows that
-the speech, and not the noise, sets the limit. Moreover, NLMS-Shift is shown to be equivalent to NLMS with
-a level-dependent step between 0.5 and 1 times the nominal step. On the board, 25 Signal Tap captures of
-real codec data (724,459 samples) are bit-exact with the integer model, and the same holds for the
-freeze behavior and the DAC word. On stationary and path-switch noise, the measured noise reduction is
-equal to that of the model, at the input level received by the board, within 0.2~dB.
+This paper presented ULLAP, which runs LMS, NLMS and NLMS-Shift on one serial 12-bit, 32-tap core on a
+low-cost Cyclone IV board and compares them with equal tuning effort. NLMS-Shift matches NLMS within the
+95\% confidence interval on stationary and amplitude-step noise while needing 72 instead of 130 busy
+cycles per sample. All three algorithms remove 11.7 to 14.9~dB of real recorded noise, and 18.5 to
+31.9~dB once the speech is removed from the primary input, showing that the speech and not the noise sets
+the limit. NLMS-Shift was further shown to be equivalent to NLMS with a level-dependent step between 0.5
+and 1 times the nominal one. On the board, 25 Signal Tap captures of real codec data (724,459 samples)
+are bit-exact with the integer model, as are the freeze behavior and the DAC word, and on stationary and
+path-switch noise the measured noise reduction equals that of the model, at the input level the board
+received, within 0.2~dB.
 
 \section*{Declarations}
 \noindent\textbf{Funding.} \TBD{Authors: funding sources, or ``No funding was received for this work.''}
@@ -727,8 +701,8 @@ competing interests.''}
 \noindent\textbf{Author contributions.} \TBD{Authors: who did what (free text or CRediT).}
 
 \noindent\textbf{Data and code availability.}
-All the RTL, testbenches, scripts and result files are available in the project repository
-\TBD{public URL and Zenodo DOI of the tagged release}. The real-audio study fetches its MS-SNSD files
+All RTL, testbenches, scripts and result files are available in the project repository
+\TBD{public URL and Zenodo DOI of the tagged release}. The real-audio study downloads its MS-SNSD files
 from a pinned commit and verifies them by SHA-256.
 
-\noindent\textbf{Use of generative AI.} Documented in the experimental set-up (Section~\ref{sec:setup}).
+\noindent\textbf{Use of generative AI.} Described in the experimental set-up (Section~\ref{sec:setup}).
