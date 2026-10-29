@@ -1,4 +1,4 @@
-# claims.md — what this project does and does not claim
+# Claims — what this project does and does not claim
 
 Platform: Terasic DE2-115, Cyclone IV E EP4CE115F29C7, Quartus Prime Lite 25.1std.
 Algorithms: LMS, NLMS (restoring divider), NLMS-Shift (leading-one detector + barrel shift, no divider).

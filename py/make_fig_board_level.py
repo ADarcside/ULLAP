@@ -1,7 +1,7 @@
 """Paper figure of board session 2: running noise reduction of the board against the integer model on the
 same 2 s stimulus, at the simulation level and at the level the board received.
 
-    python py/make_fig_board_level.py board_evidence/signaltap_session2_20261026.zip
+    python py/make_fig_board_level.py board/signaltap_session2_20261026.zip
 """
 import argparse
 import os

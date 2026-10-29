@@ -26,9 +26,10 @@ SPEC_ALLOWLIST = {
     ("docs/wm8731_config.md", 46, "50"): ("spec", "System clock domain (50 MHz)"),
     ("docs/wm8731_config.md", 48, "50"): ("spec", "System clock domain (50 MHz)"),
     # Design specifications and conversions
-    ("README.md", 82, "+3.0"): ("threshold", "Gate B timing closure setup slack target threshold (+3.0 ns)"),
-    ("README.md", 84, "50"): ("spec", "Processing time master clock frequency specification (50 MHz)"),
-    ("README.md", 121, "50"): ("spec", "Core latency conversion at master clock frequency specification (50 MHz)"),
+    ("README.md", 39, "50"): ("spec", "Master clock frequency the latency cycles are counted at (50 MHz)"),
+    ("README.md", 52, "31.9"): ("derived", "1-decimal rounding of 31.879 dB (real_audio_nospeech.csv, copy_machine lms nr_nospeech)"),
+    ("docs/power_flow.md", 38, "50"): ("spec", "Master clock frequency in the energy-per-sample conversion (50 MHz)"),
+    ("docs/power_flow.md", 44, "73"): ("historical", "Simulation time stamp of the $hold timing-check messages in the NLMS-Shift netlist log (73 ns), not a timing result"),
     ("docs/results.md", 133, "+3.0"): ("threshold", "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)"),
     ("docs/results.md", 133, "+0.5"): ("threshold", "Gate B timing closure baseline target threshold (+0.5 ns)"),
     ("docs/results.md", 157, "50"): ("spec", "Codec sample period cycle count conversion at 50 MHz master clock"),
@@ -50,25 +51,25 @@ SPEC_ALLOWLIST = {
     ("results/research_summary.md", 95, "+0.5"): ("threshold", "Gate B baseline target threshold (+0.5 ns)"),
 
     # Design targets, acceptance thresholds, and specification numbers in claims.md
-    ("claims.md", 31, "2"): ("derived", "NLMS-Shift amp_steps (24.33 dB) - LMS amp_steps (22.36 dB) = 1.97 dB ~= 2 dB (paper_numbers.csv)"),
-    ("claims.md", 32, "-0.3"): ("derived", "NLMS-Shift (5.46 dB) vs NLMS (5.73 dB) and LMS (5.69 dB) on wav: 5.46 - 5.73 = -0.27 dB ~= -0.3 dB (paper_numbers.csv)"),
-    ("claims.md", 39, "24.0"): ("threshold", "Pareto acceptance boundary threshold for amp_steps (>= 24.0 dB)"),
-    ("claims.md", 54, "4"): ("derived", "Derived delta: WAV gain (+3 dB from ~5.5 to ~8.7 dB) costs ~4 dB penalty on stationary (22.39 -> 18.29 = 4.10 dB) and path_switch (18.95 -> 14.78 = 4.17 dB) (paper_numbers.csv)"),
-    ("claims.md", 54, "10"): ("threshold", "Project noise cancellation design target on WAV audio (10 dB)"),
-    ("claims.md", 66, "50"): ("spec", "Master clock frequency specification (50 MHz)"),
-    ("claims.md", 66, "36.16"): ("historical", "Pre-pipelining unpipelined design baseline Fmax (36.16 MHz); no tracked report in results/quartus_reports"),
-    ("claims.md", 66, "-7.655"): ("historical", "Pre-pipelining unpipelined design setup slack violation (-7.655 ns); no tracked report in results/quartus_reports"),
-    ("claims.md", 83, "50"): ("spec", "Board build timing constraint (50 MHz)"),
-    ("claims.md", 93, "50"): ("spec", "Master clock frequency conversion (50 MHz)"),
-    ("claims.md", 98, "11.3"): ("derived", "1-decimal rounding of 11.26 dB (paper_numbers.csv row 14, nlms 4x nr_final_mean)"),
-    ("claims.md", 103, "1.0"): ("threshold", "Gate A hybrid adoption threshold rule (>= 1.0 dB in >= 2 scenarios)"),
-    ("claims.md", 110, "50"): ("spec", "CDC master clock sampling specification (50 MHz)"),
-    ("claims.md", 151, "2,531"): ("historical", "W=11 architectural baseline estimate (2,531 LEs); pre-pipelining estimate"),
-    ("claims.md", 151, "50"): ("spec", "Master clock frequency specification (50 MHz)"),
-    ("claims.md", 151, "20.0"): ("spec", "Master clock period specification for 50 MHz clock (20.0 ns)"),
-    ("claims.md", 151, "+3.0"): ("threshold", "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)"),
-    ("claims.md", 154, "2.97"): ("historical", "W=11 degradation figure from the 2026-10-11 log in docs/verification.md; no reproducible source"),
-    ("claims.md", 155, "24"): ("threshold", "Pareto acceptance boundary threshold for amp_steps (24 dB; post hoc threshold)"),
+    ("docs/claims.md", 31, "2"): ("derived", "NLMS-Shift amp_steps (24.33 dB) - LMS amp_steps (22.36 dB) = 1.97 dB ~= 2 dB (paper_numbers.csv)"),
+    ("docs/claims.md", 32, "-0.3"): ("derived", "NLMS-Shift (5.46 dB) vs NLMS (5.73 dB) and LMS (5.69 dB) on wav: 5.46 - 5.73 = -0.27 dB ~= -0.3 dB (paper_numbers.csv)"),
+    ("docs/claims.md", 39, "24.0"): ("threshold", "Pareto acceptance boundary threshold for amp_steps (>= 24.0 dB)"),
+    ("docs/claims.md", 54, "4"): ("derived", "Derived delta: WAV gain (+3 dB from ~5.5 to ~8.7 dB) costs ~4 dB penalty on stationary (22.39 -> 18.29 = 4.10 dB) and path_switch (18.95 -> 14.78 = 4.17 dB) (paper_numbers.csv)"),
+    ("docs/claims.md", 54, "10"): ("threshold", "Project noise cancellation design target on WAV audio (10 dB)"),
+    ("docs/claims.md", 66, "50"): ("spec", "Master clock frequency specification (50 MHz)"),
+    ("docs/claims.md", 66, "36.16"): ("historical", "Pre-pipelining unpipelined design baseline Fmax (36.16 MHz); no tracked report in results/quartus_reports"),
+    ("docs/claims.md", 66, "-7.655"): ("historical", "Pre-pipelining unpipelined design setup slack violation (-7.655 ns); no tracked report in results/quartus_reports"),
+    ("docs/claims.md", 83, "50"): ("spec", "Board build timing constraint (50 MHz)"),
+    ("docs/claims.md", 93, "50"): ("spec", "Master clock frequency conversion (50 MHz)"),
+    ("docs/claims.md", 98, "11.3"): ("derived", "1-decimal rounding of 11.26 dB (paper_numbers.csv row 14, nlms 4x nr_final_mean)"),
+    ("docs/claims.md", 103, "1.0"): ("threshold", "Gate A hybrid adoption threshold rule (>= 1.0 dB in >= 2 scenarios)"),
+    ("docs/claims.md", 110, "50"): ("spec", "CDC master clock sampling specification (50 MHz)"),
+    ("docs/claims.md", 151, "2,531"): ("historical", "W=11 architectural baseline estimate (2,531 LEs); pre-pipelining estimate"),
+    ("docs/claims.md", 151, "50"): ("spec", "Master clock frequency specification (50 MHz)"),
+    ("docs/claims.md", 151, "20.0"): ("spec", "Master clock period specification for 50 MHz clock (20.0 ns)"),
+    ("docs/claims.md", 151, "+3.0"): ("threshold", "Gate B timing closure slow 85C setup slack target (>= +3.0 ns)"),
+    ("docs/claims.md", 154, "2.97"): ("historical", "W=11 degradation figure from the 2026-10-11 log in docs/verification.md; no reproducible source"),
+    ("docs/claims.md", 155, "24"): ("threshold", "Pareto acceptance boundary threshold for amp_steps (24 dB; post hoc threshold)"),
     ("docs/verification.md", 135, "760"): ("spec", "GPIO in_valid->out_valid pin spacing: (LAT 37 + 1 accept edge) x 20 ns, checked by tb_top T10"),
     ("docs/board_test.md", 57, "760"): ("spec", "GPIO in_valid->out_valid pin spacing: (LAT 37 + 1 accept edge) x 20 ns, checked by tb_top T10"),
 
@@ -489,7 +490,7 @@ def audit_headline_tables_and_claims():
         return None
 
     mismatches = []
-    target_files = [os.path.join(ROOT, "README.md"), os.path.join(ROOT, "claims.md")]
+    target_files = [os.path.join(ROOT, "README.md")]  # docs/claims.md comes in through the docs/*.md glob
     target_files.extend(glob.glob(os.path.join(ROOT, "docs", "*.md")))
     target_files.extend(glob.glob(os.path.join(ROOT, "results", "*.md")))
     target_files = [t for t in target_files if os.path.relpath(t, ROOT).replace("\\", "/") not in EXCLUDED_DOCS]
@@ -604,7 +605,7 @@ def run_comprehensive_audit():
 
     db = build_verification_database()
 
-    target_files = [os.path.join(ROOT, "README.md"), os.path.join(ROOT, "claims.md")]
+    target_files = [os.path.join(ROOT, "README.md")]  # docs/claims.md comes in through the docs/*.md glob
     target_files.extend(glob.glob(os.path.join(ROOT, "docs", "*.md")))
     target_files.extend(glob.glob(os.path.join(ROOT, "results", "*.md")))
     target_files = [t for t in target_files if os.path.relpath(t, ROOT).replace("\\", "/") not in EXCLUDED_DOCS]

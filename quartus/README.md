@@ -1,39 +1,36 @@
-# Quartus Prime Lite Pipeline: Terasic DE2-115 (Cyclone IV E)
+# quartus
 
-This directory provides the Quartus-specific hardware integration files for the **Terasic DE2-115 Development Board** featuring the **Altera/Intel Cyclone IV E EP4CE115F29C7** FPGA.
+The Quartus Prime Lite project for the Terasic DE2-115 (Cyclone IV E EP4CE115F29C7). The core
+in `../rtl/` stays vendor neutral; everything board specific is here.
 
-## Hardware Architecture & Design Principles
+| File | Purpose |
+|---|---|
+| `anc_de2_115_top.v` | Top level: clocks, reset and switch synchronisers, codec glue, LEDs, GPIO test points |
+| `wm8731_i2c_init.v` | Writes the 11 codec registers over I²C at start-up (8.138 kHz, R8 = 0x00C) |
+| `i2s_transceiver.v` | I²S receiver and transmitter running from the 50 MHz system clock |
+| `build_quartus.tcl` | Scripted build; arguments `ALGO W K EPS_EXP MU_INT` |
+| `anc_de2_115.qpf`, `.qsf` | Project and settings (the `.qsf` also carries the Signal Tap assignments) |
+| `de2_115_pins.tcl`, `de2_115.sdc` | Pin assignments and timing constraints |
+| `anc_t9.stp` | Signal Tap file used for the on-board captures (board test T9) |
+| `anc_de2_115.cdf` | Programmer chain file |
+| `anc_de2_115.pin`, `.sld` | Pin report and Signal Tap node list written by Quartus, kept as a record of the board build |
+| `power/` | Constraints and script for the gate-level power runs on the core alone |
+| `BUILD_MANIFEST.md` | Record of one NLMS-Shift build: commit, tool version, parameters, `.sof` checksum |
 
-1. **Vendor-Neutral Core RTL**: The core signal processing logic remains in `rtl/anc_core.v` with no vendor IP, megafunctions, or proprietary primitives.
-2. **Modular Board Wrapper**: Board-level pin multiplexing, Wolfson WM8731 audio codec configuration (I2C), and I2S serialization/deserialization reside in `anc_de2_115_top.v`.
-3. **No Vivado Artifacts**: Vivado XDC constraints and Xilinx-specific modules have been completely excluded.
+## Building
 
-## Files
-- `de2_115_pins.tcl`: Official pin assignment script for the DE2-115 board.
-- `anc_de2_115_top.v`: Modular top-level wrapper interfacing WM8731 audio codec with `anc_core`.
-- `README.md`: This integration and build guide.
+```bash
+cd quartus
+quartus_sh -t build_quartus.tcl 2 12 3 2 512   # NLMS-Shift
+quartus_sh -t build_quartus.tcl 1 12 3 0 256   # NLMS
+quartus_sh -t build_quartus.tcl 0 12 3 2 256   # LMS
+```
 
-## How to Compile in Quartus Prime Lite (Version 18.1 or newer)
+Reports land in `output_files/`, which git ignores. The reports behind the paper are archived
+in [`../results/quartus_reports/`](../results/quartus_reports/), and
+`python py/import_quartus.py` parses new ones into `results/metrics/`.
 
-Once Quartus Prime Lite is installed on your machine:
-
-1. Open Quartus Prime Lite and create a project:
-   - **Device**: Cyclone IV E `EP4CE115F29C7`
-   - **Project Name**: `anc_fpga_de2115`
-   - **Top-Level Entity**: `anc_de2_115_top`
-2. Add RTL files:
-   - `rtl/anc_core.v`
-   - `quartus/anc_de2_115_top.v`
-3. Apply pin assignments:
-   - In Quartus, open `Tools -> Tcl Scripts...` and run `de2_115_pins.tcl`, or source it via Quartus Tcl Console:
-     ```tcl
-     source quartus/de2_115_pins.tcl
-     ```
-4. Compile the design:
-   - Click **Start Compilation** (or run `quartus_sh --flow compile anc_fpga_de2115`).
-5. Export reports into the ANC analysis pipeline:
-   - Run the automated report parser:
-     ```bash
-     python py/import_quartus.py --fit-rpt output_files/anc_fpga_de2115.fit.rpt --sta-rpt output_files/anc_fpga_de2115.sta.rpt --algo nlms_shift --w 11
-     ```
-   - Or fill in `results/quartus/quartus_reports_template.csv` and regenerate figures via `python py/run_pipeline.py`.
+With `anc_t9.stp` enabled in the `.qsf`, every build includes Signal Tap. The resource and
+timing numbers in the paper come from builds without it, so remove the `ENABLE_SIGNALTAP` and
+`USE_SIGNALTAP_FILE` lines before a build you want to quote. The gate-level power flow is
+described in [`../docs/power_flow.md`](../docs/power_flow.md).

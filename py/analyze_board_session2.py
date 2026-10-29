@@ -12,7 +12,7 @@ stimulus (resampled to the codec rate), so NR_final uses exactly the last 25 % o
 the window of the simulations. The same NR is computed for the integer model run on the 8 kHz
 stimulus (the digital reference), so the board and simulation are compared on the same signal.
 
-    python py/analyze_board_session2.py board_evidence/signaltap2 --out results/board/session2
+    python py/analyze_board_session2.py board/signaltap2 --out results/board/session2
 """
 import argparse
 import csv

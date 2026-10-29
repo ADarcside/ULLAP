@@ -1,4 +1,20 @@
-# Board evidence (DE2-115, Signal Tap)
+# board
+
+Evidence from running ULLAP on the DE2-115. The codec's LINE OUT could not be recorded with the
+equipment available, so the outputs were captured inside the FPGA with Signal Tap instead and
+compared, sample by sample, with the integer model.
+
+| Path | Contents |
+|---|---|
+| `signaltap_session1_20261026.zip` | Session 1: 12 captures (3 algorithms x 4 scenarios) and GPIO timing |
+| `signaltap_session2_20261026.zip` | Session 2: simulation-signal captures, freeze, DAC word, 10-minute soak, photos |
+| `signaltap/` | The operator's session-1 report and the Tcl capture script |
+| `stimulus_6s/` | The exact 6 s stimulus WAVs played into LINE IN in session 1 |
+
+The analysis results are in [`../results/board/`](../results/board/) and the procedure is in
+[`../docs/board_test.md`](../docs/board_test.md). The details of each session follow.
+
+## Session 1 (25 Oct 2026)
 
 `signaltap_session1_20261026.zip`: session 1, 25 Oct 2026, captured on the authors' bench laptop
 (Quartus Prime Lite 25.1std, no RTL change). Contents: `cap_<lms|nlms|shift>_<scenario>.csv`
@@ -41,7 +57,7 @@ window in the silence after the stimulus; the corrected figure is in the summary
 
     unzip signaltap_session2_20261026.zip -d /tmp/s2
     python py/analyze_board_session2.py /tmp/s2 --out results/board/session2
-    python py/make_fig_board_level.py board_evidence/signaltap_session2_20261026.zip
+    python py/make_fig_board_level.py board/signaltap_session2_20261026.zip
 
 Result (`results/board/session2/board_session2_summary.md`): all 13 captures bit-exact; board NR is
 2.9 to 10.6 dB below the model at the simulation level because the board received x and d about

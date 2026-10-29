@@ -1,179 +1,164 @@
-# Adaptive Noise Cancellation (ANC) Research Project: LMS vs NLMS vs NLMS-Shift
+# ULLAP: an FPGA adaptive noise canceller
 
-**Target Platform:** Terasic DE2-115 Development Board (Intel/Altera Cyclone IV E `EP4CE115F29C7`) with Quartus Prime Lite.  
-**Software Pipeline:** Platform-independent Python simulation, fixed-point modeling, golden vector generation, and research-quality visualization.
+ULLAP is a small, processor-free noise canceller that runs on the Terasic DE2-115 board
+(Cyclone IV E EP4CE115F29C7) with its WM8731 audio codec. It takes a noisy signal and a
+reference microphone, learns the noise path with a 32-tap adaptive filter in 12-bit fixed
+point, and subtracts the estimate one sample at a time, 37 clock cycles after each input.
 
----
+One serial core with a single shared multiplier runs three algorithms, selected by a
+parameter at build time:
 
-## 1. Directory Structure
+- **LMS**, the plain least-mean-square update;
+- **NLMS**, normalised LMS with a restoring divider;
+- **NLMS-Shift**, NLMS where the division is replaced by a leading-one detector and a shift.
 
-| Directory | Content |
+The repository holds everything behind the study: the Verilog, the bit-exact Python model it
+is checked against, the experiments and their raw results, the Quartus project, the on-board
+Signal Tap captures, the journal manuscript and the class presentation.
+
+```mermaid
+flowchart LR
+    REF["Reference mic<br/>x[n] (noise only)"] --> FIR["Adaptive FIR<br/>32 taps, 12-bit"]
+    PRI["Primary mic<br/>d[n] = s[n] + noise"] --> SUM(("+"))
+    FIR -- "y[n]" --> SUM
+    SUM -- "e[n] = d[n] - y[n]" --> OUT["LINE OUT<br/>cleaned signal"]
+    SUM -. "error drives the<br/>weight update" .-> FIR
+```
+
+## What we found
+
+All numbers are 20-seed means at W = 12 bits and L = 32 taps, with step sizes tuned on
+held-out seeds. The full numbers, with 95% confidence intervals, are in
+[`results/paper_numbers.csv`](results/paper_numbers.csv) and the manuscript in [`paper/`](paper/).
+
+| | LMS | NLMS | NLMS-Shift |
+|---|---|---|---|
+| Final noise reduction, stationary noise | 22.39 dB | 22.28 dB | 22.37 dB |
+| Final noise reduction, amplitude steps | 22.36 dB | 24.16 dB | 24.33 dB |
+| Busy cycles per sample (measured on the board) | 73 | 130 | 72 |
+| Input-to-output latency (cycles at 50 MHz) | 35 | 37 | 37 |
+| Logic elements (board build) | 1,792 | 2,626 | 2,610 |
+| Fmax, slow 85 °C | 70.08 MHz | 59.75 MHz | 58.66 MHz |
+| Dynamic energy per sample, gate level, max rate | 20.7 nJ | 38.0 nJ | 28.4 nJ |
+
+In short:
+
+- NLMS-Shift stays within the confidence interval of NLMS on stationary and amplitude-step
+  noise and beats LMS by about 2 dB when the noise level jumps, while finishing each sample in
+  72 instead of 130 cycles and using 22 to 25% less dynamic energy per sample than NLMS.
+- NLMS-Shift turns out to be exactly NLMS with a level-dependent step between 0.5 and 1 times
+  the nominal one ([`py/exp_equiv_step.py`](py/exp_equiv_step.py), figure 16).
+- On real recorded noise mixed with speech (MS-SNSD) the filters remove 11.7 to 14.9 dB and
+  lift STOI from 0.69–0.78 to 0.95–0.98. With the speech removed they reach 18.5 to 31.9 dB,
+  so the speech, not the noise, sets the limit.
+- On the board, all 724,459 output samples captured with Signal Tap across the three
+  algorithms match the integer model bit for bit. The measured sample rate (8,138 Hz),
+  latency and busy cycles agree with the RTL, also after a 10-minute soak.
+
+<p align="center">
+  <img src="results/plots/fig14_board_capture_amp_steps.png" width="49%" alt="Board capture of the three algorithms on amplitude-step noise">
+  <img src="results/plots/fig12_pareto_stationary_amp_steps.png" width="49%" alt="Trade-off between stationary and amplitude-step noise reduction">
+</p>
+<p align="center">
+  <img src="results/plots/fig16_equiv_step.png" width="49%" alt="Equivalent NLMS step of NLMS-Shift">
+  <img src="results/plots/fig13_wordlength_fair.png" width="49%" alt="Noise reduction against word length">
+</p>
+
+## Repository map
+
+| Folder | What is in it |
 |---|---|
-| `system_design/` | Comprehensive technical specifications: architecture (`architecture.md`), execution & research pipelines (`pipeline.md`), mathematical algorithms (`algorithm.md`), and Mermaid operational flowcharts (`flowchart.md`). |
-| `py/` | Algorithm reference models (`algos.py`), fixed-point engine (`fixedpoint.py`), metrics (`metrics.py`), test scenarios (`signals.py`), pipeline runner (`run_pipeline.py`), visualization suite (`visualize.py`), Quartus report importer (`import_quartus.py`), verification suite (`verify_core.py`), and unit tests (`test_*.py`). |
-| `rtl/` | `anc_core.v`: Portable, vendor-neutral Verilog core supporting LMS, NLMS, and NLMS-shift. No vendor IP or proprietary macros. |
-| `quartus/` | DE2-115 board-specific pin assignments (`de2_115_pins.tcl`) and modular top-level codec wrapper (`anc_de2_115_top.v`). |
-| `results/` | Unified experimental output: `raw/` (sample signals), `metrics/` (CSV tables, verification JSON), `plots/` (10 publication figures in 300 DPI PNG and vector PDF), `metadata/` (experiment configurations), `quartus/` (hardware report templates and parsed metrics). |
-| `tb/` | Verilog self-checking testbench (`tb_anc_core.v`), test vector manifest (`manifest.txt`), and regression scripts. |
-| `vectors/` | Golden `.vec` and `.w` test vectors for RTL verification; `vectors/audio/` contains test audio files (`acoustic_chord.wav`, `sine_sweep.wav`). |
-| `docs/` | Research findings (`results.md`), verification record (`verification.md`), RTL interface spec (`rtl_interface.md`), and backward-compatible mirrors. |
-| `archive/` | Reserved for the original effects processor (preserved untouched). |
+| [`rtl/`](rtl/) | `anc_core.v`, the portable Verilog core (no vendor IP) |
+| [`tb/`](tb/) | Self-checking testbenches, test manifests, fault-injection mutants |
+| [`vectors/`](vectors/) | Golden input/output vectors for the RTL and power runs, test audio |
+| [`quartus/`](quartus/) | DE2-115 project: top level, codec I²C and I²S, pins, timing and power scripts |
+| [`py/`](py/) | Float and bit-exact integer models, experiments, regression runners, unit tests |
+| [`results/`](results/) | Metrics (CSV/JSON), figures, Quartus reports, board analysis, archived logs |
+| [`board/`](board/) | On-board evidence: Signal Tap sessions, stimulus files, capture scripts |
+| [`paper/`](paper/) | Journal manuscript (Elsevier and IEEE versions sharing one body) |
+| [`presentation/`](presentation/) | Class presentation (PowerPoint and PDF) |
+| [`docs/`](docs/) | Design notes, verification record, board test plan, claims, project history |
 
----
+Each folder has its own short README.
 
-## 2. System Design Specifications (`system_design/`)
+## Getting started
 
-Detailed hardware blueprints, cycle-accurate pipeline schedules, mathematical algorithm proofs, and operational flowcharts are compiled in [`system_design/`](file:///c:/Users/Lenovo/OneDrive/Desktop/esa_proj/ULLAP/system_design/):
+You need Python 3.10 or newer. Everything on the software side runs on Windows, Linux or macOS.
 
-- [**`architecture.md`**](file:///c:/Users/Lenovo/OneDrive/Desktop/esa_proj/ULLAP/system_design/architecture.md): Complete board-level and chip-level architecture for the Terasic DE2-115 with Intel Cyclone IV E `EP4CE115F29C7`, Wolfson WM8731 codec interface (I2S transceiver & autonomous I2C engine), single-multiplier time-multiplexed DSP core, and FPGA resource utilization.
-- [**`pipeline.md`**](file:///c:/Users/Lenovo/OneDrive/Desktop/esa_proj/ULLAP/system_design/pipeline.md): Dual-pipeline specification detailing the cycle-accurate 3-stage hardware multiplier pipeline ($LAT = L+3$ for LMS, $L+5$ for NLMS/NLMS-Shift) and the 11-stage autonomous software characterization pipeline.
-- [**`algorithm.md`**](file:///c:/Users/Lenovo/OneDrive/Desktop/esa_proj/ULLAP/system_design/algorithm.md): Mathematical derivations for LMS, NLMS, and NLMS-Shift, stability bounds ($0 < \mu < 2/\text{tr}(\mathbf{R})$), stability proof of the dividerless power-of-2 approximation ($\mu_{\text{eff}} \in [\mu/2, \mu)$), and signed $Q1.(W-1)$ fixed-point arithmetic rules.
-- [**`flowchart.md`**](file:///c:/Users/Lenovo/OneDrive/Desktop/esa_proj/ULLAP/system_design/flowchart.md): Visual Mermaid flowcharts for system startup, `anc_core` FSM state transitions, algorithmic branch execution, and sticky saturation flag handling.
-- [**`README.md`**](file:///c:/Users/Lenovo/OneDrive/Desktop/esa_proj/ULLAP/system_design/README.md): Index guide for the technical specifications folder.
-
----
-
-## 3. Running Experiments & Reproducing Plots
-
-### Installation
 ```bash
-python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt    # pesq may fail to build on very new Pythons; only the real-audio study needs it
 ```
 
-### Run Unit Tests & RTL Verification
-```bash
-python -m unittest discover -s py -v
-```
-Executes all 23 unit tests, checking rounding, overflow flags, step-size normalization, vector roundtrip, protocol corner-cases, and extended verification.
+**Run the unit tests** (bit-exactness of the model, rounding, saturation, vector round trips,
+board-capture parsers):
 
-### Run Full Experimental & Visualization Pipeline (Single Command)
 ```bash
-# Fast smoke run (~1-2 minutes)
-python py/run_pipeline.py --quick
-
-# Full research study with real WAV audio
-python py/run_pipeline.py --wav vectors/audio/acoustic_chord.wav --jobs 4
+python -m pytest -q py
 ```
 
-This single command automatically:
-1. Tunes optimal step sizes ($\mu$) on an unseen seed across algorithms.
-2. Evaluates floating-point performance across all 4 scenarios (`stationary`, `amp_steps`, `path_switch`, `wav`).
-3. Executes a fixed-point bit-width sweep from 8 to 24 bits, calculating noise reduction (dB), degradation vs float, and SQNR.
-4. Identifies optimal hardware candidate word-lengths and performs accumulator-width ablation.
-5. Runs extended verification of the RTL reference model.
-6. Generates all **10 publication-quality figures** as both high-resolution 300 DPI PNGs and vector PDFs in `results/plots/`.
-7. Exports structured CSV tables to `results/metrics/` and raw signal `.npz` arrays to `results/raw/`.
-8. Updates `docs/results.md` and `results/research_summary.md`.
+**Re-run the simulation study.** This tunes the step sizes, runs every scenario in float and
+fixed point, sweeps the word length and redraws the figures in `results/plots/`. It
+overwrites files under `results/`, so commit or stash first if you want to compare.
 
----
+```bash
+python py/run_pipeline.py --quick                                  # smoke run, a couple of minutes
+python py/run_pipeline.py --wav vectors/audio/acoustic_chord.wav   # full study
+```
 
-## 4. Generated Visualizations (`results/plots/`)
+The individual journal experiments (word length, real audio, paired statistics, equivalent
+step, power activity) each have their own script in `py/`; see [`py/README.md`](py/README.md).
 
-All figures are exported as both high-res PNG (300 DPI) and vector PDF:
-1. `fig1_convergence`: Convergence comparison across LMS, NLMS, and NLMS-shift.
-2. `fig2_waveforms`: Time-domain waveforms (Primary $d[n]$, Reference $x[n]$, Clean $s[n]$, Residual $e[n]$).
-3. `fig3_residual_error`: Residual error power ($10\log_{10} e^2$) over time vs baseline.
-4. `fig4_tracking_response`: Dynamic adaptation before and after abrupt changes.
-5. `fig5_noise_reduction_comparison`: Grouped bar chart comparing final and whole-run NR across scenarios.
-6. `fig6_bitwidth_sweep`: Cancellation performance, float degradation, and SQNR vs word-length $W$.
-7. `fig7_coef_trajectories`: Evolution of selected filter tap weights over time.
-8. `fig8_resource_utilization`: FPGA Logic Elements (LEs) and dedicated registers across LMS, NLMS, and NLMS-Shift.
-9. `fig9_timing_comparison`: Maximum clock frequency ($F_{\max}$) and setup slack (all architectures >= +3.0 ns PASS on Speed Grade 7).
-10. `fig10_performance_cost_tradeoff`: Cancellation quality (dB) vs FPGA resource cost.
-11. `fig11_latency_comparison`: Processing latency in clock cycles, processing time at 50 MHz, and share of 8 kHz audio budget (< 2%).
+**Run the RTL regression.** Icarus Verilog is enough; Questa is supported too.
 
----
+```bash
+python py/run_iverilog_regression.py     # 86 tests: core, protocol, freeze/hold, top level with codec model
+python py/run_questa_regression.py       # same tests on Questa (set ANC_VSIM etc. for your install)
+python py/run_verilator_lint.py          # Verilator -Wall lint with reviewed waivers
+```
 
-## 5. Experimental Results & Validated Candidates
+**Build for the board.** From `quartus/`, with Quartus Prime Lite on the path. The arguments
+are `ALGO W K EPS_EXP MU_INT`, with ALGO 0 = LMS, 1 = NLMS, 2 = NLMS-Shift:
 
-Recent simulation and extended verification runs (`results/research_summary.md`):
+```bash
+cd quartus
+quartus_sh -t build_quartus.tcl 2 12 3 2 512   # NLMS-Shift, the tuned settings
+quartus_sh -t build_quartus.tcl 1 12 3 0 256   # NLMS
+quartus_sh -t build_quartus.tcl 0 12 3 2 256   # LMS
+```
 
-### Fair-Tuned Step Sizes & Regularisation
-- **LMS:** $\mu = 0.25$ (Fixed step size)
-- **NLMS:** $\mu = 0.25$ ($\text{EPS\_EXP} = 0, \epsilon = 1.0$, restoring divider)
-- **NLMS-Shift:** $K = 3$ ($\mu = 2^{-3} = 0.125$, $\text{EPS\_EXP} = 2, \epsilon = 0.25$, dividerless leading-one barrel shift)
+The bench procedure (tests T1 to T11, Signal Tap set-up, what to record) is in
+[`docs/board_test.md`](docs/board_test.md), and [`board/README.md`](board/README.md) shows how
+to re-run the analysis of the captures we already have.
 
-### Performance Across Test Scenarios (W=12, L=32, 20-Seed Monte Carlo from `paper_numbers.csv`)
-| Scenario | Algorithm | Final NR (dB, Mean ± 95% CI) | Whole-Run NR (dB) | Overflows | Overflow Rate |
-|---|---|---|---|---|---|
-| **Stationary Noise** | LMS | 22.39 ± 0.27 | 13.23 | 0 | 0.00e+00 |
-| **Stationary Noise** | NLMS | 22.28 ± 0.27 | 12.82 | 0 | 0.00e+00 |
-| **Stationary Noise** | NLMS-Shift | 22.37 ± 0.26 | 13.19 | 0 | 0.00e+00 |
-| **Amplitude Steps** | LMS | 22.36 ± 0.64 | 16.94 | 0 | 0.00e+00 |
-| **Amplitude Steps** | NLMS | 24.16 ± 0.58 | 16.61 | 0 | 0.00e+00 |
-| **Amplitude Steps** | NLMS-Shift | 24.33 ± 0.45 | 16.86 | 0 | 0.00e+00 |
-| **Path Switch ($t = 1.0\text{ s}$)** | LMS | 18.95 ± 0.14 | 9.59 | 0 | 0.00e+00 |
-| **Path Switch ($t = 1.0\text{ s}$)** | NLMS | 18.53 ± 0.14 | 9.17 | 0 | 0.00e+00 |
-| **Path Switch ($t = 1.0\text{ s}$)** | NLMS-Shift | 18.91 ± 0.15 | 9.56 | 0 | 0.00e+00 |
-| **Real Audio WAV** | LMS | 5.69 ± 0.04 | 10.51 | 0 | 0.00e+00 |
-| **Real Audio WAV** | NLMS | 5.73 ± 0.04 | 9.75 | 0 | 0.00e+00 |
-| **Real Audio WAV** | NLMS-Shift | 5.46 ± 0.04 | 8.87 | 0 | 0.00e+00 |
-| **Acoustic Feedback** | LMS | 4.35 ± 0.04 | 4.00 | 0 | 0.00e+00 |
-| **Acoustic Feedback** | NLMS | 4.35 ± 0.04 | 3.96 | 0 | 0.00e+00 |
-| **Acoustic Feedback** | NLMS-Shift | 4.35 ± 0.04 | 3.99 | 0 | 0.00e+00 |
+**Build the manuscript.**
 
-### Selected Cyclone IV E Hardware Synthesis (W=12, Speed Grade 7)
-- **LMS (W=12):** 1,885 LEs (1.65%), 1,148 registers, 4 DSP mults, $F_{\max} = 59.90\text{ MHz}$, Setup Slack = **+3.305 ns (PASS)**.
-- **NLMS (W=12):** 2,697 LEs (2.36%), 1,425 registers, 4 DSP mults, $F_{\max} = 61.72\text{ MHz}$, Setup Slack = **+3.798 ns (PASS)**.
-- **NLMS-Shift (W=12):** 2,690 LEs (2.35%), 1,213 registers, 4 DSP mults, $F_{\max} = \mathbf{61.98\text{ MHz}}$, Setup Slack = $\mathbf{+3.867\text{ ns}}$ **(PASS)**.
-- **Timing Closure (Gate B):** Full timing closure across all corners (Slow 85°C, Slow 0°C, Fast 0°C) with 0 unconstrained paths.
-- **Latency & Audio Budget:** Output latency $LAT = 37$ cycles ($740\text{ ns}$ @ 50 MHz), 72 busy cycles per sample (**$1.15\%$ of 8 kHz audio budget**).
-- **Verification Suite:** 23/23 Python unit tests PASSED, 57/57 Questa RTL simulation regression tests PASSED, top wrapper verified. Physical board test is marked **PENDING (manual)**.
+```bash
+cd paper
+python make_tables.py
+latexmk -pdf ullap_manuscript.tex ullap_ieee.tex
+```
 
+## How the numbers are kept honest
 
----
+Every figure in the docs is labelled by where it comes from: Python simulation, Quartus
+synthesis and timing reports, the Quartus power analyser, or a measurement on the board.
+Raw Quartus reports are archived in `results/quartus_reports/`, and
+[`py/audit_db_numbers.py`](py/audit_db_numbers.py) cross-checks the numbers quoted in the
+markdown files against the CSVs they came from. [`docs/claims.md`](docs/claims.md) lists what
+the project does and does not claim.
 
-## 5a. Journal Work Added on `board-readiness` (Simulation Only)
+## Authors
 
-| Item | Command | Output |
-|---|---|---|
-| Open-source RTL regression (Icarus, 86 tests incl. top-level T1-T10) | `python py/run_iverilog_regression.py` | `results/metrics/iverilog_regression_summary.txt` |
-| Verilator `-Wall` lint with reviewed waivers | `python py/run_verilator_lint.py` | `results/metrics/verilator_lint.txt` |
-| Word-length sweep W = 8..16 at fair settings, 20 seeds | `python py/exp_wordlength_fair.py` | `results/metrics/wordlength_fair_*.csv`, fig13 |
-| Real recorded noise + speech (MS-SNSD), NR / STOI / PESQ | `python py/exp_real_audio.py` | `results/metrics/real_audio_*.csv` |
-| Paired per-seed statistics (t, Wilcoxon, TOST) | `python py/exp_paired_stats.py` | `results/metrics/paired_*.csv` |
-| RTL switching-activity energy proxy | `python py/power_activity.py` | `results/metrics/power_activity.csv` |
-| Board stimulus WAVs and LINE OUT NR analysis | `python py/board_stimulus.py make` / `analyze` | `board_evidence/` |
-| Signal Tap capture vs integer model (board T9) | `python py/check_board_capture.py --csv ... --algo 2` | PASS/FAIL |
-| Journal manuscript draft (Elsevier and IEEE versions, shared `body.tex`, `abstract.tex`, `refs.bib`) | `cd paper && python make_tables.py && latexmk -pdf ullap_manuscript.tex ullap_ieee.tex` | `paper/ullap_manuscript.pdf`, `paper/ullap_ieee.pdf` |
+Satvik Garg and Aditya Gupta, School of Electronics Engineering (SENSE), VIT Vellore, under the
+guidance of Prof. Jaffino G.
 
-The board now runs the codec at 8.138 kHz (R8 = 0x00C) to match the simulation study, and brings
-in_valid, out_valid, busy and the sample strobe out on GPIO JP5 pins 1-4. Bench procedure:
-`docs/board_test.md`; power flow: `docs/power_flow.md`; prior art: `docs/related_work.md`.
-Extra Python packages for the real-audio study: `pip install pesq pystoi`.
+## Citing this work
 
-## 6. Measurement Classification & Integrity
+The manuscript is in preparation and has no DOI yet. Until it does, please cite the repository
+using [`CITATION.cff`](CITATION.cff) (GitHub shows a "Cite this repository" button for it).
 
-To preserve scientific rigor, all data is categorized by source:
-- **Simulated (Software Reference)**: Algorithm performance, MSE, noise reduction (dB), and bit-width sweeps computed via Python reference models (`algos.py`, `fixedpoint.py`).
-- **Synthesized / Fitted (Quartus Reports)**: Logic elements, combinational cells, dedicated registers, and embedded multipliers parsed directly from Quartus `.fit.rpt`.
-- **Timing Analyzed (TimeQuest)**: $F_{\max}$ and setup slack extracted from Quartus `.sta.rpt` across operating corners (1200mV 85C / 0C).
-- **Estimated (Quartus Power Analyzer)**: Thermal power dissipation.
-- **Physical Measurements**: Physical board-level measurements using audio analyzers or oscilloscope on the DE2-115 board.
+## Licence
 
-*Note: In the absence of Quartus compilation files, hardware figures are explicitly labeled as "UNAVAILABLE / PENDING" rather than fabricated.*
-
----
-
-## 7. Integrating Quartus Compilation Results
-
-When Quartus Prime Lite compiles the DE2-115 project:
-
-1. **Automatic Report Parsing**:
-   ```bash
-   python py/import_quartus.py --fit-rpt output_files/anc_de2_115.fit.rpt --sta-rpt output_files/anc_de2_115.sta.rpt --algo nlms_shift --w 11
-   ```
-2. **Documented CSV Import**:
-   Update `results/quartus/quartus_reports_template.csv` with measured synthesis values and run:
-   ```bash
-   python py/import_quartus.py --csv results/quartus/quartus_reports_template.csv
-   ```
-   Then re-run `python py/run_pipeline.py` to populate Figures 8, 9, and 10 with actual synthesis data.
-
----
-
-## 8. Extending the Framework
-
-- **Adding an Algorithm**: Add the algorithm definition to `py/algos.py` (float) and `py/fixedpoint.py` (integer model), register it in `ALGOS` in `py/experiment_config.py`, and implement corresponding RTL state handling in `rtl/anc_core.v`.
-- **Adding a Test Scenario**: Add the scenario generator to `py/signals.py` under `make_scenario` and add its name to `SCENARIOS`.
+MIT, see [`LICENSE`](LICENSE).

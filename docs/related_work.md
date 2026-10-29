@@ -43,7 +43,7 @@ algorithm as a contribution. Its defensible contributions are:
 | Klemd, Klauer, Timmermann, Sachau | FPL 2021, pp. 319-326 | Multi-channel feedback FxLMS | High-end FPGA, 2x2 active headrest, 11x11 benchmark at 40 kHz, 2049 taps | Noise reduction improves with compute; numbers in full paper | Abstract |
 | Park, Park | Electronics 12(11) 2511, 2023 | Fixed filters chosen by a CNN classifier instead of LMS | FPGA (device not on page) | 2.3 dB SNR gain over adaptive LMS, 53% less dynamic power from even-odd buffer (simulation) | Abstract |
 | Rodrigo, Buddhika (base paper) | TIDAC 2024 | LMS | Vivado / MATLAB simulation | No numeric results | Read in full (project file) |
-| Ding 1996 patent | as listed in `claims.md` | various | various | not verified | Not found or not opened in this search; read before citing |
+| Ding 1996 patent | as listed in `docs/claims.md` | various | various | not verified | Not found or not opened in this search; read before citing |
 
 ## Comparison against this work (cross-platform, qualitative)
 
