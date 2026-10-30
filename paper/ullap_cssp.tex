@@ -1,48 +1,116 @@
-% ULLAP journal manuscript, Springer Nature version for Circuits, Systems, and Signal Processing (sn-jnl).
-% Same content as ullap_manuscript.tex (Elsevier) and ullap_ieee.tex (IEEE): all input abstract.tex,
-% body.tex and refs.bib, so edit the paper there and rebuild all three. Red \TBD{} items are open before submission.
-% sn-jnl.cls and sn-mathphys-num.bst: Springer Nature LaTeX template (Apache-2.0 copy,
-% github.com/DanySK/template-latex-springer-nature-sn-jnl).
-\documentclass[pdflatex,sn-mathphys-num]{sn-jnl}
-\usepackage{graphicx}
-\usepackage{multirow}
+% ULLAP manuscript, CSSP (Circuits, Systems, and Signal Processing) version laid out like a published
+% CSSP article: 155 x 235 mm page, Times 10/12.5 body, bold sans headings and caption labels.
+% The earlier sn-jnl (Springer template) version is kept as ullap_cssp_snjnl.tex.
+\documentclass[10pt,twoside]{article}
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx}                  % Times body and maths
+\usepackage[scaled=0.90]{helvet}
+\usepackage{courier}                   % outline typewriter for file and signal names       % bold sans for headings (stands in for Myriad Pro)
+\usepackage[paperwidth=155mm,paperheight=235mm,textwidth=121mm,textheight=196mm,
+  inner=17mm,top=22mm,headsep=5mm,headheight=12pt,footskip=9mm]{geometry}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{amsthm}
+\usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{adjustbox}
 \usepackage{placeins}
 \usepackage{xcolor}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,fit,backgrounds}
-\graphicspath{{../results/plots/}}
+\usepackage{marvosym}                  % envelope for the corresponding author
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage[font=small,labelfont={sf,bf},labelsep=space,justification=raggedright,
+  singlelinecheck=false,skip=5pt]{caption}
+\usepackage[numbers,sort&compress]{natbib}
+\definecolor{linkblue}{RGB}{0,84,166}
+\usepackage[colorlinks=true,linkcolor=linkblue,citecolor=linkblue,urlcolor=linkblue]{hyperref}
+
+\linespread{1.04}                      % 10pt on about 12.5pt leading
+\setlength{\parindent}{1em}
+\setlength{\parskip}{0pt}
 \setlength{\emergencystretch}{1.5em}
-\newcommand{\TBD}[1]{\textcolor{red}{[TBD: #1]}}
-\newcommand{\WT}{tableorg} % plain LaTeX table (sn-jnl's table wraps threeparttable, which cannot be boxed)
-\newcommand{\WF}{figure}
-\newcommand{\fitcol}[1]{#1}   % sn-jnl tables (threeparttable) do not take an adjustbox
-\newcommand{\fitwide}[1]{\adjustbox{max width=\linewidth}{#1}}
-\theoremstyle{thmstyleone}
-\newtheorem{proposition}{Proposition}
 \raggedbottom
+\renewcommand{\topfraction}{0.9}\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.07}\renewcommand{\floatpagefraction}{0.75}
+\setcounter{topnumber}{3}\setcounter{bottomnumber}{2}\setcounter{totalnumber}{5}
+
+% headings: numbered bold sans, as in the journal
+\titleformat{\section}{\normalfont\sffamily\bfseries\fontsize{11}{13}\selectfont}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalfont\sffamily\bfseries\fontsize{10}{12}\selectfont}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalfont\sffamily\bfseries\fontsize{9.5}{11.5}\selectfont}{\thesubsubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{14pt plus 3pt minus 2pt}{7pt plus 1pt}
+\titlespacing*{\subsection}{0pt}{11pt plus 2pt minus 2pt}{5pt plus 1pt}
+\titlespacing*{\subsubsection}{0pt}{9pt plus 2pt minus 2pt}{4pt plus 1pt}
+
+% running header with a rule; page number at the outer foot
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[LO,RE]{\sffamily\fontsize{8.5}{10}\selectfont Circuits, Systems, and Signal Processing}
+\fancyfoot[RO,LE]{\sffamily\fontsize{8.5}{10}\selectfont\thepage}
+\fancypagestyle{firstpage}{\fancyhf{}%
+  \fancyhead[L]{\sffamily\fontsize{8.5}{10}\selectfont Circuits, Systems, and Signal Processing}%
+}
+
+% captions: "Fig. 1" / "Table 1" in bold sans, text in small serif
+\renewcommand{\figurename}{Fig.}
+\captionsetup[table]{position=top}
+% contributions numbered 1), 2), ...
+\setlist[enumerate,1]{label=\arabic*),leftmargin=*,itemsep=1pt,parsep=0pt,topsep=4pt}
+% references numbered "1."
+\renewcommand{\bibnumfmt}[1]{#1.}
+\renewcommand{\bibfont}{\small}
+\setlength{\bibsep}{2pt}
+\providecommand{\bibcommenthead}{} % used by sn-mathphys-num.bst
+% proposition: bold sans head, italic statement
+\newtheoremstyle{cssp}{6pt}{6pt}{\itshape}{}{\sffamily\bfseries}{}{0.5em}{}
+\theoremstyle{cssp}
+\newtheorem{proposition}{Proposition}
+% declarations: run-in bold sans heads, "Declarations" as an unnumbered section
+\newcommand{\decl}[1]{\par\addvspace{5pt}\noindent{\sffamily\bfseries #1}\enspace}
+
+\graphicspath{{../results/plots/}}
+\newcommand{\TBD}[1]{\textcolor{red}{[TBD: #1]}}
+\newcommand{\WT}{table}
+\newcommand{\WF}{figure}
+\newcommand{\fitcol}[1]{#1}
+\newcommand{\fitwide}[1]{\adjustbox{max width=\linewidth}{#1}}
+
+\hypersetup{pdftitle={A Bit-Exact, Processor-Free FPGA Adaptive Noise Canceller}}
 
 \begin{document}
-\title[Bit-exact FPGA adaptive noise canceller]{A Bit-Exact, Processor-Free FPGA Adaptive Noise Canceller:
-Fair Comparison of LMS, NLMS and Divider-Free NLMS-Shift on Cyclone IV E}
-
-\author[1]{\fnm{Satvik} \sur{Garg}}
-\author[1]{\fnm{Aditya} \sur{Gupta}}
-\author*[1]{\fnm{Jaffino} \sur{G}}\email{\TBD{e-mail; author order to be confirmed by the authors}}
-\affil*[1]{\orgdiv{School of Electronics Engineering (SENSE)}, \orgname{Vellore Institute of Technology},
-\orgaddress{\city{Vellore}, \country{India}}}
-
-\abstract{\input{abstract}}
-
-\keywords{adaptive noise cancellation, NLMS, divider-free normalisation, FPGA, fixed-point arithmetic,
-bit-exact verification}
-
-\maketitle
+\thispagestyle{firstpage}
+\begingroup\raggedright
+{\sffamily\bfseries\fontsize{14}{17}\selectfont A Bit-Exact, Processor-Free FPGA Adaptive Noise
+Canceller: Fair Comparison of LMS, NLMS and Divider-Free NLMS-Shift on Cyclone IV E\par}
+\vspace{10pt}
+{\sffamily\bfseries\fontsize{10}{12}\selectfont Satvik Garg$^{1}$ \textperiodcentered\ Aditya Gupta$^{1}$
+\textperiodcentered\ Jaffino G$^{1}$\par}
+\vspace{4pt}
+{\fontsize{8.5}{10}\selectfont \TBD{author order to be confirmed by the authors}\par}
+\endgroup
+\vspace{14pt}
+\noindent{\sffamily\bfseries\fontsize{10}{12}\selectfont Abstract}\par\vspace{3pt}
+\noindent\input{abstract}\par
+\vspace{6pt}
+\noindent{\sffamily\bfseries Keywords}\enspace Adaptive noise cancellation \textperiodcentered\ NLMS
+\textperiodcentered\ Divider-free normalisation \textperiodcentered\ FPGA \textperiodcentered\ Fixed-point
+arithmetic \textperiodcentered\ Bit-exact verification\par
+\vspace{4pt}
+\begingroup
+\renewcommand{\thefootnote}{}
+\renewcommand{\footnoterule}{\noindent\rule{0.33\linewidth}{0.4pt}\vspace{2pt}}
+\footnotetext{\hspace{-1.2em}\begin{tabular}{@{}l@{\ }p{0.92\linewidth}@{}}
+\Letter & Jaffino G\\ & \TBD{e-mail of the corresponding author}\\[3pt]
+$^{1}$ & School of Electronics Engineering (SENSE), Vellore Institute of Technology, Vellore, India
+\end{tabular}}
+\endgroup
 
 \input{body}
 
+\bibliographystyle{sn-mathphys-num}
 \bibliography{refs}
 \end{document}
