@@ -64,7 +64,6 @@
 \renewcommand{\bibnumfmt}[1]{#1.}
 \renewcommand{\bibfont}{\small}
 \setlength{\bibsep}{2pt}
-\providecommand{\bibcommenthead}{} % used by sn-mathphys-num.bst
 % proposition: bold sans head, italic statement
 \newtheoremstyle{cssp}{6pt}{6pt}{\itshape}{}{\sffamily\bfseries}{}{0.5em}{}
 \theoremstyle{cssp}
@@ -79,6 +78,7 @@
 \newcommand{\fitcol}[1]{#1}
 \newcommand{\fitwide}[1]{\adjustbox{max width=\linewidth}{#1}}
 
+\urlstyle{same}                         % links in the text font, as in the journal
 \hypersetup{pdftitle={A Bit-Exact, Processor-Free FPGA Adaptive Noise Canceller}}
 
 \begin{document}
@@ -111,6 +111,6 @@ $^{1}$ & School of Electronics Engineering (SENSE), Vellore Institute of Technol
 
 \input{body}
 
-\bibliographystyle{sn-mathphys-num}
+\bibliographystyle{cssp-num}
 \bibliography{refs}
 \end{document}

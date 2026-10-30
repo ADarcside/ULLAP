@@ -13,7 +13,9 @@
 \usetikzlibrary{arrows.meta,positioning,fit,backgrounds}
 \newif\ifshowabstract\showabstracttrue % abstract shown (CSSP requires 150-250 words); set \showabstractfalse to hide it
 \newtheorem{proposition}{Proposition}
-\usepackage[hidelinks]{hyperref}
+\definecolor{linkblue}{RGB}{0,84,166}
+\usepackage[colorlinks=true,linkcolor=linkblue,citecolor=linkblue,urlcolor=linkblue]{hyperref}
+\urlstyle{same}
 \usepackage{dblfloatfix} % keep wide floats in order and close to their first mention
 % let pages carry more floats so the figures sit next to their text rather than after the references
 \renewcommand{\topfraction}{0.9}\renewcommand{\dbltopfraction}{0.9}

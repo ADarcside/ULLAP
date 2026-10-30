@@ -13,7 +13,9 @@
 \usetikzlibrary{arrows.meta,positioning,fit,backgrounds}
 \newif\ifshowabstract\showabstracttrue % abstract shown (CSSP requires 150-250 words); set \showabstractfalse to hide it
 \newtheorem{proposition}{Proposition}
-\usepackage{hyperref}
+\definecolor{linkblue}{RGB}{0,84,166}
+\usepackage[colorlinks=true,linkcolor=linkblue,citecolor=linkblue,urlcolor=linkblue]{hyperref}
+\urlstyle{same}
 % let pages carry more floats so figures sit next to their text instead of on half-empty float pages
 \renewcommand{\topfraction}{0.9}\renewcommand{\bottomfraction}{0.8}
 \renewcommand{\textfraction}{0.07}\renewcommand{\floatpagefraction}{0.75}
