@@ -41,7 +41,7 @@ contributions are listed below.
 \item \textbf{One serial core for three algorithms:} LMS, NLMS (with a restoring divider) and NLMS-Shift
 run on the same serial core and share one multiplier, so the datapath, word length and filter length are
 identical for all three. The core sits inside a complete audio system with no processor, closes timing at
-50~MHz on Cyclone IV E, and is released together with all scripts and data.
+50~MHz on Cyclone IV E.
 \item \textbf{A fair comparison:} The step size and regularizer of every algorithm are chosen on held-out
 seeds by one common rule, and each result carries a 20-seed 95\% confidence interval. Synthetic
 scenarios, real recorded noise and speech, and a reproducible word-length study are all covered.
@@ -273,8 +273,7 @@ g[n] &= \operatorname{sat}_{W+4}\!\left(\left\lfloor\frac{2N[n]+Q[n]}{2Q[n]}\rig
 \end{align}
 Here $\mu=M_\mu\,2^{-10}$, $N[n]=M_\mu\,e[n]\,2^{2F-10}$, $Q[n]=P[n]+2^{2F-E}$ for $\epsilon=2^{-E}$, and
 $b(\cdot)$ is the bit length of a positive integer. Wherever a value is narrowed, it saturates and sets a
-sticky flag, so no overflow can pass unnoticed. The integer model (\texttt{py/fixedpoint.py},
-\texttt{py/rtl\_model.py}) uses exactly these widths and produces the golden vectors. Algorithm~\ref{alg:core} lists the
+sticky flag, so no overflow can pass unnoticed. The integer model uses exactly these widths and produces the golden vectors. Algorithm~\ref{alg:core} lists the
 per-sample operation of the core for the three algorithms in the order in which the hardware executes it.
 
 \begin{algorithm}[!htbp]
@@ -310,7 +309,7 @@ per-sample operation of the core for the three algorithms in the order in which 
 %--------------------------------------------------------------------------------------------
 \section{Hardware architecture}\label{sec:hw}
 \subsection{Core}\label{sec:core}
-Fig.~\ref{fig:core} shows the core datapath (\texttt{rtl/anc\_core.v}, vendor-neutral Verilog). The core
+Fig.~\ref{fig:core} shows the core datapath, written in vendor-neutral Verilog. The core
 takes one sample pair per \texttt{in\_valid} strobe and does all of its arithmetic on one multiplier with a
 three-stage pipeline (operand registers, product register, consume stage). A finite-state machine walks
 through each sample: two cycles square the new and the dropped reference samples for \eqref{eq:prec}
@@ -373,8 +372,7 @@ of them was caught. Verilator, run with \texttt{-Wall}, gives no unwaived warnin
 board itself, is covered in Section~\ref{sec:board}.
 
 \begin{table}[!htbp]\centering\small
-\caption{Verification summary. All RTL suites pass in both Icarus Verilog and Questa
-(\texttt{results/metrics/iverilog\_regression\_summary.txt}, \texttt{results/local\_run\_da0b6f4/}).}\label{tab:verif}
+\caption{Verification summary. All RTL suites pass in both Icarus Verilog and Questa.}\label{tab:verif}
 \fitcol{\begin{tabular}{lrl}\toprule
 Suite & Tests & Result\\\midrule
 Core golden vectors (\texttt{tb\_anc\_core}) & 68 & all pass, bit-exact\\
@@ -438,7 +436,7 @@ Recommendation P.862) are computed on the rest.
 \section{Results}\label{sec:results}
 \subsection{Synthetic scenarios}
 \begin{\WT}[!htbp]\centering\small
-\caption{Final noise reduction, dB, mean [95\% CI] over seeds 1--20, $W=12$, $L=32$ (\texttt{results/paper\_numbers.csv}).}\label{tab:nr}
+\caption{Final noise reduction, dB, mean [95\% CI] over seeds 1--20, $W=12$, $L=32$.}\label{tab:nr}
 \begin{tabular}{lccc}\toprule
 Scenario & LMS & NLMS & NLMS-Shift\\\midrule
 Stationary   & 22.39 [22.12, 22.66] & 22.28 [22.01, 22.54] & 22.37 [22.11, 22.63]\\
@@ -463,7 +461,7 @@ but they are small enough to count as ties. Against LMS on amplitude steps, the 
 normalized algorithms is significant ($p<10^{-7}$).
 
 \begin{\WT}[!htbp]\centering\scriptsize
-\caption{Paired differences in final NR over seeds 1--20 (\texttt{results/metrics/paired\_stats.csv}).}\label{tab:paired}
+\caption{Paired differences in final NR over seeds 1--20.}\label{tab:paired}
 \fitwide{\input{tab_paired.tex}}
 \end{\WT}
 
@@ -494,8 +492,7 @@ LMS settles roughly 3~dB under the two normalized algorithms, consistent with Ta
 \subsection{Real noise and speech}
 \begin{\WT}[!htbp]\centering\small
 \caption{Real recorded noise and speech (MS-SNSD), fixed point $W=12$, mean $\pm$ 95\% CI over 20 seeds, no
-speech leakage into the reference; STOI and PESQ of $e$ against $s$, with the unprocessed input in brackets
-(\texttt{results/metrics/real\_audio\_summary.csv}).}\label{tab:real}
+speech leakage into the reference; STOI and PESQ of $e$ against $s$, with the unprocessed input in brackets.}\label{tab:real}
 \fitwide{\input{tab_real_audio.tex}}
 \end{\WT}
 The real recordings (Table~\ref{tab:real}) give a consistent picture across all four noises. Processing
@@ -504,8 +501,7 @@ LMS by 0.4--0.6~dB, and NLMS-Shift trails NLMS by 0.15--0.35~dB. The noise reduc
 in Table~\ref{tab:nr}. It would be easy to blame the real noise for being harder to predict, but that is
 not what happens. With the speech removed from the primary input, the same filters on the same noise
 segments and paths reached 18.5--19.2~dB on the air conditioner and 22.4--31.9~dB on the other three
-noises, which matches or exceeds what they achieve on synthetic stationary noise
-(\texttt{py/\allowbreak exp\_real\_audio\_nospeech.py}, \texttt{results/\allowbreak metrics/\allowbreak real\_audio\_nospeech.csv}).
+noises, which matches or exceeds what they achieve on synthetic stationary noise.
 The speech is uncorrelated with the reference, yet it still reaches the error $e[n]$ that drives the
 weight update, and that costs 6.4--17.9~dB. LMS suffers most from it. Without speech, LMS is ahead of both
 normalized variants on all four noises; with speech, it loses the most (7.6--17.9~dB, against
@@ -517,7 +513,7 @@ has not been tried here. Leakage of speech into the reference is the other pract
 $-20$~dB of leakage the filter starts to cancel part of the speech: noise reduction drops by
 2.3--4.6~dB, PESQ by 0.25--0.6, and saturation events show up (18,500 over 19.2 million processed
 samples, most of them with the air conditioner). Where the reference microphone is placed therefore
-matters more than the choice of algorithm (\texttt{paper/tab\_real\_audio\_xt.tex}).
+matters more than the choice of algorithm.
 
 \subsection{Word length}
 Fig.~\ref{fig:wl} shows how much each algorithm loses against its own floating-point version as the word
@@ -540,7 +536,7 @@ $E[r]=\int_0^1 2^{u-1}\,du=1/(2\ln 2)\approx0.72$. At any particular level, howe
 $P+\epsilon$ sits inside its octave. It grows with the level and drops by half each time $P+\epsilon$
 crosses a power of two. For $L=32$ and $\epsilon=2^{-2}$, the crossing at $P+\epsilon=1/2$ corresponds to
 a reference RMS of $-21.1$~dBFS, only 3~dB above the level used in the simulations. The integer model was
-used to see what this does in practice (\texttt{py/exp\_equiv\_step.py}): the input level was swept over
+used to see what this does in practice: the input level was swept over
 12~dB in steps of 0.75~dB, once on the stationary scenario (seeds 1--5) and once with a two-tone reference
 (Fig.~\ref{fig:equiv}).
 
@@ -563,14 +559,13 @@ never does this.
 \caption{Equivalent step of NLMS-Shift versus reference level (integer model, $W=12$, $L=32$, $K=3$,
 $\epsilon=2^{-2}$). Top: mean ratio $\bar r$ of \eqref{eq:ratio}; dotted: $1/(2\ln2)$. Bottom: final noise
 reduction of NLMS-Shift, of NLMS with step $\bar r\,2^{-K}$ and of NLMS with step $2^{-K}$. Left:
-stationary scenario, seeds 1--5; right: two-tone reference (\texttt{results/metrics/equiv\_step.csv}).}\label{fig:equiv}
+stationary scenario, seeds 1--5; right: two-tone reference.}\label{fig:equiv}
 \end{figure}
 
 \subsection{Hardware cost}
 \begin{table}[!htbp]\centering\small
 \caption{Complete board design (core, codec interface, synchronizers, status logic) on Cyclone IV E
-EP4CE115F29C7, $W=12$, $L=32$, Quartus Prime Lite 25.1, commit da0b6f4
-(\texttt{results/quartus\_reports/board\_da0b6f4/}, \texttt{results/metrics/power\_activity.csv}).}\label{tab:hw}
+EP4CE115F29C7, $W=12$, $L=32$, Quartus Prime Lite 25.1.}\label{tab:hw}
 \fitcol{\begin{tabular}{lccc}\toprule
  & LMS & NLMS & NLMS-Shift\\\midrule
 Logic elements & 1,792 & 2,626 & 2,610\\
@@ -620,15 +615,19 @@ one entry per sample; the trigger is the release of the reset button, and the bu
 (4.0~s). A second instance watches the four GPIO test points at 50~MHz. For the stimuli, the noise-only
 versions of the four scenarios were played from a laptop into LINE IN, each preceded by a 1~kHz
 calibration tone. Reset was pressed while the tone was playing. Every capture therefore starts with zero
-weights on real codec data at about $-25$~dBFS, and no captured sample reaches full scale. The analysis
-script and the raw exports are kept in the repository (\texttt{py/analyze\_board\_capture.py},
-\texttt{board\_evidence/}). Fig.~\ref{fig:boardphoto} shows the board on the bench.
+weights on real codec data at about $-25$~dBFS, and no captured sample reaches full scale. Fig.~\ref{fig:boardphoto} shows the board on the bench.
 
 \begin{figure}[!htbp]\centering
-\includegraphics[width=0.85\linewidth]{fig_board_photo.jpg}
-\caption{The DE2-115 board (Intel Cyclone IV E, WM8731 codec) running ULLAP during the 10-min soak test.
-The stimulus enters LINE IN (blue jack) and LINE OUT (green jack) carries the codec output; the board is
-programmed and read by Signal Tap over the USB-Blaster port (top left).}\label{fig:boardphoto}
+\begin{minipage}[b]{0.49\linewidth}\centering
+\includegraphics[width=\linewidth]{fig_board_photo_boot.jpg}\\[2pt]{\small (a)}
+\end{minipage}\hfill
+\begin{minipage}[b]{0.49\linewidth}\centering
+\includegraphics[width=\linewidth]{fig_board_photo.jpg}\\[2pt]{\small (b)}
+\end{minipage}
+\caption{The DE2-115 board (Intel Cyclone IV E, WM8731 codec) running ULLAP on the bench: (a) after
+configuration, with KEY0 (reset) being pressed; (b) during the 10-min soak test. The stimulus enters
+LINE IN (blue jack) and LINE OUT (green jack) carries the codec output; the board is programmed and read
+by Signal Tap over the USB-Blaster port (top left).}\label{fig:boardphoto}
 \end{figure}
 
 \emph{Bit-exactness.} The check itself is simple. For each of the 12 captures (three algorithms times four
@@ -678,8 +677,7 @@ ideal signal. Across all scenarios on the board, the three algorithms stay withi
 
 \begin{table}[!htbp]\centering\small
 \caption{On-board $\mathrm{NR}_\mathrm{final}$ (dB) on the 2~s seed-1 stimulus against the integer model on
-the same signal, at the simulation level and scaled to the level the board received
-(\texttt{results/board/session2/}). Every board capture is bit-exact.}\label{tab:board}
+the same signal, at the simulation level and scaled to the level the board received. Every board capture is bit-exact.}\label{tab:board}
 \fitcol{\begin{tabular}{llrrr}\toprule
 Algorithm & Scenario & Board & Model, sim.\ level & Model, board level\\\midrule
 LMS & stationary & 15.88 & 22.77 & 15.76\\
@@ -772,8 +770,7 @@ competing interests.''}
 \decl{Author contributions} \TBD{Authors: who did what (free text or CRediT).}
 
 \decl{Data and code availability}
-All RTL, testbenches, scripts and result files are available in the project repository
-\TBD{public URL and Zenodo DOI of the tagged release}. The real-audio study downloads its MS-SNSD files
-from a pinned commit and verifies them by SHA-256.
+The RTL, testbenches, scripts and result files are available from the corresponding author on reasonable
+request. The MS-SNSD files used in the real-audio study are verified by SHA-256 before use.
 
 \decl{Use of generative AI} Described in the experimental set-up (Section~\ref{sec:setup}).
