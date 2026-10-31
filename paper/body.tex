@@ -274,7 +274,38 @@ g[n] &= \operatorname{sat}_{W+4}\!\left(\left\lfloor\frac{2N[n]+Q[n]}{2Q[n]}\rig
 Here $\mu=M_\mu\,2^{-10}$, $N[n]=M_\mu\,e[n]\,2^{2F-10}$, $Q[n]=P[n]+2^{2F-E}$ for $\epsilon=2^{-E}$, and
 $b(\cdot)$ is the bit length of a positive integer. Wherever a value is narrowed, it saturates and sets a
 sticky flag, so no overflow can pass unnoticed. The integer model (\texttt{py/fixedpoint.py},
-\texttt{py/rtl\_model.py}) uses exactly these widths and produces the golden vectors.
+\texttt{py/rtl\_model.py}) uses exactly these widths and produces the golden vectors. Algorithm~\ref{alg:core} lists the
+per-sample operation of the core for the three algorithms in the order in which the hardware executes it.
+
+\begin{algorithm}[!htbp]
+\caption{Per-sample operation of the ULLAP core (LMS, NLMS and NLMS-Shift)}\label{alg:core}
+\small
+\begin{algorithmic}[1]
+\Require $W=12$, $F=W-1$, $L=32$; step $M_\mu$ (LMS, NLMS) or $K$ (NLMS-Shift); $\epsilon=2^{-E}$
+\State $w_i \gets 0$ for $i=0,\dots,L-1$;\quad $P \gets 0$
+\For{each sample pair $(x[n],d[n])$ marked by \texttt{in\_valid}}
+  \State shift $x[n]$ into the reference window $x_0,\dots,x_{L-1}$
+  \If{NLMS or NLMS-Shift}
+    \State $P \gets P + x^2[n] - x^2[n-L]$ \Comment{\eqref{eq:prec}, 2 cycles}
+    \State $Q \gets P+2^{2F-E}$
+  \EndIf
+  \State $a \gets \operatorname{sat}_{B_a}\big(\sum_{i=0}^{L-1} w_i\,x_i\big)$ \Comment{\eqref{eq:acc}, $L$ cycles}
+  \State $y \gets \operatorname{sat}_W(\operatorname{rs}(a,F))$;\quad $e \gets \operatorname{sat}_W(d-y)$ \Comment{\eqref{eq:yq}, \eqref{eq:ye}}
+  \State output $e[n]$ with \texttt{out\_valid}
+  \If{NLMS}
+    \State $g \gets$ restoring division \Comment{\eqref{eq:g}}
+  \ElsIf{NLMS-Shift}
+    \State $s \gets b(Q)-F+K$ \Comment{leading-one detector}
+  \EndIf
+  \If{\textbf{not} \texttt{freeze}}
+    \For{$i=0,\dots,L-1$} \Comment{$L$ cycles}
+      \State $\Delta w_i \gets$ \eqref{eq:dw_lms}, \eqref{eq:dw_nlms} or \eqref{eq:dw_shift}
+      \State $w_i \gets \operatorname{sat}_W(w_i+\Delta w_i)$ \Comment{\eqref{eq:wupd}}
+    \EndFor
+  \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
 
 %--------------------------------------------------------------------------------------------
 \section{Hardware architecture}\label{sec:hw}
@@ -591,7 +622,14 @@ versions of the four scenarios were played from a laptop into LINE IN, each prec
 calibration tone. Reset was pressed while the tone was playing. Every capture therefore starts with zero
 weights on real codec data at about $-25$~dBFS, and no captured sample reaches full scale. The analysis
 script and the raw exports are kept in the repository (\texttt{py/analyze\_board\_capture.py},
-\texttt{board\_evidence/}).
+\texttt{board\_evidence/}). Fig.~\ref{fig:boardphoto} shows the board on the bench.
+
+\begin{figure}[!htbp]\centering
+\includegraphics[width=0.85\linewidth]{fig_board_photo.jpg}
+\caption{The DE2-115 board (Intel Cyclone IV E, WM8731 codec) running ULLAP during the 10-min soak test.
+The stimulus enters LINE IN (blue jack) and LINE OUT (green jack) carries the codec output; the board is
+programmed and read by Signal Tap over the USB-Blaster port (top left).}\label{fig:boardphoto}
+\end{figure}
 
 \emph{Bit-exactness.} The check itself is simple. For each of the 12 captures (three algorithms times four
 scenarios), the integer model of Section~\ref{sec:model} was started from zero state at the first sample
